@@ -1,5 +1,5 @@
 [rawrepo-oai]
-repository-name = ${NAME|DBC OAI}
+repository-name = "${NAME|DBC OAI}"
 base-url = ${EXPOSED_URL|http://oai.dbc.dk/}
 records-pr-request = ${RECORDS_PR_REQUEST|10}
 identifiers-pr-request = ${IDENTIFIERS_PR_REQUEST|10}
@@ -7,6 +7,6 @@ token-max-age = ${TOKEN_MAX_AGE|8}
 fetch-record-timeout = ${FETCH_RECORD_TIMEOUT|30}
 no-throttle = ${NO_THROTTLE|false}
 no-authentication = ${NO_AUTHENTICATION|false}
-x-forwarded-for = ${X_FORWARDED_FOR|"127.0.0.1 172.16.0.0/12"}
+x-forwarded-for = "${X_FORWARDED_FOR|127.0.0.1 172.16.0.0/12}"
 fors-rights-url = ${FORS_RIGHTS_URL}
-fors-rights-rules = ${FORS_RIGHTS_RULES|netpunkt.dk,500=bkm}
+fors-rights-rules = "${FORS_RIGHTS_RULES|netpunkt.dk,500=bkm}"
