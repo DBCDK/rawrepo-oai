@@ -19,7 +19,6 @@
 package dk.dbc.rawrepo.oai;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -29,12 +28,10 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.stream.Collectors;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-import javax.persistence.Transient;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,21 +97,21 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
         if (from != null) {
             sb.append(" AND");
             if (from.contains(".")) {
-                sb.append(" DATE_TRUNC('milliseconds', changed) >= DATE_TRUNC('milliseconds', ?::timestamp)");
+                sb.append(" DATE_TRUNC('milliseconds', changed) >= DATE_TRUNC('milliseconds', ?::timestamp AT TIME ZONE 'UTC')");
             } else if (from.contains("T")) {
-                sb.append(" DATE_TRUNC('second', changed) >= DATE_TRUNC('second', ?::timestamp)");
+                sb.append(" DATE_TRUNC('second', changed) >= DATE_TRUNC('second', ?::timestamp AT TIME ZONE 'UTC')");
             } else {
-                sb.append(" DATE_TRUNC('day', changed) >= DATE_TRUNC('day', ?::timestamp)");
+                sb.append(" DATE_TRUNC('day', changed) >= DATE_TRUNC('day', ?::timestamp AT TIME ZONE 'UTC')");
             }
         }
         if (until != null) {
             sb.append(" AND");
             if (until.contains(".")) {
-                sb.append(" DATE_TRUNC('milliseconds', changed) <= DATE_TRUNC('milliseconds', ?::timestamp)");
+                sb.append(" DATE_TRUNC('milliseconds', changed) <= DATE_TRUNC('milliseconds', ?::timestamp) AT TIME ZONE 'UTC'");
             } else if (until.contains("T")) {
-                sb.append(" DATE_TRUNC('second', changed) <= DATE_TRUNC('second', ?::timestamp)");
+                sb.append(" DATE_TRUNC('second', changed) <= DATE_TRUNC('second', ?::timestamp) AT TIME ZONE 'UTC'");
             } else {
-                sb.append(" DATE_TRUNC('day', changed) <= DATE_TRUNC('day', ?::timestamp)");
+                sb.append(" DATE_TRUNC('day', changed) <= DATE_TRUNC('day', ?::timestamp) AT TIME ZONE 'UTC'");
             }
         }
         sb.append(" GROUP BY pid ORDER BY changed, pid OFFSET ? LIMIT ?");

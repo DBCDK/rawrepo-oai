@@ -25,6 +25,7 @@ import dk.dbc.oai.pmh.ObjectFactory;
 import dk.dbc.oai.pmh.RequestType;
 import java.io.CharArrayWriter;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.GregorianCalendar;
@@ -188,7 +189,9 @@ public class OAIResource {
                     verb = "";
                 }
 
-                try (Connection connection = rawrepo.getConnection()) {
+                try (Connection connection = rawrepo.getConnection() ;
+                     PreparedStatement stmt = connection.prepareStatement("SET TIMEZONE TO 'UTC'")) {
+                    stmt.executeUpdate();
                     OAIWorker worker = new OAIWorker(connection, config, recordFormatter, allowedSets, params);
                     switch (verb.toLowerCase(Locale.ROOT)) {
                         case "identify":
