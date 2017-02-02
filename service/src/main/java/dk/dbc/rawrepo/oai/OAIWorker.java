@@ -184,8 +184,8 @@ public class OAIWorker {
         String ts = DateTimeFormatter.ISO_INSTANT.format(timestamp.toInstant());
 
         IdentifyType identify = OBJECT_FACTORY.createIdentifyType();
-        identify.setRepositoryName(config.repositoryName);
-        identify.setBaseURL(config.baseUrl);
+        identify.setRepositoryName(config.getRepositoryName());
+        identify.setBaseURL(config.getBaseUrl());
         identify.setProtocolVersion("2.0");
         identify.setEarliestDatestamp(ts);
         identify.setDeletedRecord(DeletedRecordType.TRANSIENT);
@@ -203,7 +203,7 @@ public class OAIWorker {
 
         OAIIdentifierCollection collection = new OAIIdentifierCollection(connection, allowedSets);
         JsonObject json = findIdentifiersJson(oaipmh);
-        JsonObject cont = collection.fetch(json, config.identifiersPrRequest);
+        JsonObject cont = collection.fetch(json, config.getIdentifiersPrRequest());
 
         ListIdentifiersType listIdetifiers = OBJECT_FACTORY.createListIdentifiersType();
         List<HeaderType> headers = listIdetifiers.getHeaders();
@@ -213,7 +213,7 @@ public class OAIWorker {
                     headers.add(id.toHeader());
                 });
 
-        listIdetifiers.setResumptionToken(ResumptionToken.toToken(cont, config.tokenMaxAge));
+        listIdetifiers.setResumptionToken(ResumptionToken.toToken(cont, config.getTokenMaxAge()));
 
         oaipmh.setListIdentifiers(listIdetifiers);
     }
@@ -257,14 +257,14 @@ public class OAIWorker {
         ListRecordsType listRecords = OBJECT_FACTORY.createListRecordsType();
         OAIIdentifierCollection collection = new OAIIdentifierCollection(connection, allowedSets);
         JsonObject json = findIdentifiersJson(oaipmh);
-        JsonObject cont = collection.fetch(json, config.recordsPrRequest);
+        JsonObject cont = collection.fetch(json, config.getRecordsPrRequest());
 
         List<RecordType> recordsWithContent = fetchRecordContent(collection, "marcx");
 
         List<RecordType> records = listRecords.getRecords();
         records.addAll(recordsWithContent);
 
-        listRecords.setResumptionToken(ResumptionToken.toToken(cont, config.tokenMaxAge));
+        listRecords.setResumptionToken(ResumptionToken.toToken(cont, config.getTokenMaxAge()));
         oaipmh.setListRecords(listRecords);
     }
 
@@ -317,7 +317,7 @@ public class OAIWorker {
                 .map(id -> recordFormatter.fetch(id, metadataPrefix))
                 .collect(Collectors.toList());
         try {
-            Instant timeout = Instant.now().plus(config.fetchRecordTimeout, ChronoUnit.SECONDS);
+            Instant timeout = Instant.now().plus(config.getFetchRecordTimeout(), ChronoUnit.SECONDS);
             List<RecordType> recordsWithContent = futures.stream()
                     .map(future -> {
                         try {

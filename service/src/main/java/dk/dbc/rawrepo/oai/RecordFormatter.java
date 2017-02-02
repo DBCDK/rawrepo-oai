@@ -23,7 +23,10 @@ import com.codahale.metrics.Timer;
 import java.util.concurrent.Future;
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
-import javax.ejb.Stateless;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +35,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author DBC {@literal <dbc.dk>}
  */
-@Stateless
+@Singleton
+@Startup
+@Lock(LockType.READ)
 public class RecordFormatter {
 
     private static final Logger log = LoggerFactory.getLogger(RecordFormatter.class);

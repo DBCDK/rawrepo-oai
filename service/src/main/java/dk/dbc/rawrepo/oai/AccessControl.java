@@ -36,8 +36,11 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJBException;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
+import javax.ejb.Startup;
 import javax.inject.Inject;
-import javax.inject.Singleton;
+import javax.ejb.Singleton;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +50,8 @@ import org.slf4j.LoggerFactory;
  * @author DBC {@literal <dbc.dk>}
  */
 @Singleton
+@Startup
+@Lock(LockType.READ)
 public class AccessControl {
 
     private static final Logger log = LoggerFactory.getLogger(AccessControl.class);

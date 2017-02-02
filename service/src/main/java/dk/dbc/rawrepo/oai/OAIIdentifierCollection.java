@@ -76,6 +76,7 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
      */
     @SuppressFBWarnings("SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING")
     public JsonObject fetch(JsonObject json, int limit) {
+        log.debug("limit = " + limit);
         StringBuilder sb = new StringBuilder();
         String set = json.getString("s", null);
         String from = json.getString("f", null);

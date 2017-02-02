@@ -173,7 +173,7 @@ public class OAIResource {
 
         String user = ip;
         Set<String> allowedSets = accessControl.getAllSets();
-        if (!config.noAuthentication) {
+        if (!config.isNoAuthentication()) {
             AccessControl.Response response = accessControl.authenticate(identity, ip);
             user = response.getId();
             allowedSets = response.getAllowedSets();
@@ -181,7 +181,7 @@ public class OAIResource {
         }
 
         OAIPMH oaipmh = OBJECT_FACTORY.createOAIPMH();
-        try (AutoCloseable throttleLock = config.noThrottle ? new NoThrottleLock() : throttle.lock(user)) {
+        try (AutoCloseable throttleLock = config.isNoThrottle() ? new NoThrottleLock() : throttle.lock(user)) {
             try {
                 log.debug("identity = " + identity);
                 String verb = params.getFirst("verb");
@@ -259,7 +259,7 @@ public class OAIResource {
         long ip = ipToLong(remoteIp);
         String forwardedFor = req.getHeader("X-Forwarded-For");
         if (forwardedFor != null) {
-            for (String allowedNet : config.xForwardedFor.split(" +")) {
+            for (String allowedNet : config.getxForwardedFor().split(" +")) {
                 if (allowedNet.isEmpty()) {
                     continue;
                 }
@@ -332,7 +332,7 @@ public class OAIResource {
         oaipmh.setResponseDate(date);
         RequestType request = oaipmh.getRequest();
         if (request != null) {
-            request.setValue(config.baseUrl);
+            request.setValue(config.getBaseUrl());
         }
         Marshaller marshaller = context.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");

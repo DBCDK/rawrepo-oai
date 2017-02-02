@@ -19,8 +19,9 @@
 package dk.dbc.rawrepo.oai;
 
 import java.time.Instant;
-import java.util.concurrent.ConcurrentHashMap;
-import javax.inject.Singleton;
+import java.util.HashMap;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,11 +31,15 @@ import org.slf4j.LoggerFactory;
  * @author DBC {@literal <dbc.dk>}
  */
 @Singleton
+@Startup
+//@Lock(LockType.WRITE) // Implicit
 public class Throttle {
 
     private static final Logger log = LoggerFactory.getLogger(Throttle.class);
 
-    private static final ConcurrentHashMap<String, Instant> AGENCIES = new ConcurrentHashMap<>();
+//  Since @Lock(WRITE) ConcurrentHashMap isn't necessary
+//  private static final ConcurrentHashMap<String, Instant> AGENCIES = new ConcurrentHashMap<>();
+    private static final HashMap<String, Instant> AGENCIES = new HashMap<>();
 
     /**
      * Construct a lock on agency level

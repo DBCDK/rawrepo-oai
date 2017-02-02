@@ -21,8 +21,11 @@ package dk.dbc.rawrepo.oai;
 import dk.dbc.eeconfig.EEConfig;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
 import javax.inject.Inject;
-import javax.inject.Singleton;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import javax.sql.DataSource;
 import javax.validation.constraints.Min;
 import org.slf4j.Logger;
@@ -33,12 +36,14 @@ import org.slf4j.LoggerFactory;
  * @author DBC {@literal <dbc.dk>}
  */
 @Singleton
+@Startup
+@Lock(LockType.READ)
 public class Config {
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
     @Resource(lookup = C.DATASOURCE)
-    DataSource rawrepo;
+    private DataSource rawrepo;
 
     @PostConstruct
     public void init() {
@@ -48,49 +53,93 @@ public class Config {
     @Inject
     @EEConfig.Name(C.REPOSITORY_NAME)
     @EEConfig.Default(C.REPOSITORY_NAME_DEFAULT)
-    public String repositoryName;
+    private String repositoryName;
 
     @Inject
     @EEConfig.Name(C.BASE_URL)
     @EEConfig.Default(C.BASE_URL_DEFAULT)
-    public String baseUrl;
+    private String baseUrl;
 
     @Inject
     @EEConfig.Name(C.RECORDS_PR_REQUEST)
     @EEConfig.Default(C.RECORDS_PR_REQUEST_DEFAULT)
     @Min(1)
-    public int recordsPrRequest;
+    private int recordsPrRequest;
 
     @Inject
     @EEConfig.Name(C.IDENTIFIERS_PR_REQUEST)
     @EEConfig.Default(C.IDENTIFIERS_PR_REQUEST_DEFAULT)
     @Min(1)
-    public int identifiersPrRequest;
+    private int identifiersPrRequest;
 
     @Inject
     @EEConfig.Name(C.TOKEN_MAX_AGE)
     @EEConfig.Default(C.TOKEN_MAX_AGE_DEFAULT)
     @Min(1)
-    public int tokenMaxAge;
+    private int tokenMaxAge;
 
     @Inject
     @EEConfig.Name(C.FETCH_RECORD_TIMEOUT)
     @EEConfig.Default(C.FETCH_RECORD_TIMEOUT_DEFAULT)
     @Min(1)
-    public long fetchRecordTimeout;
+    private long fetchRecordTimeout;
 
     @Inject
     @EEConfig.Name(C.NO_THROTTLE)
     @EEConfig.Default(C.NO_THROTTLE_DEFAULT)
-    public boolean noThrottle;
+    private boolean noThrottle;
 
     @Inject
     @EEConfig.Name(C.NO_AUTHENTICATION)
     @EEConfig.Default(C.NO_AUTHENTICATION_DEFAULT)
-    public boolean noAuthentication;
+    private boolean noAuthentication;
 
     @Inject
     @EEConfig.Name(C.X_FORWARDED_FOR)
     @EEConfig.Default(C.X_FORWARDED_FOR_DEFAULT)
-    public String xForwardedFor;
+    private String xForwardedFor;
+
+    public static Logger getLog() {
+        return log;
+    }
+
+    public DataSource getRawrepo() {
+        return rawrepo;
+    }
+
+    public String getRepositoryName() {
+        return repositoryName;
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    public int getRecordsPrRequest() {
+        return recordsPrRequest;
+    }
+
+    public int getIdentifiersPrRequest() {
+        return identifiersPrRequest;
+    }
+
+    public int getTokenMaxAge() {
+        return tokenMaxAge;
+    }
+
+    public long getFetchRecordTimeout() {
+        return fetchRecordTimeout;
+    }
+
+    public boolean isNoThrottle() {
+        return noThrottle;
+    }
+
+    public boolean isNoAuthentication() {
+        return noAuthentication;
+    }
+
+    public String getxForwardedFor() {
+        return xForwardedFor;
+    }
 }
