@@ -47,6 +47,7 @@ CREATE INDEX oairecords_time ON oairecords(changed);
 CREATE TABLE oairecordsets (
     pid VARCHAR(128) NOT NULL,
     setSpec VARCHAR(64) NOT NULL,
+    gone BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT oairecordsets_pk PRIMARY KEY (pid, setSpec),
     CONSTRAINT oairecordsets_pid_fk FOREIGN KEY (pid) REFERENCES oairecords (pid),
     CONSTRAINT oairecordsets_setspec_fk FOREIGN KEY (setSpec) REFERENCES oaisets (setSpec)

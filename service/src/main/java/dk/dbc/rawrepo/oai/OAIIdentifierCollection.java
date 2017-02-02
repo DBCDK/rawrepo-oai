@@ -62,7 +62,7 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
     /**
      * Fetch identifiers from database
      *
-     * json argument is object with: null null     {@literal
+     * json argument is object with: null null null null     {@literal
      * f: fromTimestamp*
      * u: untilTimestamp*
      * m: metadataPrefix
@@ -83,7 +83,11 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
         String until = json.getString("u", null);
         String metadataPrefix = json.getString("m", "");
         int offset = json.getInt("o", 0);
-        sb.append("SELECT pid, changed, deleted FROM oairecords JOIN oairecordsets USING (pid) WHERE");
+        sb.append("SELECT pid, changed, deleted");
+        if (set != null) {
+            sb.append(" OR gone");
+        }
+        sb.append(" FROM oairecords JOIN oairecordsets USING (pid) WHERE");
         if (set != null) {
             sb.append(" setSpec = ?");
         } else if (allowedSets.isEmpty()) {
@@ -115,14 +119,18 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
                 sb.append(" DATE_TRUNC('day', changed) <= DATE_TRUNC('day', ?::timestamp AT TIME ZONE 'UTC')");
             }
         }
-        sb.append(" GROUP BY pid ORDER BY changed, pid OFFSET ? LIMIT ?");
+        sb.append(" GROUP BY pid");
+        if (set != null) {
+            sb.append(", gone");
+        }
+        sb.append(" ORDER BY changed, pid OFFSET ? LIMIT ?");
         String query = sb.toString();
         log.debug("query = " + query);
 
         sb = new StringBuilder();
         sb.append("SELECT setSpec FROM oairecordsets WHERE pid = ? AND setSpec IN ('")
                 .append(allowedSets.stream().sorted().collect(Collectors.joining("', '")))
-                .append("') ORDER BY setSpec");
+                .append("') AND NOT gone ORDER BY setSpec");
         String setQuery = sb.toString();
 
         Timestamp last = null;
@@ -151,12 +159,10 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
                     if (row <= limit) {
                         OAIIdentifier oaiRecord = new OAIIdentifier(pid, changed, deleted);
                         add(oaiRecord);
-                        if (!deleted) {
-                            sets.setString(1, pid);
-                            try (ResultSet setsResult = sets.executeQuery()) {
-                                while (setsResult.next()) {
-                                    oaiRecord.add(setsResult.getString(1));
-                                }
+                        sets.setString(1, pid);
+                        try (ResultSet setsResult = sets.executeQuery()) {
+                            while (setsResult.next()) {
+                                oaiRecord.add(setsResult.getString(1));
                             }
                         }
                         if (changed.equals(last)) {

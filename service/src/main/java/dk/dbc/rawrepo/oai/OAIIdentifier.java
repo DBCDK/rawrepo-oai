@@ -54,7 +54,7 @@ public class OAIIdentifier extends ArrayList<String> {
     private static final String SELECT_RECORD_PRE = "SELECT changed, deleted FROM oairecords JOIN oairecordsets USING (pid) WHERE pid = ? AND setSpec IN ('";
     private static final String SELECT_RECORD_POST = "')";
     private static final String SELECT_SET_PRE = "SELECT setSpec FROM oairecordsets WHERE pid = ? AND setSpec IN ('";
-    private static final String SELECT_SET_POST = "') ORDER BY setSpec";
+    private static final String SELECT_SET_POST = "') AND NOT gone ORDER BY setSpec";
 
     private static final ZoneId UTC = ZoneId.of("UTC");
     private static final ObjectFactory OBJECT_FACTORY = new ObjectFactory();

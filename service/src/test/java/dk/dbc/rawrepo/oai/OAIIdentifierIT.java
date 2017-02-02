@@ -92,6 +92,19 @@ public class OAIIdentifierIT {
         assertFalse(pid2.contains("bkm"));
     }
 
+    @Test
+    public void testNotSelectGone() throws Exception {
+        loadRecordsFrom("recordset_1.json");
+        Connection connection = pg.getConnection();
+        try (PreparedStatement stmt = connection.prepareStatement("UPDATE oairecordsets SET gone=TRUE WHERE pid='pid:2' AND setSpec='bkm'")) {
+            stmt.executeUpdate();
+        }
+
+        OAIIdentifier pid2 = OAIIdentifier.fromDb(connection, "pid:2", Arrays.asList("nat", "bkm"));
+        System.out.println("pid2 = " + pid2);
+        assertFalse(pid2.contains("bkm"));
+    }
+
     private void loadRecordsFrom(String... jsons) throws SQLException {
         Connection connection = pg.getConnection();
         connection.prepareStatement("SET TIMEZONE TO 'UTC'").execute();

@@ -111,8 +111,7 @@ public class OAIIdentifierCollectionIT {
     }
 
     /**
-     * Find a record that has both nat & bkm
-     * see that sets don't include bkm
+     * Find a record that has both nat & bkm see that sets don't include bkm
      *
      * @throws Exception just in case
      */
@@ -133,6 +132,52 @@ public class OAIIdentifierCollectionIT {
         System.out.println("id = " + id);
         assertEquals(1, id.size());
         assertEquals("nat", id.get(0));
+    }
+
+    @Test
+    public void testGoneIsDeleted() throws Exception {
+        loadRecordsFrom("recordset_1.json");
+        Connection connection = pg.getConnection();
+
+        try (PreparedStatement stmt = connection.prepareStatement("UPDATE oairecordsets SET gone=TRUE WHERE pid='pid:2' AND setSpec='bkm'")) {
+            stmt.executeUpdate();
+        }
+
+        JsonObject build = Json.createObjectBuilder()
+                .add("s", "bkm")
+                .add("m", "marcx")
+                .build();
+        OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat", "bkm"));
+        recordCollection.fetch(build, 100);
+        OAIIdentifier id = recordCollection.stream()
+                .filter(i -> "pid:2".equals(i.getIdentifier()))
+                .findFirst()
+                .orElseThrow(() -> new OAIException(OAIPMHerrorcodeType.NO_RECORDS_MATCH, "WHAT!"));
+        System.out.println("id = " + id);
+        assertFalse(id.contains("bkm"));
+        assertTrue(id.isDeleted());
+    }
+
+    @Test
+    public void testGoneIsNotDeleted() throws Exception {
+        loadRecordsFrom("recordset_1.json");
+        Connection connection = pg.getConnection();
+
+        try (PreparedStatement stmt = connection.prepareStatement("UPDATE oairecordsets SET gone=TRUE WHERE pid='pid:2' AND setSpec='bkm'")) {
+            stmt.executeUpdate();
+        }
+
+        JsonObject build = Json.createObjectBuilder()
+                .add("m", "marcx")
+                .build();
+        OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat", "bkm"));
+        recordCollection.fetch(build, 100);
+        OAIIdentifier id = recordCollection.stream()
+                .filter(i -> "pid:2".equals(i.getIdentifier()))
+                .findFirst()
+                .orElseThrow(() -> new OAIException(OAIPMHerrorcodeType.NO_RECORDS_MATCH, "WHAT!"));
+        System.out.println("id = " + id);
+        assertFalse(id.contains("bkm"));
     }
 
     @Test
