@@ -107,11 +107,11 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
         if (until != null) {
             sb.append(" AND");
             if (until.contains(".")) {
-                sb.append(" DATE_TRUNC('milliseconds', changed) <= DATE_TRUNC('milliseconds', ?::timestamp) AT TIME ZONE 'UTC'");
+                sb.append(" DATE_TRUNC('milliseconds', changed) <= DATE_TRUNC('milliseconds', ?::timestamp AT TIME ZONE 'UTC')");
             } else if (until.contains("T")) {
-                sb.append(" DATE_TRUNC('second', changed) <= DATE_TRUNC('second', ?::timestamp) AT TIME ZONE 'UTC'");
+                sb.append(" DATE_TRUNC('second', changed) <= DATE_TRUNC('second', ?::timestamp AT TIME ZONE 'UTC')");
             } else {
-                sb.append(" DATE_TRUNC('day', changed) <= DATE_TRUNC('day', ?::timestamp) AT TIME ZONE 'UTC'");
+                sb.append(" DATE_TRUNC('day', changed) <= DATE_TRUNC('day', ?::timestamp AT TIME ZONE 'UTC')");
             }
         }
         sb.append(" GROUP BY pid ORDER BY changed, pid OFFSET ? LIMIT ?");
