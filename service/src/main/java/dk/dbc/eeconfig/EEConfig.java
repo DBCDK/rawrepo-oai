@@ -23,6 +23,7 @@ import javax.validation.constraints.NotNull;
  * @author DBC {@literal <dbc.dk>}
  */
 @Singleton
+@SuppressWarnings("PMD.CollapsibleIfStatements")
 public class EEConfig {
 
     @Target(value = {ElementType.FIELD})

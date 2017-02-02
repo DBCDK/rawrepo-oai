@@ -1,7 +1,6 @@
 package dk.dbc.rawrepo.oai.packing;
 
 
-import dk.dbc.rawrepo.oai.packing.BitInputStream;
 import java.util.Comparator;
 
 /*

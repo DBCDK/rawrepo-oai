@@ -1,9 +1,6 @@
 package dk.dbc.rawrepo.oai.packing;
 
 
-import dk.dbc.rawrepo.oai.packing.BitInputStream;
-import dk.dbc.rawrepo.oai.packing.BitOutputStream;
-import dk.dbc.rawrepo.oai.packing.TextTreeNode;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

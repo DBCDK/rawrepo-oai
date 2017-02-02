@@ -127,9 +127,10 @@ public class OAIIdentifier extends ArrayList<String> {
      *
      * @param connection  database
      * @param identifier  identifier
-     * @param allowedSets
+     * @param allowedSets sets allowed in header
      * @return new OAIIdentifier
      */
+    @SuppressWarnings("SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING")
     public static OAIIdentifier fromDb(Connection connection, String identifier, Collection<String> allowedSets) {
         String setInline = allowedSets.stream()
                 .sorted()

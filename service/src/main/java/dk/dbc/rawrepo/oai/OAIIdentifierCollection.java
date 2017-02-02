@@ -73,6 +73,7 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
      * @param limit how many records to fetch
      * @return json as described or null if no more records
      */
+    @SuppressWarnings("SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING")
     public JsonObject fetch(JsonObject json, int limit) {
         StringBuilder sb = new StringBuilder();
         String set = json.getString("s", null);
