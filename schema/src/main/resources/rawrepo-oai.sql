@@ -13,8 +13,8 @@ CREATE TABLE oaisets (
     CONSTRAINT oaisets_pk PRIMARY KEY (setSpec)
 );
 
-INSERT INTO oaisets (setSpec, setName, description) VALUES ('bkm', 'BiblioteksKatalogiseret Materiale', 'Noget on hvad det er');
-INSERT INTO oaisets (setSpec, setName, description) VALUES ('nat', 'National Bibliografi', 'Noget mere om hvad det er');
+INSERT INTO oaisets (setSpec, setName, description) VALUES ('nat', 'NationalBibliografi', 'Alt det der som er udgivet. Offentligt tilgængeligt.');
+INSERT INTO oaisets (setSpec, setName, description) VALUES ('bkm', 'BiblioteksKatalogiseret Materiale', 'Betalingsprodukt - kræver adgangskode.');
 
 CREATE TABLE oairecords (
     pid VARCHAR(128) NOT NULL,
