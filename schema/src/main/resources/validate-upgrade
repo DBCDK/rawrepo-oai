@@ -1,0 +1,136 @@
+#!/bin/bash
+
+cd "${0%/*}"
+
+name=rawrepo-oai
+tmp=../../../target/validate-upgrade
+mkdir -p $tmp
+rm -f $tmp/log
+
+if [ $# = 0 ]; then 
+    version=`ls -f $name-*.sql | sed 's/[^0-9]//g' | sort -n | tail -n 1`
+    version=${version//[^0-9]/}
+
+    if [ $name-$version.sql -ot $name.sql ]; then
+	echo "updating latest stable ($version) from current"
+	(echo '\set ON_ERROR_STOP' ; cat $name.sql) > $name-$version.sql
+    fi
+else
+    version=$(($1))
+fi
+
+
+V="`ls -f /usr/lib/postgresql/ | sort -n | tail -n 1`"
+export PGHOST=/tmp/$$
+
+trap '/usr/lib/postgresql/$V/bin/pg_ctl stop -D $PGHOST/data >>$tmp/log 2>&1 ; rm -rf $PGHOST' EXIT
+
+if [ ! -e $name-$version.sql ]; then
+    (echo '\set ON_ERROR_STOP' ; cat $name.sql) > $name-$version.sql
+fi
+
+if [ ! -e $tmp/$name-$version.schema ] ||
+   [ $tmp/$name-$version.schema -ot $name-$version.sql ]; then
+    echo "building $name-$version.schema"
+    (
+	rm -rf $PGHOST
+	/usr/lib/postgresql/$V/bin/pg_ctl initdb -D $PGHOST/data
+	/usr/lib/postgresql/$V/bin/pg_ctl start -w -D $PGHOST/data -l $PGHOST/log -o "-h '' -k $PGHOST" 1>&2
+	cat - $name-$version.sql <<-EOT | psql postgres
+\set ON_ERROR_STOP
+CREATE DATABASE data;
+CREATE ROLE duser WITH PASSWORD 'dpass' LOGIN SUPERUSER;
+GRANT ALL PRIVILEGES ON DATABASE data TO duser;
+\\connect data
+EOT
+	/usr/lib/postgresql/$V/bin/pg_dump -s -f $tmp/$name-$version.schema data
+	/usr/lib/postgresql/$V/bin/pg_dump -a --inserts -t version data | grep '^INSERT INTO ' | sort > $tmp/$name-$version.content
+	/usr/lib/postgresql/$V/bin/pg_ctl stop -D $PGHOST/data
+	rm -rf $PGHOST
+    ) >>$tmp/log 2>&1
+    if grep -q ^ERROR: $tmp/log; then
+	echo "SQL ERROR see $tmp/log"
+	rm -f $tmp/$name-$version.schema
+	exit 1
+    fi
+fi
+
+if [ ! -e $name-$version-upgrade.sql ]; then
+    sed -e '1,/^__SQL__/d' -e 's/@VERSION@/'$version'/g' $0 > $name-$version-upgrade.sql
+fi
+
+
+if [ ! -e $tmp/$name-$version-upgrade.schema ] ||
+   [ $tmp/$name-$version-upgrade.schema -ot $name-$(($version - 1)).sql ] ||
+   [ $tmp/$name-$version-upgrade.schema -ot $name-$version-upgrade.sql ]; then
+    echo "building $name-$version-upgrade.schema"
+    (
+	rm -rf $PGHOST
+	/usr/lib/postgresql/$V/bin/pg_ctl initdb -D $PGHOST/data
+	/usr/lib/postgresql/$V/bin/pg_ctl start -w -D $PGHOST/data -l $PGHOST/log -o "-h '' -k $PGHOST" 1>&2
+	cat - $name-$(($version - 1)).sql $name-$version-upgrade.sql <<-EOT | psql postgres
+\set ON_ERROR_STOP
+CREATE DATABASE data;
+CREATE ROLE duser WITH PASSWORD 'dpass' LOGIN SUPERUSER;
+GRANT ALL PRIVILEGES ON DATABASE data TO duser;
+\\connect data
+EOT
+	/usr/lib/postgresql/$V/bin/pg_dump -s -f $tmp/$name-$version-upgrade.schema data
+	/usr/lib/postgresql/$V/bin/pg_dump -a --inserts -t version data | grep '^INSERT INTO ' | sort > $tmp/$name-$version-upgrade.content
+	/usr/lib/postgresql/$V/bin/pg_ctl stop -D $PGHOST/data
+	rm -rf $PGHOST
+    ) >>$tmp/log 2>&1
+    if grep -q ^ERROR: $tmp/log; then
+	echo "SQL ERROR see $tmp/log" >&2
+	rm -f $tmp/$name-$version-upgrade.schema
+	exit 1
+    fi
+fi
+
+java -jar tools/apgdiff-2.4.jar --ignore-start-with $tmp/$name-$version-upgrade.schema $tmp/$name-$version.schema
+
+if ! cmp -s $tmp/$name-$version.content $tmp/$name-$version-upgrade.content; then
+    echo "Content Mismatch"
+    diff -y $tmp/$name-$version.content $tmp/$name-$version-upgrade.content
+    exit 1
+fi
+
+
+
+exit 0
+
+
+__SQL__
+--
+-- ENSURE ONLY UPGRADING PREVIOUS VERSION
+--
+\set ON_ERROR_STOP
+
+BEGIN TRANSACTION;
+
+DO
+$$
+DECLARE
+  currentversion INTEGER = @VERSION@;
+  brokenversion INTEGER = 0;
+  oldversion INTEGER;
+BEGIN
+  SELECT MAX(version) INTO oldversion FROM version;
+  IF (oldversion <> (currentversion-1)) THEN
+    RAISE EXCEPTION 'Expected schema version % found %', (currentversion-1), oldversion;
+  END IF;
+  INSERT INTO version VALUES(currentversion);
+  DELETE FROM version WHERE version <= brokenversion;
+END
+$$;
+
+
+--
+--
+--
+
+
+--
+--
+--
+COMMIT;

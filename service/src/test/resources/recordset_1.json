@@ -1,0 +1,9 @@
+[
+  {"pid":"pid:1", "deleted":true, "sets":["nat"]},
+  {"pid":"pid:2", "deleted":false, "sets":["nat", "bkm"]},
+  {"pid":"pid:3", "changed":"2017-01-02T00:00:00.1Z", "deleted":false, "sets":["nat"]},
+  {"pid":"pid:4", "changed":"2017-01-02T00:00:00.1Z", "deleted":false, "sets":["nat"]},
+  {"pid":"pid:5", "changed":"2017-01-02T00:00:00.1Z", "deleted":false, "sets":["nat", "bkm"]},
+  {"pid":"pid:6", "changed":"2017-01-01T00:00:00Z", "deleted":false, "sets":["nat"]},
+  {"pid":"pid:7", "changed":"2017-01-01T00:00:00Z", "deleted":false, "sets":["nat"]}
+]

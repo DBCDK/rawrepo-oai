@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>dk.dbc</groupId>
+        <artifactId>rawrepo-oai</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>rawrepo-oai-schema</artifactId>
+    <packaging>jar</packaging>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+                <includes>
+                    <include>*.sql</include>
+                </includes>
+                <excludes>
+                    <exclude>*0*</exclude>
+                    <exclude>*1*</exclude>
+                    <exclude>*2*</exclude>
+                    <exclude>*3*</exclude>
+                    <exclude>*4*</exclude>
+                    <exclude>*5*</exclude>
+                    <exclude>*6*</exclude>
+                    <exclude>*7*</exclude>
+                    <exclude>*8*</exclude>
+                    <exclude>*9*</exclude>
+                </excludes>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <artifactId>exec-maven-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+                <executions>
+                    <execution>
+                        <id>verify-schema</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${basedir}/src/main/resources</workingDirectory>
+                            <executable>${basedir}/src/main/resources/validate-upgrade</executable>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
