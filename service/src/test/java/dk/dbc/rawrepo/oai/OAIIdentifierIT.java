@@ -19,7 +19,6 @@
 package dk.dbc.rawrepo.oai;
 
 import dk.dbc.commons.testutils.postgres.connection.PostgresITConnection;
-import dk.dbc.oai.pmh.OAIPMHerrorcodeType;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,10 +27,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
-import java.util.stream.Collectors;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
@@ -47,11 +43,11 @@ import static org.junit.Assert.*;
  *
  * @author DBC {@literal <dbc.dk>}
  */
-public class OAIIdentifierCollectionIT {
+public class OAIIdentifierIT {
 
     protected PostgresITConnection pg;
 
-    public OAIIdentifierCollectionIT() throws SQLException {
+    public OAIIdentifierIT() throws SQLException {
         pg = null;
 
     }
@@ -68,88 +64,32 @@ public class OAIIdentifierCollectionIT {
     }
 
     @Test
-    public void testContinue() throws Exception {
+    public void testAllowed() throws Exception {
         loadRecordsFrom("recordset_1.json");
         Connection connection = pg.getConnection();
 
-        JsonObject build = Json.createObjectBuilder()
-                .add("s", "nat")
-                .add("u", "2017-02-20")
-                .add("m", "marcx")
-                .build();
+        OAIIdentifier pid2 = OAIIdentifier.fromDb(connection, "pid:2", Arrays.asList("bkm"));
+        System.out.println("pid2 = " + pid2);
 
-        OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat", "bkm"));
-        JsonObject cont = recordCollection.fetch(build, 4);
-        System.out.println("recordCollection = " + recordCollection);
-        System.out.println("cont = " + cont);
-        System.out.println("cont = " + ResumptionToken.encode(cont, 48));
+    }
 
-        assertNotNull(cont);
-        recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat", "bkm"));
-        cont = recordCollection.fetch(cont, 4);
-        System.out.println("recordCollection = " + recordCollection);
-        System.out.println("cont = " + cont);
+    @Test(expected = OAIException.class)
+    public void testNotAllowed() throws Exception {
+        loadRecordsFrom("recordset_1.json");
+        Connection connection = pg.getConnection();
 
-        assertNull(cont);
+        OAIIdentifier pid1 = OAIIdentifier.fromDb(connection, "pid:1", Arrays.asList("bkm"));
+        System.out.println("pid1 = " + pid1);
     }
 
     @Test
-    public void testNoneDuplicates() throws Exception {
+    public void testOnlySetsShownThatAreAllowed() throws Exception {
         loadRecordsFrom("recordset_1.json");
         Connection connection = pg.getConnection();
 
-        JsonObject build = Json.createObjectBuilder()
-                .add("m", "marcx")
-                .build();
-        OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat", "bkm"));
-        recordCollection.fetch(build, 100);
-        System.out.println("recordCollection = " + recordCollection);
-        Set<String> uniq = recordCollection.stream()
-                .map(id -> id.getIdentifier())
-                .collect(Collectors.toSet());
-        assertEquals(uniq.size(), recordCollection.size());
-    }
-
-    /**
-     * Find a record that has both nat & bkm
-     * see that sets don't include bkm
-     *
-     * @throws Exception just in case
-     */
-    @Test
-    public void testNoAccess() throws Exception {
-        loadRecordsFrom("recordset_1.json");
-        Connection connection = pg.getConnection();
-
-        JsonObject build = Json.createObjectBuilder()
-                .add("m", "marcx")
-                .build();
-        OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat"));
-        recordCollection.fetch(build, 100);
-        OAIIdentifier id = recordCollection.stream()
-                .filter(i -> "pid:2".equals(i.getIdentifier()))
-                .findFirst()
-                .orElseThrow(() -> new OAIException(OAIPMHerrorcodeType.NO_RECORDS_MATCH, "WHAT!"));
-        System.out.println("id = " + id);
-        assertEquals(1, id.size());
-        assertEquals("nat", id.get(0));
-    }
-
-    @Test
-    public void testUnknownFormat() throws Exception {
-        loadRecordsFrom("recordset_1.json");
-        Connection connection = pg.getConnection();
-
-        JsonObject build = Json.createObjectBuilder()
-                .add("s", "nat")
-                .add("u", "2017-02-20")
-                .add("m", "???")
-                .build();
-
-        OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat", "bkm"));
-        JsonObject cont = recordCollection.fetch(build, 4);
-        assertNull(cont);
-        assertTrue(recordCollection.isEmpty());
+        OAIIdentifier pid2 = OAIIdentifier.fromDb(connection, "pid:2", Arrays.asList("nat"));
+        System.out.println("pid2 = " + pid2);
+        assertFalse(pid2.contains("bkm"));
     }
 
     private void loadRecordsFrom(String... jsons) throws SQLException {

@@ -31,6 +31,8 @@ import java.sql.Timestamp;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,8 +50,10 @@ public class OAIIdentifier extends ArrayList<String> {
 
     private static final long serialVersionUID = 1480719915786481639L;
 
-    private static final String SELECT_RECORD = "SELECT changed, deleted FROM oairecords WHERE pid = ?";
-    private static final String SELECT_SET = "SELECT setSpec FROM oairecordsets WHERE pid = ? ORDER BY setSpec";
+    private static final String SELECT_RECORD_PRE = "SELECT changed, deleted FROM oairecords JOIN oairecordsets USING (pid) WHERE pid = ? AND setSpec IN ('";
+    private static final String SELECT_RECORD_POST = "')";
+    private static final String SELECT_SET_PRE = "SELECT setSpec FROM oairecordsets WHERE pid = ? AND setSpec IN ('";
+    private static final String SELECT_SET_POST = "') ORDER BY setSpec";
 
     private static final ZoneId UTC = ZoneId.of("UTC");
     private static final ObjectFactory OBJECT_FACTORY = new ObjectFactory();
@@ -121,17 +125,32 @@ public class OAIIdentifier extends ArrayList<String> {
     /**
      * Pull a single identifier from the database
      *
-     * @param connection database
-     * @param identifier identifier
+     * @param connection  database
+     * @param identifier  identifier
+     * @param allowedSets
      * @return new OAIIdentifier
      */
-    public static OAIIdentifier fromDb(Connection connection, String identifier) {
+    public static OAIIdentifier fromDb(Connection connection, String identifier, Collection<String> allowedSets) {
+        String setInline = allowedSets.stream()
+                .sorted()
+                .collect(Collectors.joining("', '"));
+        String recordQuery = new StringBuilder()
+                .append(SELECT_RECORD_PRE)
+                .append(setInline)
+                .append(SELECT_RECORD_POST)
+                .toString();
+        String setQuery = new StringBuilder()
+                .append(SELECT_SET_PRE)
+                .append(setInline)
+                .append(SELECT_SET_POST)
+                .toString();
+
         OAIIdentifier oaiIdentifier;
-        try (PreparedStatement stmt = connection.prepareStatement(SELECT_RECORD)) {
+        try (PreparedStatement stmt = connection.prepareStatement(recordQuery)) {
             stmt.setString(1, identifier);
             try (ResultSet resultSet = stmt.executeQuery()) {
                 if (!resultSet.next()) {
-                    throw new OAIException(OAIPMHerrorcodeType.ID_DOES_NOT_EXIST, "No matching identifier");
+                    throw new OAIException(OAIPMHerrorcodeType.ID_DOES_NOT_EXIST, "No matching identifier or needs authentication");
                 }
                 oaiIdentifier = new OAIIdentifier(identifier, resultSet.getTimestamp(1), resultSet.getBoolean(2));
             }
@@ -141,7 +160,7 @@ public class OAIIdentifier extends ArrayList<String> {
             throw new ServerErrorException(Response.Status.INTERNAL_SERVER_ERROR, "Internal Error");
         }
         if (!oaiIdentifier.isDeleted()) {
-            try (PreparedStatement stmt = connection.prepareStatement(SELECT_SET)) {
+            try (PreparedStatement stmt = connection.prepareStatement(setQuery)) {
                 stmt.setString(1, identifier);
                 try (ResultSet resultSet = stmt.executeQuery()) {
                     while (resultSet.next()) {
@@ -159,7 +178,7 @@ public class OAIIdentifier extends ArrayList<String> {
 
     @Override
     public String toString() {
-        return "OAIIdentifier{" + "identifier=" + identifier + "timestamp=" + timestamp + "; deleted=" + deleted + "; sets=" + String.join(", ", this) + '}';
+        return "OAIIdentifier{" + "identifier=" + identifier + "; timestamp=" + timestamp + "; deleted=" + deleted + "; sets=" + String.join(", ", this) + '}';
     }
 
 }

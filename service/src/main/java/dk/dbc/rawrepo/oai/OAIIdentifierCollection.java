@@ -61,8 +61,7 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
     /**
      * Fetch identifiers from database
      *
-     * json argument is object with:
-     * {@literal
+     * json argument is object with: null null     {@literal
      * f: fromTimestamp*
      * u: untilTimestamp*
      * m: metadataPrefix
@@ -70,7 +69,7 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
      * s: set*
      * }
      *
-     * @param json as described
+     * @param json  as described
      * @param limit how many records to fetch
      * @return json as described or null if no more records
      */
@@ -113,12 +112,20 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
                 sb.append(" DATE_TRUNC('day', changed) <= DATE_TRUNC('day', ?::timestamp)");
             }
         }
-        sb.append(" ORDER BY changed, pid OFFSET ? LIMIT ?");
+        sb.append(" GROUP BY pid ORDER BY changed, pid OFFSET ? LIMIT ?");
         String query = sb.toString();
         log.debug("query = " + query);
+
+        sb = new StringBuilder();
+        sb.append("SELECT setSpec FROM oairecordsets WHERE pid = ? AND setSpec IN ('")
+                .append(allowedSets.stream().sorted().collect(Collectors.joining("', '")))
+                .append("') ORDER BY setSpec");
+        String setQuery = sb.toString();
+
         Timestamp last = null;
         int row = 0;
-        try (final PreparedStatement stmt = connection.prepareStatement(query) ; final PreparedStatement sets = connection.prepareStatement("SELECT setSpec FROM oairecordsets WHERE pid = ? ORDER BY setSpec")) {
+        try (PreparedStatement stmt = connection.prepareStatement(query) ;
+             PreparedStatement sets = connection.prepareStatement(setQuery)) {
             int i = 1;
             if (set != null) {
                 stmt.setString(i++, set);
@@ -132,7 +139,7 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
             }
             stmt.setInt(i++, offset);
             stmt.setInt(i++, limit + 1);
-            try (final ResultSet resultSet = stmt.executeQuery()) {
+            try (ResultSet resultSet = stmt.executeQuery()) {
                 while (resultSet.next()) {
                     row++;
                     String pid = resultSet.getString(1);
@@ -143,7 +150,7 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
                         add(oaiRecord);
                         if (!deleted) {
                             sets.setString(1, pid);
-                            try (final ResultSet setsResult = sets.executeQuery()) {
+                            try (ResultSet setsResult = sets.executeQuery()) {
                                 while (setsResult.next()) {
                                     oaiRecord.add(setsResult.getString(1));
                                 }

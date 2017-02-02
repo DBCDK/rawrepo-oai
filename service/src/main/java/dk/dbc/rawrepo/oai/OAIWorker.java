@@ -143,7 +143,7 @@ public class OAIWorker {
         try {
             GetRecordType getRecord = OBJECT_FACTORY.createGetRecordType();
 
-            OAIIdentifier oaiIdentifier = OAIIdentifier.fromDb(connection, identifier);
+            OAIIdentifier oaiIdentifier = OAIIdentifier.fromDb(connection, identifier, allowedSets);
             List<RecordType> records = fetchRecordContent(Arrays.asList(oaiIdentifier), metadataPrefix);
             if (records.isEmpty()) {
                 log.error("Somehow the record: " + identifier + " doesn't get content");
