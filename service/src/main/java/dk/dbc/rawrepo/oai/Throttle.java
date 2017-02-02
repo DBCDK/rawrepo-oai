@@ -46,7 +46,7 @@ public class Throttle {
         return new Lock(agency);
     }
 
-    private class Lock implements AutoCloseable {
+    private static class Lock implements AutoCloseable {
 
         private final String agency;
 

@@ -23,6 +23,7 @@ import dk.dbc.oai.pmh.OAIPMHerrorcodeType;
 import dk.dbc.oai.pmh.ObjectFactory;
 import dk.dbc.oai.pmh.RecordType;
 import dk.dbc.oai.pmh.StatusType;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -130,7 +131,7 @@ public class OAIIdentifier extends ArrayList<String> {
      * @param allowedSets sets allowed in header
      * @return new OAIIdentifier
      */
-    @SuppressWarnings("SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING")
+    @SuppressFBWarnings("SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING")
     public static OAIIdentifier fromDb(Connection connection, String identifier, Collection<String> allowedSets) {
         String setInline = allowedSets.stream()
                 .sorted()

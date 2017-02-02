@@ -165,6 +165,8 @@ public class OAIResource {
                 case "false":
                     indent = false;
                     break;
+                default:
+                    break;
             }
         }
 

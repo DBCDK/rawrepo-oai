@@ -18,6 +18,8 @@
  */
 package dk.dbc.rawrepo.oai;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,10 +29,12 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.persistence.Transient;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +48,7 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
     private static final Logger log = LoggerFactory.getLogger(OAIIdentifierCollection.class);
     private static final long serialVersionUID = -6784746125519667600L;
 
-    private final Connection connection;
+    private transient final Connection connection;
     private final Collection<String> allowedSets;
 
     /**
@@ -73,7 +77,7 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
      * @param limit how many records to fetch
      * @return json as described or null if no more records
      */
-    @SuppressWarnings("SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING")
+    @SuppressFBWarnings("SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING")
     public JsonObject fetch(JsonObject json, int limit) {
         StringBuilder sb = new StringBuilder();
         String set = json.getString("s", null);
