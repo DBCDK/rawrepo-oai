@@ -1,6 +1,6 @@
 [rawrepo-oai]
-repository-name = "${NAME|DBC OAI}"
-base-url = ${EXPOSED_URL|http://oai.dbc.dk/}
+repository-name = "${REPOSITORY_NAME|DBC OAI}"
+base-url = ${BASE_URL|}
 records-pr-request = ${RECORDS_PR_REQUEST|10}
 identifiers-pr-request = ${IDENTIFIERS_PR_REQUEST|10}
 token-max-age = ${TOKEN_MAX_AGE|8}
