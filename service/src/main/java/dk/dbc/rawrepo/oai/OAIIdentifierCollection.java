@@ -83,11 +83,7 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
         String until = json.getString("u", null);
         String metadataPrefix = json.getString("m", "");
         int offset = json.getInt("o", 0);
-        sb.append("SELECT pid, changed, deleted");
-        if (set != null) {
-            sb.append(" OR gone");
-        }
-        sb.append(" FROM oairecords JOIN oairecordsets USING (pid) WHERE");
+        sb.append("SELECT pid, changed, deleted FROM oairecords JOIN oairecordsets USING (pid) WHERE");
         if (set != null) {
             sb.append(" setSpec = ?");
         } else if (allowedSets.isEmpty()) {
@@ -158,13 +154,16 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
                     Boolean deleted = resultSet.getBoolean(3);
                     if (row <= limit) {
                         OAIIdentifier oaiRecord = new OAIIdentifier(pid, changed, deleted);
-                        add(oaiRecord);
                         sets.setString(1, pid);
                         try (ResultSet setsResult = sets.executeQuery()) {
                             while (setsResult.next()) {
                                 oaiRecord.add(setsResult.getString(1));
                             }
                         }
+                        if(oaiRecord.isEmpty() && !oaiRecord.isDeleted()) {
+                            oaiRecord = new OAIIdentifier(pid, changed, true);
+                        }
+                        add(oaiRecord);
                         if (changed.equals(last)) {
                             offset++;
                         } else {

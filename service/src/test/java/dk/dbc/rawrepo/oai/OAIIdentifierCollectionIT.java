@@ -139,7 +139,7 @@ public class OAIIdentifierCollectionIT {
         loadRecordsFrom("recordset_1.json");
         Connection connection = pg.getConnection();
 
-        try (PreparedStatement stmt = connection.prepareStatement("UPDATE oairecordsets SET gone=TRUE WHERE pid='pid:2' AND setSpec='bkm'")) {
+        try (PreparedStatement stmt = connection.prepareStatement("UPDATE oairecordsets SET gone=TRUE WHERE pid='pid:2' AND setSpec='nat'")) {
             stmt.executeUpdate();
         }
 
@@ -147,14 +147,14 @@ public class OAIIdentifierCollectionIT {
                 .add("s", "bkm")
                 .add("m", "marcx")
                 .build();
-        OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat", "bkm"));
+        OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat"));
         recordCollection.fetch(build, 100);
         OAIIdentifier id = recordCollection.stream()
                 .filter(i -> "pid:2".equals(i.getIdentifier()))
                 .findFirst()
                 .orElseThrow(() -> new OAIException(OAIPMHerrorcodeType.NO_RECORDS_MATCH, "WHAT!"));
         System.out.println("id = " + id);
-        assertFalse(id.contains("bkm"));
+        assertTrue(id.isEmpty());
         assertTrue(id.isDeleted());
     }
 

@@ -105,6 +105,20 @@ public class OAIIdentifierIT {
         assertFalse(pid2.contains("bkm"));
     }
 
+    @Test
+    public void testAllGoneIsDeleted() throws Exception {
+        loadRecordsFrom("recordset_1.json");
+        Connection connection = pg.getConnection();
+        try (PreparedStatement stmt = connection.prepareStatement("UPDATE oairecordsets SET gone=TRUE WHERE pid='pid:2' AND setSpec='nat'")) {
+            stmt.executeUpdate();
+        }
+
+        OAIIdentifier pid2 = OAIIdentifier.fromDb(connection, "pid:2", Arrays.asList("nat"));
+        System.out.println("pid2 = " + pid2);
+        assertTrue(pid2.isEmpty());
+        assertTrue(pid2.isDeleted());
+    }
+
     private void loadRecordsFrom(String... jsons) throws SQLException {
         Connection connection = pg.getConnection();
         connection.prepareStatement("SET TIMEZONE TO 'UTC'").execute();

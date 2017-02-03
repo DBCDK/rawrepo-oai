@@ -148,13 +148,15 @@ public class OAIIdentifier extends ArrayList<String> {
                 .toString();
 
         OAIIdentifier oaiIdentifier;
+        Timestamp timestamp;
         try (PreparedStatement stmt = connection.prepareStatement(recordQuery)) {
             stmt.setString(1, identifier);
             try (ResultSet resultSet = stmt.executeQuery()) {
                 if (!resultSet.next()) {
                     throw new OAIException(OAIPMHerrorcodeType.ID_DOES_NOT_EXIST, "No matching identifier or needs authentication");
                 }
-                oaiIdentifier = new OAIIdentifier(identifier, resultSet.getTimestamp(1), resultSet.getBoolean(2));
+                timestamp = resultSet.getTimestamp(1);
+                oaiIdentifier = new OAIIdentifier(identifier, timestamp, resultSet.getBoolean(2));
             }
         } catch (SQLException ex) {
             log.error("Exception: " + ex.getMessage());
@@ -173,6 +175,9 @@ public class OAIIdentifier extends ArrayList<String> {
                 log.error("Exception: " + ex.getMessage());
                 log.debug("Exception:", ex);
                 throw new ServerErrorException(Response.Status.INTERNAL_SERVER_ERROR, "Internal Error");
+            }
+            if (oaiIdentifier.isEmpty()) {
+                oaiIdentifier = new OAIIdentifier(identifier, timestamp, true);
             }
         }
         return oaiIdentifier;
