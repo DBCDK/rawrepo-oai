@@ -393,10 +393,11 @@ public class OAIResource {
     }
 
     private static final Pattern ENV_MATCHER = Pattern.compile("\\$\\{(\\w+)(?::(\\w+))?(?:\\|((?:[^\\}\\\\]|\\.)*))?\\}");
+
     private Response sendIndexHtml() {
         StringBuffer html = new StringBuffer();
         Matcher matcher = ENV_MATCHER.matcher(indexHtml);
-        while(matcher.find()) {
+        while (matcher.find()) {
             String content;
             switch (matcher.group(1)) {
                 case "base_url":
@@ -408,11 +409,13 @@ public class OAIResource {
                 default:
                     content = "UNKNOWN VARIABLE";
             }
-            if(content == null)
+            if (content == null) {
                 content = "";
-            if(content.isEmpty() && matcher.group(2) != null)
+            }
+            if (content.isEmpty() && matcher.group(2) != null) {
                 content = matcher.group(2);
-            if(matcher.group(3) != null) {
+            }
+            if (matcher.group(3) != null) {
                 switch (matcher.group(3)) {
                     case "html":
                         content = HTML_ESCAPE.replace(content);
@@ -434,21 +437,23 @@ public class OAIResource {
     }
 
     private static final RegexMatcher HTML_ESCAPE = new RegexMatcher("[<>&]", m -> {
-        switch (m.group()) {
-            case "<":
-                return "&lt;";
-            case ">":
-                return "&gt;";
-            case "&":
-                return "&amp;";
-            default:
-                return m.group();
-        }
-    });
+                                                                 switch (m.group()) {
+                                                                     case "<":
+                                                                         return "&lt;";
+                                                                     case ">":
+                                                                         return "&gt;";
+                                                                     case "&":
+                                                                         return "&amp;";
+                                                                     default:
+                                                                         return m.group();
+                                                                 }
+                                                             });
 
     private static class RegexMatcher {
+
         private final Pattern pattern;
         private final Function<Matcher, String> func;
+
         public RegexMatcher(String pattern, Function<Matcher, String> func) {
             this.pattern = Pattern.compile(pattern);
             this.func = func;
@@ -457,7 +462,7 @@ public class OAIResource {
         public String replace(String text) {
             Matcher matcher = pattern.matcher(text);
             StringBuffer sb = new StringBuffer();
-            while(matcher.find()) {
+            while (matcher.find()) {
                 matcher.appendReplacement(sb, func.apply(matcher));
             }
             matcher.appendTail(sb);
@@ -465,7 +470,6 @@ public class OAIResource {
         }
 
     }
-
 
     /**
      * Dummy autoclosable, for not locking in throttle object
