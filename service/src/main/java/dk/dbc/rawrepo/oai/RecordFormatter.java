@@ -20,7 +20,13 @@ package dk.dbc.rawrepo.oai;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Timer;
+import dk.dbc.eeconfig.EEConfig;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
 import javax.ejb.Lock;
@@ -28,6 +34,9 @@ import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +52,11 @@ public class RecordFormatter {
     private static final Logger log = LoggerFactory.getLogger(RecordFormatter.class);
 
     @Inject
+    @EEConfig.Name(C.FORMAT_SERVICE)
+    @EEConfig.Default(C.FORMAT_SERVICE_DEFAULT)
+    String formatService;
+
+    @Inject
     Timer recordsFetchedTotal;
 
     @Inject
@@ -53,11 +67,11 @@ public class RecordFormatter {
 
     public static class RecordWithContent {
 
-        private final OAIIdentifier identifier;
+        private final OAIIdentifier oaiIdentifier;
         private final String content;
 
-        private RecordWithContent(OAIIdentifier identifier, String content) {
-            this.identifier = identifier;
+        private RecordWithContent(OAIIdentifier oaiIdentifier, String content) {
+            this.oaiIdentifier = oaiIdentifier;
             this.content = content;
         }
 
@@ -66,8 +80,8 @@ public class RecordFormatter {
          *
          * @return identifier
          */
-        public OAIIdentifier getIdentifier() {
-            return identifier;
+        public OAIIdentifier getOAIIdentifier() {
+            return oaiIdentifier;
         }
 
         /**
@@ -79,28 +93,59 @@ public class RecordFormatter {
             return content;
         }
     }
+    private static final Pattern ENV_MATCHER = Pattern.compile("\\$\\{(\\w+)\\}");
 
     /**
      * Fetch a record
      *
      * @param identifier     what to get
      * @param metadataPrefix fetch of record
+     * @param allowedSets    what sets a client is allowed to see
      * @return RecordWithContent (OAIIdentifier, String)
      */
     @Asynchronous
-    public Future<RecordWithContent> fetch(OAIIdentifier identifier, String metadataPrefix) {
+    public Future<RecordWithContent> fetch(OAIIdentifier identifier, String metadataPrefix, Set<String> allowedSets) {
         if (identifier.isDeleted()) {
             log.info("Not fetching. record is deleted");
             return new AsyncResult<>(new RecordWithContent(identifier, null));
         }
         try (Timer.Context time = recordsFetchedTotal.time()) {
             try {
-                log.info("Pre Sleep");
-                Thread.sleep(1000);
-                log.info("Post Sleep");
-            } catch (InterruptedException ex) {
+                StringBuffer sb = new StringBuffer();
+                Matcher matcher = ENV_MATCHER.matcher(formatService);
+                while (matcher.find()) {
+                    String content;
+                    switch (matcher.group(1)) {
+                        case "id":
+                            content = identifier.getIdentifier();
+                            break;
+                        case "format":
+                            content = metadataPrefix;
+                            break;
+                        case "sets":
+                            content = String.join(",", allowedSets);
+                            break;
+                        default:
+                            content = "";
+                            break;
+                    }
+                    matcher.appendReplacement(sb, URLEncoder.encode(content, "UTF-8"));
+                }
+                matcher.appendTail(sb);
+                String request = sb.toString();
+
+                log.info("Fetching record: " + request);
+                Client client = ClientBuilder.newClient();
+                String content = client.target(request)
+                        .request(MediaType.APPLICATION_XML)
+                        .get(String.class);
+                log.trace("content for " + identifier.getIdentifier() + " is: " + content);
+                return new AsyncResult<>(new RecordWithContent(identifier, content));
+            } catch (RuntimeException | UnsupportedEncodingException ex) {
+                log.error("Exception: " + ex.getMessage());
+                log.debug("Exception: ", ex);
+                return new AsyncResult<>(new RecordWithContent(identifier, null));
             }
-            return new AsyncResult<>(new RecordWithContent(identifier, "<record xmlns=\"info:bar\"><foo/><bar>" + identifier.getIdentifier() + "</bar></record>"));
         }
     }
 }

@@ -62,4 +62,7 @@ public class C {
     public static final String FORS_RIGHTS_RULES = "fors-rights-rules";
     public static final String FORS_RIGHTS_RULES_DEFAULT = "netpunkt.dk,500=bkm";
 
+    public static final String FORMAT_SERVICE = "format-service";
+    public static final String FORMAT_SERVICE_DEFAULT = "http://127.0.0.1/format.php?id=${id}&format=${format}&sets=${sets}";
+
 }

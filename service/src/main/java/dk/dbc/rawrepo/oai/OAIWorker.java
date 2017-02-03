@@ -316,7 +316,7 @@ public class OAIWorker {
      */
     private List<RecordType> fetchRecordContent(List<OAIIdentifier> collection, String metadataPrefix) {
         List<Future<RecordFormatter.RecordWithContent>> futures = collection.stream()
-                .map(id -> recordFormatter.fetch(id, metadataPrefix))
+                .map(id -> recordFormatter.fetch(id, metadataPrefix, allowedSets))
                 .collect(Collectors.toList());
         try {
             Instant timeout = Instant.now().plus(config.getFetchRecordTimeout(), ChronoUnit.SECONDS);
@@ -325,10 +325,15 @@ public class OAIWorker {
                         try {
                             long until = Math.max(0, Instant.now().until(timeout, ChronoUnit.SECONDS));
                             RecordFormatter.RecordWithContent rec = future.get(until, TimeUnit.SECONDS);
-                            RecordType record = rec.getIdentifier().toRecord();
-                            if (!rec.getIdentifier().isDeleted()) {
+                            RecordType record = rec.getOAIIdentifier().toRecord();
+                            if (!rec.getOAIIdentifier().isDeleted()) {
                                 MetadataType metadata = OBJECT_FACTORY.createMetadataType();
-                                Element element = stringToElement(rec.getContent());
+                                String content = rec.getContent();
+                                if (content == null) {
+                                    log.error("Cannot get content for: " + rec.getOAIIdentifier().getIdentifier());
+                                    throw new ServerErrorException(Response.Status.INTERNAL_SERVER_ERROR, "Internal Error");
+                                }
+                                Element element = stringToElement(content);
                                 fixXmlNamespacePrefix(element, metadataPrefix);
                                 metadata.setAny(element);
                                 record.setMetadata(metadata);
@@ -370,8 +375,9 @@ public class OAIWorker {
         String prefix = null;
         if (namespaceURI.equals(element.getNamespaceURI())) {
             prefix = element.getPrefix();
-            if(prefix == null)
+            if (prefix == null) {
                 prefix = "";
+            }
             element.setPrefix(metadataPrefix);
         }
         for (Node child = element.getFirstChild() ; child != null ; child = child.getNextSibling()) {
