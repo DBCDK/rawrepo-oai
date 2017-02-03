@@ -122,8 +122,7 @@ public class OAIIdentifierIT {
     private void loadRecordsFrom(String... jsons) throws SQLException {
         Connection connection = pg.getConnection();
         connection.prepareStatement("SET TIMEZONE TO 'UTC'").execute();
-        try (PreparedStatement set = connection.prepareStatement("INSERT INTO oaisets (setSpec, setName) VALUES(?, ?)") ;
-             PreparedStatement rec = connection.prepareStatement("INSERT INTO oairecords (pid, changed, deleted) VALUES(?, ?::timestamp, ?)") ;
+        try (PreparedStatement rec = connection.prepareStatement("INSERT INTO oairecords (pid, changed, deleted) VALUES(?, ?::timestamp, ?)") ;
              PreparedStatement recSet = connection.prepareStatement("INSERT INTO oairecordsets (pid, setSpec) VALUES(?, ?)")) {
 
             for (String json : jsons) {

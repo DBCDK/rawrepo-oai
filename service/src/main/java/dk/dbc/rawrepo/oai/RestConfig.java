@@ -25,7 +25,7 @@ import javax.ws.rs.core.Application;
  *
  * @author DBC {@literal <dbc.dk>}
  */
-@ApplicationPath("/oai")
+@ApplicationPath("/")
 public class RestConfig extends Application {
 
 }

@@ -23,7 +23,11 @@ import dk.dbc.oai.pmh.OAIPMHerrorType;
 import dk.dbc.oai.pmh.OAIPMHerrorcodeType;
 import dk.dbc.oai.pmh.ObjectFactory;
 import dk.dbc.oai.pmh.RequestType;
+import java.io.ByteArrayOutputStream;
 import java.io.CharArrayWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.Instant;
@@ -33,7 +37,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJBException;
 import javax.inject.Inject;
@@ -85,6 +93,8 @@ public class OAIResource {
     @Inject
     AccessControl accessControl;
 
+    String indexHtml;
+
     private static final JAXBContext context = makeJAXBContext();
     private static final ObjectFactory OBJECT_FACTORY = new ObjectFactory();
     private static final DatatypeFactory DATATYPE_FACTORY = makeDatatypeFactory();
@@ -101,6 +111,25 @@ public class OAIResource {
         try {
             return DatatypeFactory.newInstance();
         } catch (DatatypeConfigurationException ex) {
+            throw new EJBException(ex);
+        }
+    }
+
+    @PostConstruct
+    public void init() {
+        try (InputStream stream = getClass().getClassLoader().getResourceAsStream("index.html") ;
+             ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            for (;;) {
+                int available = stream.available();
+                if (available == 0) {
+                    break;
+                }
+                int read = stream.read(buffer);
+                bos.write(buffer, 0, read);
+            }
+            indexHtml = new String(buffer, StandardCharsets.UTF_8);
+        } catch (IOException ex) {
             throw new EJBException(ex);
         }
     }
@@ -135,6 +164,9 @@ public class OAIResource {
                                 @HeaderParam("Identity") String identityByHeader) {
 
         MultivaluedMap<String, String> params = uriInfo.getQueryParameters();
+        if (!params.containsKey("verb")) {
+            return sendIndexHtml();
+        }
         String identity = params.getFirst("identity");
         if (identity == null) {
             identity = identityByHeader;
@@ -359,6 +391,81 @@ public class OAIResource {
         XMLGregorianCalendar date = DATATYPE_FACTORY.newXMLGregorianCalendar(gregorian);
         return date;
     }
+
+    private static final Pattern ENV_MATCHER = Pattern.compile("\\$\\{(\\w+)(?::(\\w+))?(?:\\|((?:[^\\}\\\\]|\\.)*))?\\}");
+    private Response sendIndexHtml() {
+        StringBuffer html = new StringBuffer();
+        Matcher matcher = ENV_MATCHER.matcher(indexHtml);
+        while(matcher.find()) {
+            String content;
+            switch (matcher.group(1)) {
+                case "base_url":
+                    content = config.getBaseUrl();
+                    break;
+                case "name":
+                    content = config.getRepositoryName();
+                    break;
+                default:
+                    content = "UNKNOWN VARIABLE";
+            }
+            if(content == null)
+                content = "";
+            if(content.isEmpty() && matcher.group(2) != null)
+                content = matcher.group(2);
+            if(matcher.group(3) != null) {
+                switch (matcher.group(3)) {
+                    case "html":
+                        content = HTML_ESCAPE.replace(content);
+                        break;
+                    case "attr":
+                        content = content.replaceAll("\"", "&quot;");
+                        break;
+                    default:
+                        log.warn("Unknown escape type: " + matcher.group(3) + " in index.html");
+                        break;
+                }
+            }
+            matcher.appendReplacement(html, content);
+
+        }
+        matcher.appendTail(html);
+
+        return Response.ok(html.toString(), MediaType.TEXT_HTML).build();
+    }
+
+    private static final RegexMatcher HTML_ESCAPE = new RegexMatcher("[<>&]", m -> {
+        switch (m.group()) {
+            case "<":
+                return "&lt;";
+            case ">":
+                return "&gt;";
+            case "&":
+                return "&amp;";
+            default:
+                return m.group();
+        }
+    });
+
+    private static class RegexMatcher {
+        private final Pattern pattern;
+        private final Function<Matcher, String> func;
+        public RegexMatcher(String pattern, Function<Matcher, String> func) {
+            this.pattern = Pattern.compile(pattern);
+            this.func = func;
+        }
+
+        public String replace(String text) {
+            Matcher matcher = pattern.matcher(text);
+            StringBuffer sb = new StringBuffer();
+            while(matcher.find()) {
+                matcher.appendReplacement(sb, func.apply(matcher));
+            }
+            matcher.appendTail(sb);
+            return sb.toString();
+        }
+
+    }
+
 
     /**
      * Dummy autoclosable, for not locking in throttle object
