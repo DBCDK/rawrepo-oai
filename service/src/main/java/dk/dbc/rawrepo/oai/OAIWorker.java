@@ -69,7 +69,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -259,7 +261,7 @@ public class OAIWorker {
         JsonObject json = findIdentifiersJson(oaipmh);
         JsonObject cont = collection.fetch(json, config.getRecordsPrRequest());
 
-        List<RecordType> recordsWithContent = fetchRecordContent(collection, "marcx");
+        List<RecordType> recordsWithContent = fetchRecordContent(collection, json.getString("m"));
 
         List<RecordType> records = listRecords.getRecords();
         records.addAll(recordsWithContent);
@@ -326,7 +328,9 @@ public class OAIWorker {
                             RecordType record = rec.getIdentifier().toRecord();
                             if (!rec.getIdentifier().isDeleted()) {
                                 MetadataType metadata = OBJECT_FACTORY.createMetadataType();
-                                metadata.setAny(stringToElement(rec.getContent()));
+                                Element element = stringToElement(rec.getContent());
+                                fixXmlNamespacePrefix(element, metadataPrefix);
+                                metadata.setAny(element);
                                 record.setMetadata(metadata);
                             }
                             return record;
@@ -351,6 +355,32 @@ public class OAIWorker {
                 }
             });
             throw e;
+        }
+    }
+
+    private void fixXmlNamespacePrefix(Element element, String metadataPrefix) throws DOMException {
+        String namespaceURI = element.getNamespaceURI();
+        if (namespaceURI == null) {
+            return;
+        }
+        fixXmlNamespacePrefix(element, metadataPrefix, namespaceURI);
+    }
+
+    private void fixXmlNamespacePrefix(Element element, String metadataPrefix, String namespaceURI) throws DOMException {
+        String prefix = null;
+        if (namespaceURI.equals(element.getNamespaceURI())) {
+            prefix = element.getPrefix();
+            if(prefix == null)
+                prefix = "";
+            element.setPrefix(metadataPrefix);
+        }
+        for (Node child = element.getFirstChild() ; child != null ; child = child.getNextSibling()) {
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                fixXmlNamespacePrefix((Element) child, metadataPrefix, namespaceURI);
+            }
+        }
+        if (prefix != null) {
+            element.removeAttribute(prefix.isEmpty() ? "xmlns" : ( "xmlns:" + prefix ));
         }
     }
 

@@ -100,7 +100,7 @@ public class RecordFormatter {
                 log.info("Post Sleep");
             } catch (InterruptedException ex) {
             }
-            return new AsyncResult<>(new RecordWithContent(identifier, "<record>" + identifier.getIdentifier() + "</record>"));
+            return new AsyncResult<>(new RecordWithContent(identifier, "<record xmlns=\"info:bar\"><foo/><bar>" + identifier.getIdentifier() + "</bar></record>"));
         }
     }
 }
