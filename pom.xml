@@ -18,8 +18,7 @@
 
  You should have received a copy of the GNU Affero General Public License
  along with dbc-rawrepo-oai.  If not, see <http://www.gnu.org/licenses/>.
--->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+--><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <repositories>
@@ -46,10 +45,11 @@
     <modules>
         <module>schema</module>
         <module>service</module>
+        <module>formatter</module>
         <module>docker</module>
         <!-- This needs to be last, otherwise all following tools are not a part of the package --> 
         <!-- <module>debian</module> -->
-    </modules>
+  </modules>
 
     <build>
         <plugins>
