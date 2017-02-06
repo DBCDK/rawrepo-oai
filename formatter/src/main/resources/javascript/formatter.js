@@ -17,9 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* global XmlUtil, XmlNamespaces, Log, NodeTypes */
+/* global XmlUtil, Log */
 
 use("Log");
+use("XmlUtil");
 
 /**
  * Formats a MarcX record, either producing a Dublin Core record
