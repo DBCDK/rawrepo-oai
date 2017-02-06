@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-    <artifactId>rawrepo-oai</artifactId>
-    <groupId>dk.dbc</groupId>
-    <version>1.0-SNAPSHOT</version>
-  </parent>
+        <artifactId>rawrepo-oai</artifactId>
+        <groupId>dk.dbc</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
 
     <groupId>dk.dbc</groupId>
     <artifactId>rawrepo-oai-formatter</artifactId>
@@ -46,7 +46,14 @@
         <dependency>
             <groupId>dk.dbc</groupId>
             <artifactId>dbc-jslib</artifactId>
-            <version>1.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.dbc.testutils</groupId>
+            <artifactId>maven-javascript-unit-test-runner</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+            <type>tar.gz</type>
+            <classifier>bin</classifier>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -95,7 +102,44 @@
                             </artifactItems>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>unpack-jsunittest</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeTypes>tar.gz</includeTypes>
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <useSubDirectoryPerArtifact>false</useSubDirectoryPerArtifact>
+                            <stripVersion>true</stripVersion>
+                        </configuration>
+                    </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>Javascript unit tests</id>
+                        <phase>process-test-classes</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>${project.build.directory}/maven-javascript-unit-test-runner/bin/test-runner.sh</executable>
+                    <workingDirectory>${project.build.directory}/maven-javascript-unit-test-runner</workingDirectory>
+                    <environmentVariables>
+                        <USE_JAVA_XML_DOM>true</USE_JAVA_XML_DOM>
+                        <MODULE_PATHS>
+                            classpath:javascript/ classpath:javascript/javacore/ classpath:javascript/jscommon/config/ classpath:javascript/jscommon/convert/ classpath:javascript/jscommon/devel/ classpath:javascript/jscommon/external/ classpath:javascript/jscommon/io/ classpath:javascript/jscommon/marc/ classpath:javascript/jscommon/net/ classpath:javascript/jscommon/system/ classpath:javascript/jscommon/util/ classpath:javascript/jscommon/xml/
+                        </MODULE_PATHS>
+                    </environmentVariables>
+                </configuration>
             </plugin>
         </plugins>
     </build>
