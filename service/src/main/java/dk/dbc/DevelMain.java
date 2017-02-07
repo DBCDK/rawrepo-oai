@@ -89,7 +89,7 @@ public class DevelMain extends Main {
         super.run(config, env);
         env.admin().addTask(new Task("terminate") {
             @Override
-            @SuppressFBWarnings("BAD_PRACTICE")
+            @SuppressFBWarnings(value = {"BAD_PRACTICE", "DM_EXIT"}, justification = "It's intentional that the system should exit on a 'terminate' call")
             public void execute(ImmutableMultimap<String, String> im, PrintWriter writer) throws Exception {
                 writer.append("EXITTING\n");
                 writer.close();
