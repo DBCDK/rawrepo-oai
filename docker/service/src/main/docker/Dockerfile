@@ -1,14 +1,10 @@
-FROM docker.dbc.dk/dbc-payara
+FROM docker.dbc.dk/dbc-dropwizard
 MAINTAINER os-team
 
-ENV KAFKA_LOG_APPNAME rawrepo-oai-service
+ENV KAFKA_LOG_APPNAME rawrepo-oai-service-dw
+ADD res/rawrepo-oai-service-jar/ $DROPWIZARD_HOME
 
-ADD pre/* $PAYARA_CFG/pre/
-ADD post/* $PAYARA_CFG/post/
-ADD res/rawrepo-oai-service.war $PAYARA_CFG/pre/
-RUN payara-setup $PAYARA_CFG/pre/
-
-LABEL RAWREPO_OAI_URL="Rawrepo-oai jdbc url. (required). Ex.: 'user:pass@host:1234/dbname'" \
+LABEL RAWREPO_OAI_URL="Rawrepo-oai jdbc url. (required). Format: user:pass@host:port/base" \
       REPOSITORY_NAME="The name of the OAI service (required)" \
       BASE_URL="External url for this service (required)" \
       RECORDS_PR_REQUEST="Number of Records to deliver in one request (default: 10)" \

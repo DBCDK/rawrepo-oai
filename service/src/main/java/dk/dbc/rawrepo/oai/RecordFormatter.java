@@ -19,21 +19,17 @@
 package dk.dbc.rawrepo.oai;
 
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import dk.dbc.eeconfig.EEConfig;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.ejb.AsyncResult;
-import javax.ejb.Asynchronous;
-import javax.ejb.Lock;
-import javax.ejb.LockType;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.inject.Inject;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
@@ -44,26 +40,24 @@ import org.slf4j.LoggerFactory;
  *
  * @author DBC {@literal <dbc.dk>}
  */
-@Singleton
-@Startup
-@Lock(LockType.READ)
 public class RecordFormatter {
 
     private static final Logger log = LoggerFactory.getLogger(RecordFormatter.class);
 
-    @Inject
-    @EEConfig.Name(C.FORMAT_SERVICE)
-    @EEConfig.Default(C.FORMAT_SERVICE_DEFAULT)
-    String formatService;
+    private final OAIConfiuration config;
+    private final ExecutorService threadPool;
+    private final Counter records;
+    private final Counter deleted;
+    private final Timer fetching;
 
-    @Inject
-    Timer recordsFetchedTotal;
+    public RecordFormatter(OAIConfiuration config, MetricRegistry metrics) {
+        this.config = config;
+        this.records = metrics.counter(getClass().getCanonicalName() + "/records");
+        this.deleted = metrics.counter(getClass().getCanonicalName() + "/deleted");
+        this.fetching = metrics.timer(getClass().getCanonicalName() + "/fetching");
+        this.threadPool = Executors.newFixedThreadPool(10);
+    }
 
-    @Inject
-    Counter recordsNotFetchedDeleted;
-
-    @Inject
-    Counter recordsFetchedFailed;
 
     public static class RecordWithContent {
 
@@ -103,49 +97,53 @@ public class RecordFormatter {
      * @param allowedSets    what sets a client is allowed to see
      * @return RecordWithContent (OAIIdentifier, String)
      */
-    @Asynchronous
     public Future<RecordWithContent> fetch(OAIIdentifier identifier, String metadataPrefix, Set<String> allowedSets) {
-        if (identifier.isDeleted()) {
-            log.info("Not fetching. record is deleted");
-            return new AsyncResult<>(new RecordWithContent(identifier, null));
-        }
-        try (Timer.Context time = recordsFetchedTotal.time()) {
-            try {
-                StringBuffer sb = new StringBuffer();
-                Matcher matcher = ENV_MATCHER.matcher(formatService);
-                while (matcher.find()) {
-                    String content;
-                    switch (matcher.group(1)) {
-                        case "id":
-                            content = identifier.getIdentifier();
-                            break;
-                        case "format":
-                            content = metadataPrefix;
-                            break;
-                        case "sets":
-                            content = String.join(",", allowedSets);
-                            break;
-                        default:
-                            content = "";
-                            break;
-                    }
-                    matcher.appendReplacement(sb, URLEncoder.encode(content, "UTF-8"));
+        return threadPool.submit(new Callable<RecordWithContent>() {
+            @Override
+            public RecordWithContent call() throws Exception {
+                records.inc();
+                if (identifier.isDeleted()) {
+                    deleted.inc();
+                    log.info("Not fetching. record is deleted");
+                    return new RecordWithContent(identifier, null);
                 }
-                matcher.appendTail(sb);
-                String request = sb.toString();
+                try (Timer.Context time = fetching.time()) {
+                    StringBuffer sb = new StringBuffer();
+                    Matcher matcher = ENV_MATCHER.matcher(config.getFormatService());
+                    while (matcher.find()) {
+                        String content;
+                        switch (matcher.group(1)) {
+                            case "id":
+                                content = identifier.getIdentifier();
+                                break;
+                            case "format":
+                                content = metadataPrefix;
+                                break;
+                            case "sets":
+                                content = String.join(",", allowedSets);
+                                break;
+                            default:
+                                content = "";
+                                break;
+                        }
+                        matcher.appendReplacement(sb, URLEncoder.encode(content, "UTF-8"));
+                    }
+                    matcher.appendTail(sb);
+                    String request = sb.toString();
 
-                log.info("Fetching record: " + request);
-                Client client = ClientBuilder.newClient();
-                String content = client.target(request)
-                        .request(MediaType.APPLICATION_XML)
-                        .get(String.class);
-                log.trace("content for " + identifier.getIdentifier() + " is: " + content);
-                return new AsyncResult<>(new RecordWithContent(identifier, content));
-            } catch (RuntimeException | UnsupportedEncodingException ex) {
-                log.error("Exception: " + ex.getMessage());
-                log.debug("Exception: ", ex);
-                return new AsyncResult<>(new RecordWithContent(identifier, null));
+                    log.info("Fetching record: " + request);
+                    Client client = ClientBuilder.newClient();
+                    String content = client.target(request)
+                            .request(MediaType.APPLICATION_XML)
+                            .get(String.class);
+                    log.trace("content for " + identifier.getIdentifier() + " is: " + content);
+                    return new RecordWithContent(identifier, content);
+                } catch (RuntimeException | UnsupportedEncodingException ex) {
+                    log.error("Exception: " + ex.getMessage());
+                    log.debug("Exception: ", ex);
+                    return new RecordWithContent(identifier, null);
+                }
             }
-        }
+        });
     }
 }

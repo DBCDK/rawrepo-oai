@@ -11,7 +11,11 @@
     <groupId>dk.dbc</groupId>
     <artifactId>rawrepo-oai-service</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
+
+    <properties>
+        <dropwizard.version>1.0.6</dropwizard.version>
+    </properties>
 
     <build>
         <plugins>
@@ -28,7 +32,6 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <debug>true</debug>
                     <verbose>true</verbose>
                     <schemaDirectory>${basedir}/src/main/xsd</schemaDirectory>
                     <extension>true</extension>
@@ -44,44 +47,54 @@
                     <source>1.8</source>
                     <target>1.8</target>
                     <compilerArguments>
-                        <endorseddirs>${project.build.directory}/endorsed</endorseddirs>
+                        <!--<endorseddirs>${project.build.directory}/endorsed</endorseddirs>-->
                     </compilerArguments>
                 </configuration>
             </plugin>
             
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>3.0.0</version>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.3</version>
                 <configuration>
-                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <createDependencyReducedPom>true</createDependencyReducedPom>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                                <exclude>**/DevelMain.class</exclude>
+                                <exclude>**/DevelMain$*.class</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
                 </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>dk.dbc.Main</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
+            
             
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>3.0.0</version>
                 <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${endorsed.dir}</outputDirectory>
-                            <silent>true</silent>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>javax</groupId>
-                                    <artifactId>javaee-endorsed-api</artifactId>
-                                    <version>7.0</version>
-                                    <type>jar</type>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-
                     <execution>
                         <!-- INTEGRATION TEST - SCHEMA -->
                         <id>unpack-cfg-test-resources</id>
@@ -127,7 +140,7 @@
             </plugin>
 
             <plugin>
-                <!-- INTEGRATION TEST - POSTGRES -->
+                <!--INTEGRATION TEST - POSTGRES--> 
                 <groupId>dk.dbc</groupId>
                 <artifactId>postgresql-maven-plugin</artifactId>
                 <version>1.3-SNAPSHOT</version>
@@ -161,10 +174,9 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>2.11</version>
                 <configuration>
-                    <!--                    <redirectTestOutputToFile>true</redirectTestOutputToFile> -->
+                    <!-- <redirectTestOutputToFile>true</redirectTestOutputToFile> -->
                     <systemPropertyVariables>
                         <postgresql.port>${postgresql.port}</postgresql.port>
-                        <wiremock.port>${wiremock.port}</wiremock.port>
                     </systemPropertyVariables>
                 </configuration>
                 <executions>
@@ -180,22 +192,28 @@
     </build>    
 
     <dependencies>
+
         <dependency>
-            <groupId>com.codahale.metrics</groupId>
-            <artifactId>metrics-core</artifactId>
-            <version>3.0.2</version>
-            <type>jar</type>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-core</artifactId>
+            <version>${dropwizard.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-client</artifactId>
+            <version>${dropwizard.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-jdbi</artifactId>
+            <version>${dropwizard.version}</version>
+        </dependency>
+        
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>annotations</artifactId>
             <version>3.0.1</version>
             <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-web-api</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -203,23 +221,13 @@
             <artifactId>postgresql</artifactId>
             <version>9.4.1212.jre7</version>
         </dependency>
-                        
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>dk.dbc</groupId>
             <artifactId>forsrights-ws-client</artifactId>
             <version>1.2-SNAPSHOT</version>
         </dependency>
-    
+
         <!-- TEST -->
         <dependency>
             <groupId>junit</groupId>
@@ -228,39 +236,18 @@
         </dependency>
 
         <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-core</artifactId>
-            <version>1.3</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.json</artifactId>
-            <version>1.0.4</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.metro</groupId>
-            <artifactId>webservices-rt</artifactId>
-            <version>2.3.1</version>
-            <scope>test</scope>
-        </dependency>
-        
-        <dependency>
             <groupId>dk.dbc.commoms.testutils</groupId>
             <artifactId>dbc-commons-testutil-postgres-connection</artifactId>
             <version>1.3-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>dk.dbc</groupId>
             <artifactId>rawrepo-oai-schema</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
-
+                
     </dependencies>
 </project>

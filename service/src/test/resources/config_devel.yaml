@@ -1,0 +1,50 @@
+repositoryName: ${REPOSITORY_NAME:-DBC OAI}
+baseUrl: ${BASE_URL:-http://dbc.dk/}
+recordsPrRequest: ${RECORDS_PR_REQUEST:-3}
+identifiersPrRequest: ${IDENTIFIERS_PR_REQUEST:-5}
+tokenMaxAge: ${TOKEN_MAX_AGE:-4}
+noThrottle: ${NO_THROTTLE:-false}
+noAuthentication: ${NO_AUTHENTICATION:-false}
+xForwardedFor: ${X_FORWARDED_FOR:127.0.0.1 172.16.0.0/12}
+forsRightsUrl: ${FORS_RIGHTS_URL:-http://forsrights.addi.dk/1.2/}
+forsRightsRules: ${FORS_RIGHTS_RULES:-netpunkt.dk,500=bkm}
+formatService: ${FORMAT_SERVICE:-http://localhost/format.php?id=${id}&format=${format}&sets=${sets}}
+fetchRecordsTimeout: ${FETCH_RECORDS_TIMEOUT:-30}
+
+rawrepoOai:
+  driverClass: org.postgresql.Driver
+  user: ${PGUSER:-user}
+  password: ${PGPASSWORD:-password}
+  url: jdbc:postgresql://${PGHOST:-localhost}:${PGPORT:-5432}/${PGBASE:-data}
+  properties:
+    charSet: UTF-8
+  maxWaitForConnection: 1s
+  validationQuery: "/* MyService Health Check */ SELECT 1"
+  validationQueryTimeout: 3s
+  minSize: 8
+  maxSize: 32
+  checkConnectionWhileIdle: false
+  evictionInterval: 10s
+  minIdleTime: 1 minute
+
+server:
+# *** logback requestlog
+  type: dbc
+#  softNofileLimit: 1000
+#  hardNofileLimit: 1000
+  applicationConnectors:
+    - type: http
+      port: 8000
+  adminConnectors:
+    - type: http
+      port: 8001
+# *** No requestlog
+#  requestLog:
+#    appenders: []
+# Logging settings.
+# *** use logback.xml
+#logging:
+#  level: OFF
+#  appenders:
+#    - type: console
+#      threshold: OFF

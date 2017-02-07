@@ -18,6 +18,8 @@
  */
 package dk.dbc.rawrepo.oai;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,9 +31,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +44,7 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
     private static final Logger log = LoggerFactory.getLogger(OAIIdentifierCollection.class);
     private static final long serialVersionUID = -6784746125519667600L;
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private transient final Connection connection;
     private final Collection<String> allowedSets;
 
@@ -62,7 +62,7 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
     /**
      * Fetch identifiers from database
      *
-     * json argument is object with: null null null null     {@literal
+     * json argument is object with: null null null null null     {@literal
      * f: fromTimestamp*
      * u: untilTimestamp*
      * m: metadataPrefix
@@ -75,14 +75,14 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
      * @return json as described or null if no more records
      */
     @SuppressFBWarnings("SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING")
-    public JsonObject fetch(JsonObject json, int limit) {
+    public ObjectNode fetch(ObjectNode json, int limit) {
         log.debug("limit = " + limit);
         StringBuilder sb = new StringBuilder();
-        String set = json.getString("s", null);
-        String from = json.getString("f", null);
-        String until = json.getString("u", null);
-        String metadataPrefix = json.getString("m", "");
-        int offset = json.getInt("o", 0);
+        String set = json.path("s").asText(null);
+        String from = json.path("f").asText(null);
+        String until = json.path("u").asText(null);
+        String metadataPrefix = json.path("m").asText("");
+        int offset = json.path("o").asInt(0);
         sb.append("SELECT pid, changed, deleted FROM oairecords JOIN oairecordsets USING (pid) WHERE");
         if (set != null) {
             sb.append(" setSpec = ?");
@@ -160,7 +160,7 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
                                 oaiRecord.add(setsResult.getString(1));
                             }
                         }
-                        if(oaiRecord.isEmpty() && !oaiRecord.isDeleted()) {
+                        if (oaiRecord.isEmpty() && !oaiRecord.isDeleted()) {
                             oaiRecord = new OAIIdentifier(pid, changed, true);
                         }
                         add(oaiRecord);
@@ -171,22 +171,23 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
                             offset = 1;
                         }
                     } else {
-                        JsonObjectBuilder ob = Json.createObjectBuilder();
+                        ObjectNode obj = OBJECT_MAPPER.createObjectNode();
                         String continueFrom = changed.toInstant().atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_INSTANT);
-                        ob.add("f", continueFrom);
+                        obj.put("f", continueFrom);
                         if (changed.equals(last)) {
-                            ob.add("o", offset);
+                            obj.put("o", offset);
                         }
                         if (until != null) {
-                            ob.add("u", until);
+                            obj.put("u", until);
                         }
                         if (set != null) {
-                            ob.add("s", set);
+                            obj.put("s", set);
                         }
                         if (metadataPrefix != null) {
-                            ob.add("m", metadataPrefix);
+                            obj.put("m", metadataPrefix);
                         }
-                        return ob.build();
+                        log.debug("continueFrom = " + obj);
+                        return obj;
                     }
                 }
             }
@@ -197,4 +198,5 @@ public class OAIIdentifierCollection extends ArrayList<OAIIdentifier> {
         }
         return null;
     }
+
 }

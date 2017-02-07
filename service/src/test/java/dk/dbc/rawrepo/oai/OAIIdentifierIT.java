@@ -18,7 +18,10 @@
  */
 package dk.dbc.rawrepo.oai;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.dbc.commons.testutils.postgres.connection.PostgresITConnection;
+import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,12 +30,8 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Iterator;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonString;
-import javax.json.JsonValue;
+import java.util.List;
+import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -119,7 +118,7 @@ public class OAIIdentifierIT {
         assertTrue(pid2.isDeleted());
     }
 
-    private void loadRecordsFrom(String... jsons) throws SQLException {
+    private void loadRecordsFrom(String... jsons) throws SQLException, IOException {
         Connection connection = pg.getConnection();
         connection.prepareStatement("SET TIMEZONE TO 'UTC'").execute();
         try (PreparedStatement rec = connection.prepareStatement("INSERT INTO oairecords (pid, changed, deleted) VALUES(?, ?::timestamp, ?)") ;
@@ -130,20 +129,19 @@ public class OAIIdentifierIT {
                 if (is == null) {
                     throw new RuntimeException("Cannot find: " + json);
                 }
-                JsonArray array = Json.createReader(is).readArray();
-                for (Iterator<JsonValue> iterator = array.iterator() ; iterator.hasNext() ;) {
-                    JsonValue next = iterator.next();
-                    if (!( next instanceof JsonObject )) {
-                        throw new RuntimeException("json contains: " + next + " expected an object ({...})");
-                    }
-                    JsonObject obj = (JsonObject) next;
-                    rec.setString(1, obj.getString("pid"));
-                    rec.setString(2, obj.getString("changed", DateTimeFormatter.ISO_INSTANT.format(Instant.now().atZone(ZoneId.systemDefault()))));
-                    rec.setBoolean(3, obj.getBoolean("deleted", false));
+                ObjectMapper objectMapper = new ObjectMapper();
+                List<ObjectNode> array = objectMapper.readValue(is, List.class);
+                for (Object object : array) {
+                    Map<String,Object> obj =  (Map<String,Object>) object;
+                    rec.setString(1, (String) obj.get("pid"));
+                    rec.setString(2, (String) obj.getOrDefault("changed", DateTimeFormatter.ISO_INSTANT.format(Instant.now().atZone(ZoneId.systemDefault()))));
+                    rec.setBoolean(3, (boolean) obj.getOrDefault("deleted", false));
                     rec.executeUpdate();
-                    recSet.setString(1, obj.getString("pid"));
-                    for (Iterator<JsonValue> setIterator = obj.getJsonArray("sets").iterator() ; setIterator.hasNext() ;) {
-                        recSet.setString(2, ( (JsonString) setIterator.next() ).getString());
+                    recSet.setString(1, (String) obj.get("pid"));
+                    List<Object> sets = (List<Object>) obj.get("sets");
+
+                    for (Object set : sets) {
+                        recSet.setString(2, (String) set);
                         recSet.executeUpdate();
                     }
                 }

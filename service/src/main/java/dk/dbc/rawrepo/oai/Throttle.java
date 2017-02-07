@@ -19,6 +19,8 @@
 package dk.dbc.rawrepo.oai;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.inject.Singleton;
 import javax.ws.rs.core.Response;
@@ -43,7 +45,11 @@ public class Throttle {
      * @return lock
      */
     public AutoCloseable lock(String agency) {
-            return new Lock(agency);
+        return new Lock(agency);
+    }
+
+    public Map<String, Instant> getMap() {
+        return Collections.unmodifiableMap(AGENCIES);
     }
 
     private static class Lock implements AutoCloseable {

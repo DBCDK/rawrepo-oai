@@ -1,6 +1,5 @@
 package dk.dbc.rawrepo.oai.packing;
 
-
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -27,7 +26,6 @@ import java.util.Iterator;
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 /**
  *
  * @author DBC {@literal <dbc.dk>}
@@ -59,7 +57,7 @@ public final class PackText {
         byte[] bytes = Base64.getDecoder().decode(base64);
         BitInputStream bis = new BitInputStream(bytes);
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        for ( ; ;) {
+        for (;;) {
             int c = TREE.getChar(bis);
             if (c == 0) {
                 break;

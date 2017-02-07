@@ -18,6 +18,8 @@
  */
 package dk.dbc.rawrepo.oai;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.dbc.oai.pmh.DeletedRecordType;
 import dk.dbc.oai.pmh.DescriptionType;
 import dk.dbc.oai.pmh.GetRecordType;
@@ -41,6 +43,7 @@ import dk.dbc.oai.pmh.VerbType;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -59,9 +62,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.xml.parsers.DocumentBuilder;
@@ -94,17 +94,18 @@ public class OAIWorker {
     private static final String DC_POST = "</dc:description>" +
                                           "</oai_dc:dc>";
 
-    private static final DocumentBuilder DOCUMENT_BUILDER = newDocumentBuilder();
+    private static final DocumentBuilder DOCUMENT_BUILDER = makeDocumentBuilder();
     private static final ObjectFactory OBJECT_FACTORY = new ObjectFactory();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Timestamp EPOCH = new Timestamp(0);
 
     private final Connection connection;
-    private final Config config;
+    private final OAIConfiuration config;
     private final RecordFormatter recordFormatter;
     private final Set<String> allowedSets;
     private final MultivaluedMap<String, String> params;
 
-    private static DocumentBuilder newDocumentBuilder() {
+    private static DocumentBuilder makeDocumentBuilder() {
         synchronized (DocumentBuilderFactory.class) {
             try {
                 DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -121,7 +122,7 @@ public class OAIWorker {
     }
 
     public OAIWorker(Connection connection,
-                     Config config,
+                     OAIConfiuration config,
                      RecordFormatter recordFormatter,
                      Set<String> allowedSets,
                      MultivaluedMap<String, String> params) {
@@ -199,15 +200,16 @@ public class OAIWorker {
      * http://www.openarchives.org/OAI/openarchivesprotocol.html#ListIdentifiers
      *
      * @param oaipmh response object
+     * @throws java.io.IOException
      */
-    public void listIdentifiers(OAIPMH oaipmh) {
+    public void listIdentifiers(OAIPMH oaipmh) throws IOException {
         setRequest(oaipmh, VerbType.LIST_IDENTIFIERS);
 
-        OAIIdentifierCollection collection = new OAIIdentifierCollection(connection, allowedSets);
-        JsonObject json = findIdentifiersJson(oaipmh);
-        JsonObject cont = collection.fetch(json, config.getIdentifiersPrRequest());
-
         ListIdentifiersType listIdetifiers = OBJECT_FACTORY.createListIdentifiersType();
+        OAIIdentifierCollection collection = new OAIIdentifierCollection(connection, allowedSets);
+        ObjectNode json = findIdentifiersJson(oaipmh);
+        ObjectNode cont = collection.fetch(json, config.getRecordsPrRequest());
+
         List<HeaderType> headers = listIdetifiers.getHeaders();
 
         collection.stream()
@@ -219,7 +221,6 @@ public class OAIWorker {
 
         oaipmh.setListIdentifiers(listIdetifiers);
     }
-
     /**
      * http://www.openarchives.org/OAI/openarchivesprotocol.html#ListMetadataFormats
      *
@@ -253,15 +254,16 @@ public class OAIWorker {
      * http://www.openarchives.org/OAI/openarchivesprotocol.html#ListRecords
      *
      * @param oaipmh response object
+     * @throws java.io.IOException
      */
-    public void listRecords(OAIPMH oaipmh) {
+    public void listRecords(OAIPMH oaipmh) throws IOException {
         setRequest(oaipmh, VerbType.LIST_IDENTIFIERS);
         ListRecordsType listRecords = OBJECT_FACTORY.createListRecordsType();
         OAIIdentifierCollection collection = new OAIIdentifierCollection(connection, allowedSets);
-        JsonObject json = findIdentifiersJson(oaipmh);
-        JsonObject cont = collection.fetch(json, config.getRecordsPrRequest());
-
-        List<RecordType> recordsWithContent = fetchRecordContent(collection, json.getString("m"));
+        ObjectNode json = findIdentifiersJson(oaipmh);
+        ObjectNode cont = collection.fetch(json, config.getRecordsPrRequest());
+        log.debug("cont = " + cont);
+        List<RecordType> recordsWithContent = fetchRecordContent(collection, json.path("m").asText());
 
         List<RecordType> records = listRecords.getRecords();
         records.addAll(recordsWithContent);
@@ -318,12 +320,14 @@ public class OAIWorker {
         List<Future<RecordFormatter.RecordWithContent>> futures = collection.stream()
                 .map(id -> recordFormatter.fetch(id, metadataPrefix, allowedSets))
                 .collect(Collectors.toList());
+        log.debug("futures = " + futures);
         try {
-            Instant timeout = Instant.now().plus(config.getFetchRecordTimeout(), ChronoUnit.SECONDS);
+            Instant timeout = Instant.now().plus(config.getFetchRecordsTimeout(), ChronoUnit.SECONDS);
             List<RecordType> recordsWithContent = futures.stream()
                     .map(future -> {
                         try {
                             long until = Math.max(0, Instant.now().until(timeout, ChronoUnit.SECONDS));
+                            log.debug("until = " + until);
                             RecordFormatter.RecordWithContent rec = future.get(until, TimeUnit.SECONDS);
                             RecordType record = rec.getOAIIdentifier().toRecord();
                             if (!rec.getOAIIdentifier().isDeleted()) {
@@ -397,33 +401,33 @@ public class OAIWorker {
      * @param oaipmh Output object for storing request arguments
      * @return json
      */
-    private JsonObject findIdentifiersJson(OAIPMH oaipmh) {
+    private ObjectNode findIdentifiersJson(OAIPMH oaipmh) throws IOException {
         RequestType request = oaipmh.getRequest();
         String token = getParameter("resumptionToken", s -> request.setResumptionToken(s));
         if (token != null) {
             return ResumptionToken.decode(token);
         } else {
-            JsonObjectBuilder ob = Json.createObjectBuilder();
+            ObjectNode obj = OBJECT_MAPPER.createObjectNode();
             getParameterRequired("metadataPrefix", s -> {
                              request.setMetadataPrefix(s);
-                             ob.add("m", s);
+                             obj.put("m", s);
                          });
             getParameter("from", s -> {
                      request.setFrom(s);
-                     ob.add("f", s);
+                     obj.put("f", s);
                  });
             getParameter("until", s -> {
                      request.setFrom(s);
-                     ob.add("u", s);
+                     obj.put("u", s);
                  });
             getParameter("set", s -> {
                      if (!allowedSets.contains(s)) {
                          throw new OAIException(OAIPMHerrorcodeType.BAD_ARGUMENT, "Unknown/Forbidden set");
                      }
                      request.setFrom(s);
-                     ob.add("s", s);
+                     obj.put("s", s);
                  });
-            return ob.build();
+            return obj;
         }
     }
 

@@ -18,18 +18,17 @@
  */
 package dk.dbc.rawrepo.oai;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.dbc.oai.pmh.ListRecordsType;
 import dk.dbc.oai.pmh.OAIPMH;
 import dk.dbc.oai.pmh.ObjectFactory;
 import dk.dbc.oai.pmh.ResumptionTokenType;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
-import javax.json.Json;
-import javax.json.JsonObject;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import org.junit.Test;
@@ -43,20 +42,20 @@ import static org.junit.Assert.*;
 public class ResumptionTokenTest {
 
     @Test
-    public void testEncryptDecrypt() {
-        JsonObject jsonOriginal = Json.createReader(new StringReader("{\"foo\":\"bar\"}")).readObject();
+    public void testEncryptDecrypt() throws Exception {
+        ObjectNode jsonOriginal = (ObjectNode) new ObjectMapper().readTree("{\"foo\":\"bar\"}");
 
         String token = ResumptionToken.encode(jsonOriginal, 1);
         assertNotEquals(jsonOriginal.toString(), token);
 
-        JsonObject json = ResumptionToken.decode(token);
+        ObjectNode json = ResumptionToken.decode(token);
         assertEquals(jsonOriginal.toString(), json.toString());
     }
 
     @Test
-    public void testResumptionTokenTimeout() {
+    public void testResumptionTokenTimeout() throws Exception {
         try {
-            JsonObject jsonOriginal = Json.createReader(new StringReader("{\"foo\":\"bar\"}")).readObject();
+            ObjectNode jsonOriginal = (ObjectNode) new ObjectMapper().readTree("{\"foo\":\"bar\"}");
 
             String token = ResumptionToken.encode(jsonOriginal, -1);
             ResumptionToken.decode(token);
@@ -66,13 +65,13 @@ public class ResumptionTokenTest {
     }
 
     @Test
-    public void testResumptionTokenVerbatim() {
-        JsonObject json = ResumptionToken.decode("{\"foo\":\"bar\"}");
+    public void testResumptionTokenVerbatim() throws Exception {
+        ObjectNode json = (ObjectNode) new ObjectMapper().readTree("{\"foo\":\"bar\"}");
         assertEquals("{\"foo\":\"bar\"}", json.toString());
     }
 
     @Test
-    public void testResumptionTokenVerbatimSyntaxError() {
+    public void testResumptionTokenVerbatimSyntaxError() throws Exception {
         try {
             ResumptionToken.decode("{\"foo\":\"bar}");
             fail("Expected exception");
@@ -83,7 +82,7 @@ public class ResumptionTokenTest {
 
     @Test
     public void testXmlExpiration() throws Exception {
-        JsonObject jsonOriginal = Json.createReader(new StringReader("{\"foo\":\"bar\"}")).readObject();
+        ObjectNode jsonOriginal = (ObjectNode) new ObjectMapper().readTree("{\"foo\":\"bar\"}");
 
         long now = Instant.now().getEpochSecond();
         ResumptionTokenType token = ResumptionToken.toToken(jsonOriginal, 0);
@@ -114,7 +113,7 @@ public class ResumptionTokenTest {
 
     @Test
     public void testXml() throws Exception {
-        JsonObject jsonOriginal = Json.createReader(new StringReader("{\"foo\":\"bar\"}")).readObject();
+        ObjectNode jsonOriginal = (ObjectNode) new ObjectMapper().readTree("{\"foo\":\"bar\"}");
 
         ResumptionTokenType token = ResumptionToken.toToken(jsonOriginal, 1);
 
@@ -123,7 +122,7 @@ public class ResumptionTokenTest {
         oaipmh.setListRecords(getRecord);
         getRecord.setResumptionToken(token);
 
-        JsonObject json = ResumptionToken.decode(token.getValue());
+        ObjectNode json = ResumptionToken.decode(token.getValue());
         assertEquals(jsonOriginal.toString(), json.toString());
     }
 }

@@ -1,14 +1,14 @@
 /*
  * Copyright (C) 2017 DBC A/S (http://dbc.dk/)
  *
- * This is part of dbc-rawrepo-oai-service
+ * This is part of dbc-rawrepo-oai-service-dw
  *
- * dbc-rawrepo-oai-service is free software: you can redistribute it and/or modify
+ * dbc-rawrepo-oai-service-dw is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * dbc-rawrepo-oai-service is distributed in the hope that it will be useful,
+ * dbc-rawrepo-oai-service-dw is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -41,10 +41,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.ejb.EJBException;
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 import javax.ws.rs.Consumes;
@@ -73,51 +69,21 @@ import org.slf4j.LoggerFactory;
  *
  * @author DBC {@literal <dbc.dk>}
  */
-@Path("")
+@Path("/oai")
 public class OAIResource {
 
     private static final Logger log = LoggerFactory.getLogger(OAIResource.class);
 
-    @Resource(lookup = C.DATASOURCE)
-    DataSource rawrepo;
+    private final OAIConfiuration configuration;
+    private final DataSource rawrepoOai;
+    private final AccessControl accessControl;
+    private final Throttle throttle;
+    private final RecordFormatter recordFormatter;
 
-    @Inject
-    Config config;
+    private static final String INDEX_HTML = makeIndexHtml();
 
-    @Inject
-    Throttle throttle;
-
-    @Inject
-    RecordFormatter recordFormatter;
-
-    @Inject
-    AccessControl accessControl;
-
-    String indexHtml;
-
-    private static final JAXBContext context = makeJAXBContext();
-    private static final ObjectFactory OBJECT_FACTORY = new ObjectFactory();
-    private static final DatatypeFactory DATATYPE_FACTORY = makeDatatypeFactory();
-
-    private static JAXBContext makeJAXBContext() {
-        try {
-            return JAXBContext.newInstance(OAIPMH.class);
-        } catch (JAXBException ex) {
-            throw new EJBException(ex);
-        }
-    }
-
-    private static DatatypeFactory makeDatatypeFactory() {
-        try {
-            return DatatypeFactory.newInstance();
-        } catch (DatatypeConfigurationException ex) {
-            throw new EJBException(ex);
-        }
-    }
-
-    @PostConstruct
-    public void init() {
-        try (InputStream stream = getClass().getClassLoader().getResourceAsStream("index.html") ;
+    private static String makeIndexHtml() {
+        try (InputStream stream = OAIResource.class.getClassLoader().getResourceAsStream("index.html") ;
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             byte[] buffer = new byte[1024];
             for (;;) {
@@ -128,10 +94,54 @@ public class OAIResource {
                 int read = stream.read(buffer);
                 bos.write(buffer, 0, read);
             }
-            indexHtml = new String(buffer, StandardCharsets.UTF_8);
+            return new String(buffer, StandardCharsets.UTF_8);
         } catch (IOException ex) {
-            throw new EJBException(ex);
+            throw new RuntimeException(ex);
         }
+    }
+
+    private static final JAXBContext CONTEXT = makeJAXBContext();
+    private static final ObjectFactory OBJECT_FACTORY = new ObjectFactory();
+    private static final DatatypeFactory DATATYPE_FACTORY = makeDatatypeFactory();
+
+    private static JAXBContext makeJAXBContext() {
+        try {
+            return JAXBContext.newInstance(OAIPMH.class);
+        } catch (JAXBException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private static DatatypeFactory makeDatatypeFactory() {
+        try {
+            return DatatypeFactory.newInstance();
+        } catch (DatatypeConfigurationException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public OAIResource(OAIConfiuration configuration, DataSource rawrepoOai, AccessControl accessControl, Throttle throttle, RecordFormatter recordFormatter) {
+        this.configuration = configuration;
+        this.rawrepoOai = rawrepoOai;
+        this.accessControl = accessControl;
+        this.throttle = throttle;
+        this.recordFormatter = recordFormatter;
+    }
+
+    @GET
+    public Response getResponse(@Context UriInfo uriInfo,
+                                @Context HttpServletRequest req,
+                                @HeaderParam("Identity") String identityByHeader) {
+        MultivaluedMap<String, String> params = uriInfo.getQueryParameters();
+        if (!params.containsKey("verb")) {
+            return sendIndexHtml();
+        }
+        String identity = params.getFirst("identity");
+        if (identity == null) {
+            identity = identityByHeader;
+        }
+        String ip = remoteIp(req);
+        return resource(identity, ip, params);
     }
 
     @POST
@@ -150,24 +160,6 @@ public class OAIResource {
         if (identity == null) {
             identity = identityByUrl;
         }
-        if (identity == null) {
-            identity = identityByHeader;
-        }
-        String ip = remoteIp(req);
-        return resource(identity, ip, params);
-    }
-
-    @GET
-    @Produces(MediaType.APPLICATION_XML)
-    public Response resourceGet(@Context UriInfo uriInfo,
-                                @Context HttpServletRequest req,
-                                @HeaderParam("Identity") String identityByHeader) {
-
-        MultivaluedMap<String, String> params = uriInfo.getQueryParameters();
-        if (!params.containsKey("verb")) {
-            return sendIndexHtml();
-        }
-        String identity = params.getFirst("identity");
         if (identity == null) {
             identity = identityByHeader;
         }
@@ -205,48 +197,45 @@ public class OAIResource {
 
         String user = ip;
         Set<String> allowedSets = accessControl.getAllSets();
-        if (!config.isNoAuthentication()) {
+        if (!configuration.getNoAuthentication()) {
             AccessControl.Response response = accessControl.authenticate(identity, ip);
             user = response.getId();
             allowedSets = response.getAllowedSets();
-
         }
 
         OAIPMH oaipmh = OBJECT_FACTORY.createOAIPMH();
-        try (AutoCloseable throttleLock = config.isNoThrottle() ? new NoThrottleLock() : throttle.lock(user)) {
-            try {
-                log.debug("identity = " + identity);
-                String verb = params.getFirst("verb");
-                if (verb == null) {
-                    verb = "";
-                }
+        try (AutoCloseable throttleLock = configuration.getNoThrottle() ? new NoThrottleLock() : throttle.lock(user)) {
+            log.debug("identity = " + identity);
+            String verb = params.getFirst("verb");
+            if (verb == null) {
+                verb = "";
+            }
 
-                try (Connection connection = rawrepo.getConnection() ;
-                     PreparedStatement stmt = connection.prepareStatement("SET TIMEZONE TO 'UTC'")) {
-                    stmt.executeUpdate();
-                    OAIWorker worker = new OAIWorker(connection, config, recordFormatter, allowedSets, params);
-                    switch (verb.toLowerCase(Locale.ROOT)) {
-                        case "identify":
-                            worker.identify(oaipmh);
-                            return marshall(oaipmh, indent);
-                        case "listmetadataformats":
-                            worker.listMetadataFormats(oaipmh);
-                            return marshall(oaipmh, indent);
-                        case "listsets":
-                            worker.listSets(oaipmh);
-                            return marshall(oaipmh, indent);
-                        case "getrecord":
-                            worker.getRecord(oaipmh);
-                            return marshall(oaipmh, indent);
-                        case "listidentifiers":
-                            worker.listIdentifiers(oaipmh);
-                            return marshall(oaipmh, indent);
-                        case "listrecords":
-                            worker.listRecords(oaipmh);
-                            return marshall(oaipmh, indent);
-                        default:
-                            throw new OAIException(OAIPMHerrorcodeType.BAD_VERB, "Unknown verb: " + verb);
-                    }
+            try (Connection connection = rawrepoOai.getConnection() ;
+                 PreparedStatement stmt = connection.prepareStatement("SET TIMEZONE TO 'UTC'")) {
+                stmt.executeUpdate();
+                OAIWorker worker = new OAIWorker(connection, configuration, recordFormatter, allowedSets, params);
+                switch (verb.toLowerCase(Locale.ROOT)) {
+                    case "getrecord":
+                        worker.getRecord(oaipmh);
+                        return marshall(oaipmh, indent);
+                    case "identify":
+                        worker.identify(oaipmh);
+                        return marshall(oaipmh, indent);
+                    case "listidentifiers":
+                        worker.listIdentifiers(oaipmh);
+                        return marshall(oaipmh, indent);
+                    case "listmetadataformats":
+                        worker.listMetadataFormats(oaipmh);
+                        return marshall(oaipmh, indent);
+                    case "listsets":
+                        worker.listSets(oaipmh);
+                        return marshall(oaipmh, indent);
+                    case "listrecords":
+                        worker.listRecords(oaipmh);
+                        return marshall(oaipmh, indent);
+                    default:
+                        throw new OAIException(OAIPMHerrorcodeType.BAD_VERB, "Unknown verb: " + verb);
                 }
             } catch (OAIException ex) {
                 log.info(ex.getMessage());
@@ -266,7 +255,7 @@ public class OAIResource {
             logQuery(params);
             return Response.status(ex.getStatus())
                     .type(MediaType.TEXT_PLAIN)
-                    .entity(ex.getMessage())
+                    .entity(ex.getMessage() + "\n")
                     .build();
         } catch (Exception ex) {
             log.error(ex.getMessage());
@@ -274,7 +263,7 @@ public class OAIResource {
             log.debug("", ex);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .type(MediaType.TEXT_PLAIN)
-                    .entity("DON'T PANIC - Error has been logged")
+                    .entity("DON'T PANIC - Error has been logged\n")
                     .build();
         }
     }
@@ -291,7 +280,7 @@ public class OAIResource {
         long ip = ipToLong(remoteIp);
         String forwardedFor = req.getHeader("X-Forwarded-For");
         if (forwardedFor != null) {
-            for (String allowedNet : config.getxForwardedFor().split(" +")) {
+            for (String allowedNet : configuration.getxForwardedFor().split(" +")) {
                 if (allowedNet.isEmpty()) {
                     continue;
                 }
@@ -364,15 +353,15 @@ public class OAIResource {
         oaipmh.setResponseDate(date);
         RequestType request = oaipmh.getRequest();
         if (request != null) {
-            request.setValue(config.getBaseUrl());
+            request.setValue(configuration.getBaseUrl());
         }
-        Marshaller marshaller = context.createMarshaller();
+        Marshaller marshaller = CONTEXT.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, indent);
         CharArrayWriter writer = new CharArrayWriter();
         marshaller.marshal(oaipmh, writer);
         String value = new String(writer.toCharArray());
-        log.debug("Xml is:\n" + value);
+        log.trace("Xml is:\n" + value);
         return Response.ok(value).build();
     }
 
@@ -396,27 +385,25 @@ public class OAIResource {
 
     private Response sendIndexHtml() {
         StringBuffer html = new StringBuffer();
-        Matcher matcher = ENV_MATCHER.matcher(indexHtml);
+        Matcher matcher = ENV_MATCHER.matcher(INDEX_HTML);
         while (matcher.find()) {
             String content;
             switch (matcher.group(1)) {
                 case "base_url":
-                    content = config.getBaseUrl();
+                    content = configuration.getBaseUrl();
                     break;
                 case "name":
-                    content = config.getRepositoryName();
+                    content = configuration.getRepositoryName();
                     break;
                 default:
                     content = "UNKNOWN VARIABLE";
+                    break;
             }
             if (content == null) {
                 content = "";
             }
-            if (content.isEmpty() && matcher.group(2) != null) {
-                content = matcher.group(2);
-            }
-            if (matcher.group(3) != null) {
-                switch (matcher.group(3)) {
+            if (matcher.group(2) != null) {
+                switch (matcher.group(2)) {
                     case "html":
                         content = HTML_ESCAPE.replace(content);
                         break;
@@ -424,9 +411,13 @@ public class OAIResource {
                         content = content.replaceAll("\"", "&quot;");
                         break;
                     default:
-                        log.warn("Unknown escape type: " + matcher.group(3) + " in index.html");
+                        log.warn("Unknown escape type: " + matcher.group(2) + " in index.html");
                         break;
                 }
+            }
+            if (content.isEmpty() && matcher.group(3) != null) {
+                content = matcher.group(3);
+                content = content.replaceAll("\\\\(.)", "\\1");
             }
             matcher.appendReplacement(html, content);
 

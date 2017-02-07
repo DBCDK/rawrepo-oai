@@ -18,16 +18,15 @@
  */
 package dk.dbc.rawrepo.oai;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.dbc.oai.pmh.OAIPMHerrorcodeType;
 import dk.dbc.oai.pmh.ObjectFactory;
 import dk.dbc.oai.pmh.ResumptionTokenType;
 import dk.dbc.rawrepo.oai.packing.PackText;
-import java.io.StringReader;
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.stream.JsonParsingException;
 import javax.xml.datatype.XMLGregorianCalendar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +39,7 @@ public class ResumptionToken {
 
     private static final Logger log = LoggerFactory.getLogger(ResumptionToken.class);
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final ObjectFactory OBJECT_FACTORY = new ObjectFactory();
 
     /**
@@ -49,7 +49,7 @@ public class ResumptionToken {
      * @param validHours timeout
      * @return base64 encoded string
      */
-    public static String encode(JsonObject obj, int validHours) {
+    public static String encode(ObjectNode obj, int validHours) {
         if (obj == null) {
             return null;
         }
@@ -63,8 +63,9 @@ public class ResumptionToken {
      *
      * @param token resumption token
      * @return object
+     * @throws java.io.IOException Unlikely, ByteArrayInputStream is broken
      */
-    public static JsonObject decode(String token) {
+    public static ObjectNode decode(String token) throws IOException {
         if (!token.startsWith("{")) {
             long now = Instant.now().toEpochMilli() / 1000L;
             String decoded = PackText.decode(token);
@@ -76,11 +77,11 @@ public class ResumptionToken {
             token = decoded.substring(indexOf);
         }
         try {
-            return Json.createReader(new StringReader(token)).readObject();
-        } catch (JsonParsingException ex) {
-            log.error("Error parsing JSON from ResumptionToken: " + token);
-            log.debug("Exception", ex);
-            throw new OAIException(OAIPMHerrorcodeType.BAD_RESUMPTION_TOKEN, "Content invalid");
+            return (ObjectNode) OBJECT_MAPPER.readTree(token);
+        } catch (IOException ex) {
+            log.error("Exception:" + ex.getMessage());
+            log.debug("Exception:", ex);
+            throw new OAIException(OAIPMHerrorcodeType.BAD_RESUMPTION_TOKEN, "bad token");
         }
     }
 
@@ -91,7 +92,7 @@ public class ResumptionToken {
      * @param validHours timeout
      * @return Resumption token to add to an oaipmh request
      */
-    public static ResumptionTokenType toToken(JsonObject obj, int validHours) {
+    public static ResumptionTokenType toToken(ObjectNode obj, int validHours) {
         if (obj == null) {
             return null;
         }

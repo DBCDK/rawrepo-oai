@@ -18,8 +18,11 @@
  */
 package dk.dbc.rawrepo.oai;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.dbc.commons.testutils.postgres.connection.PostgresITConnection;
 import dk.dbc.oai.pmh.OAIPMHerrorcodeType;
+import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,15 +31,10 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonString;
-import javax.json.JsonValue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,14 +70,10 @@ public class OAIIdentifierCollectionIT {
         loadRecordsFrom("recordset_1.json");
         Connection connection = pg.getConnection();
 
-        JsonObject build = Json.createObjectBuilder()
-                .add("s", "nat")
-                .add("u", "2017-02-20")
-                .add("m", "marcx")
-                .build();
+        ObjectNode json = json("'s':'nat','u':'2017-02-20','m':'marcx'");
 
         OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat", "bkm"));
-        JsonObject cont = recordCollection.fetch(build, 4);
+        ObjectNode cont = recordCollection.fetch(json, 4);
         System.out.println("recordCollection = " + recordCollection);
         System.out.println("cont = " + cont);
         System.out.println("cont = " + ResumptionToken.encode(cont, 48));
@@ -98,11 +92,10 @@ public class OAIIdentifierCollectionIT {
         loadRecordsFrom("recordset_1.json");
         Connection connection = pg.getConnection();
 
-        JsonObject build = Json.createObjectBuilder()
-                .add("m", "marcx")
-                .build();
+        ObjectNode json = json("'m':'marcx'");
+
         OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat", "bkm"));
-        recordCollection.fetch(build, 100);
+        recordCollection.fetch(json, 100);
         System.out.println("recordCollection = " + recordCollection);
         Set<String> uniq = recordCollection.stream()
                 .map(id -> id.getIdentifier())
@@ -120,11 +113,9 @@ public class OAIIdentifierCollectionIT {
         loadRecordsFrom("recordset_1.json");
         Connection connection = pg.getConnection();
 
-        JsonObject build = Json.createObjectBuilder()
-                .add("m", "marcx")
-                .build();
+        ObjectNode json = json("'m':'marcx'");
         OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat"));
-        recordCollection.fetch(build, 100);
+        recordCollection.fetch(json, 100);
         OAIIdentifier id = recordCollection.stream()
                 .filter(i -> "pid:2".equals(i.getIdentifier()))
                 .findFirst()
@@ -143,12 +134,9 @@ public class OAIIdentifierCollectionIT {
             stmt.executeUpdate();
         }
 
-        JsonObject build = Json.createObjectBuilder()
-                .add("s", "bkm")
-                .add("m", "marcx")
-                .build();
+        ObjectNode json = json("'s':'bkm','m':'marcx'");
         OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat"));
-        recordCollection.fetch(build, 100);
+        recordCollection.fetch(json, 100);
         OAIIdentifier id = recordCollection.stream()
                 .filter(i -> "pid:2".equals(i.getIdentifier()))
                 .findFirst()
@@ -167,11 +155,9 @@ public class OAIIdentifierCollectionIT {
             stmt.executeUpdate();
         }
 
-        JsonObject build = Json.createObjectBuilder()
-                .add("m", "marcx")
-                .build();
+        ObjectNode json = json("'m':'marcx'");
         OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat", "bkm"));
-        recordCollection.fetch(build, 100);
+        recordCollection.fetch(json, 100);
         OAIIdentifier id = recordCollection.stream()
                 .filter(i -> "pid:2".equals(i.getIdentifier()))
                 .findFirst()
@@ -185,19 +171,20 @@ public class OAIIdentifierCollectionIT {
         loadRecordsFrom("recordset_1.json");
         Connection connection = pg.getConnection();
 
-        JsonObject build = Json.createObjectBuilder()
-                .add("s", "nat")
-                .add("u", "2017-02-20")
-                .add("m", "???")
-                .build();
+        ObjectNode json = json("'s':'bkm','m':'???'");
 
         OAIIdentifierCollection recordCollection = new OAIIdentifierCollection(connection, Arrays.asList("nat", "bkm"));
-        JsonObject cont = recordCollection.fetch(build, 4);
+        ObjectNode cont = recordCollection.fetch(json, 4);
         assertNull(cont);
         assertTrue(recordCollection.isEmpty());
     }
 
-    private void loadRecordsFrom(String... jsons) throws SQLException {
+    private ObjectNode json(String json) throws IOException {
+        return new ObjectMapper().readValue("{" + json.replaceAll("'", "\"") + "}",
+                                            ObjectNode.class);
+    }
+
+    private void loadRecordsFrom(String... jsons) throws SQLException, IOException {
         Connection connection = pg.getConnection();
         connection.prepareStatement("SET TIMEZONE TO 'UTC'").execute();
         try (PreparedStatement rec = connection.prepareStatement("INSERT INTO oairecords (pid, changed, deleted) VALUES(?, ?::timestamp, ?)") ;
@@ -208,20 +195,19 @@ public class OAIIdentifierCollectionIT {
                 if (is == null) {
                     throw new RuntimeException("Cannot find: " + json);
                 }
-                JsonArray array = Json.createReader(is).readArray();
-                for (Iterator<JsonValue> iterator = array.iterator() ; iterator.hasNext() ;) {
-                    JsonValue next = iterator.next();
-                    if (!( next instanceof JsonObject )) {
-                        throw new RuntimeException("json contains: " + next + " expected an object ({...})");
-                    }
-                    JsonObject obj = (JsonObject) next;
-                    rec.setString(1, obj.getString("pid"));
-                    rec.setString(2, obj.getString("changed", DateTimeFormatter.ISO_INSTANT.format(Instant.now().atZone(ZoneId.systemDefault()))));
-                    rec.setBoolean(3, obj.getBoolean("deleted", false));
+                ObjectMapper objectMapper = new ObjectMapper();
+                List<ObjectNode> array = objectMapper.readValue(is, List.class);
+                for (Object object : array) {
+                    Map<String,Object> obj =  (Map<String,Object>) object;
+                    rec.setString(1, (String) obj.get("pid"));
+                    rec.setString(2, (String) obj.getOrDefault("changed", DateTimeFormatter.ISO_INSTANT.format(Instant.now().atZone(ZoneId.systemDefault()))));
+                    rec.setBoolean(3, (boolean) obj.getOrDefault("deleted", false));
                     rec.executeUpdate();
-                    recSet.setString(1, obj.getString("pid"));
-                    for (Iterator<JsonValue> setIterator = obj.getJsonArray("sets").iterator() ; setIterator.hasNext() ;) {
-                        recSet.setString(2, ( (JsonString) setIterator.next() ).getString());
+                    recSet.setString(1, (String) obj.get("pid"));
+                    List<Object> sets = (List<Object>) obj.get("sets");
+
+                    for (Object set : sets) {
+                        recSet.setString(2, (String) set);
                         recSet.executeUpdate();
                     }
                 }
