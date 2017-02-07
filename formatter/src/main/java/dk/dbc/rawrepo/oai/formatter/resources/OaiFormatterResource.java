@@ -139,7 +139,7 @@ public class OaiFormatterResource {
         Throwable cause = null; 
         Throwable result = e;
 
-        while( null != ( cause = result.getCause() )  && ( result != cause ) ) {
+        while( null != ( cause = result.getCause() )  && result != cause ) {
             result = cause;
             if( result.getMessage() != null ) {
                 message = result.getMessage();
