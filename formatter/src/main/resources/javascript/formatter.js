@@ -47,6 +47,14 @@ var format = function( content, format, allowedSets ) {
 
         default:
             throw Error("Format not allowed");
-    }
-    
+    }    
+};
+
+/**
+ * Used for validating format
+ * 
+ * @returns {List} list of allowed formats
+ */
+var allowedFormats = function() {
+    return [ 'oai_dc', 'marcx' ];
 };

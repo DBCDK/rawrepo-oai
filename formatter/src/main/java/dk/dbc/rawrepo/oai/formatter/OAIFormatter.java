@@ -21,12 +21,14 @@ package dk.dbc.rawrepo.oai.formatter;
 
 import dk.dbc.rawrepo.RawRepoDAO;
 import dk.dbc.rawrepo.Record;
+import dk.dbc.rawrepo.oai.formatter.JavaScriptWorker.OAIFormatUnsupportedException;
 import java.sql.Connection;
 import java.util.List;
 import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -58,6 +60,8 @@ public class OAIFormatter {
                            @QueryParam("format") String format, 
                            @QueryParam("sets") List<String> sets) {
         
+        log.debug("Processing request: id={}, format={}, sets={}", id, format, sets);
+        
         try (Connection connection = rawrepo.getConnection()) {
             
             FormatRequest request = FormatRequest.parse(id, format, sets);
@@ -65,22 +69,25 @@ public class OAIFormatter {
             RawRepoDAO dao = RawRepoDAO.builder(connection).build();
             
             if(!dao.recordExists(request.bibRecId, request.agencyId)){
-                return Response.status(Response.Status.NOT_FOUND).entity("No such record").type(MediaType.TEXT_PLAIN).build();
+                throw new NotFoundException();
             }
+            
             Record record = dao.fetchRecord(request.bibRecId, request.agencyId);
             String content = new String(record.getContent(), "UTF-8");
             String result = javaScriptWorker.format(content, request.format, request.sets);
+            
             return Response.ok(result).build();
+            
+        } catch (NotFoundException ex) {
+            log.debug("Record not found, id={}, format={}, sets={}", id, format, sets);
+            return Response.status(Response.Status.NOT_FOUND).entity("No such record: " + id).type(MediaType.TEXT_PLAIN).build();
+        } catch (OAIFormatUnsupportedException | IllegalArgumentException ex) {
+            log.debug("Invalid request, id={}, format={}, sets={}. Reason={}", id, format, sets, ex.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(unrollCause(ex)).type(MediaType.TEXT_PLAIN).build();
         } catch (Exception ex) {
-            log.error("Could not handle format request id={}, format={}, sets={}, message={}", id, format, sets, ex.getMessage());
+            log.error("Could not handle format request id={}, format={}, sets={}. Reason={}", id, format, sets, ex.getMessage());
             log.debug("Could not handle format request id={}, format={}, sets={}", id, format, sets, ex);
-            
-            if(ex instanceof IllegalArgumentException){
-                return Response.status(Response.Status.BAD_REQUEST).entity(unrollCause(ex)).type(MediaType.TEXT_PLAIN).build();
-            }
-            
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(unrollCause(ex)).type(MediaType.TEXT_PLAIN).build();
-            
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(unrollCause(ex)).type(MediaType.TEXT_PLAIN).build();            
         }
     }
     
@@ -95,8 +102,7 @@ public class OAIFormatter {
             this.bibRecId = bibRecId;
             this.agencyId = agencyId;
             this.format = format;
-            this.sets = sets;
-            
+            this.sets = sets;            
         }
         
         static FormatRequest parse(String id, String format, List<String> sets) {
@@ -141,8 +147,6 @@ public class OAIFormatter {
             }
         }
         return message;
-    }
-            
-            
+    }      
 
 }
