@@ -38,9 +38,15 @@ var MarcXchangeToOaiDc = function() {
 
         var marcRecord = MarcXchange.marcXchangeToMarcRecord( marcXrecord );
         var oaiDcXml = XmlUtil.createDocument( "dc", XmlNamespaces.oai_dc );
+        XmlUtil.addNamespace( oaiDcXml, XmlNamespaces.dc );
+        XmlUtil.addNamespace( oaiDcXml, XmlNamespaces.xsi );
+        XmlUtil.setAttribute( oaiDcXml, 
+                              "schemaLocation", 
+                              "http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd", 
+                              XmlNamespaces.xsi );
 
         var map = new MatchMap( );
-        oaiDcXml = MarcXchangeToOaiDc.addDcTitleElement( oaiDcXml, map );
+        MarcXchangeToOaiDc.addDcTitleElement( oaiDcXml, map );
         //call more functions
         marcRecord.eachFieldMap( map );
 
@@ -66,7 +72,7 @@ var MarcXchangeToOaiDc = function() {
 
         map.put( "245", function( field ) {
             var titles = [];
-            field.eachSubfield( "a", function( field, subfield ) {
+            field.eachSubField( "a", function( field, subfield ) {
                 titles.push( subfield.value );
             } );
             var dcTitleValue = titles.join( ". " );
