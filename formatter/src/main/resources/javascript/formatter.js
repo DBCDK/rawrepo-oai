@@ -19,8 +19,9 @@
 
 /* global XmlUtil, Log */
 
-use("Log");
-use("XmlUtil");
+use( "Log" );
+use( "XmlUtil" );
+use( "MarcXchangeToOaiDc" );
 
 /**
  * Formats a MarcX record, either producing a Dublin Core record
@@ -32,17 +33,14 @@ use("XmlUtil");
  * @returns {String} DC or MarcX
  */
 var format = function( content, format, allowedSets ) {
-    var marcXDoc = XmlUtil.fromString( content );
     
     switch( format ) {
         case 'oai_dc':
-            
-            // Create DC
-            return '<dc>I am DC</dc>';
-            
+            return XmlUtil.toXmlString( MarcXchangeToOaiDc.createDcXml( content ) );
         case 'marcx':
             
             // create marcx
+            var marcXDoc = XmlUtil.fromString( content );
             return XmlUtil.toXmlString( marcXDoc );
 
         default:

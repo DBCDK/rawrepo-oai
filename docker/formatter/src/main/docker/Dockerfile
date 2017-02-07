@@ -1,11 +1,9 @@
-FROM docker.dbc.dk/dbc-payara
+FROM docker.dbc.dk/dbc-dropwizard
 MAINTAINER os-team
 
 ENV KAFKA_LOG_APPNAME rawrepo-oai-formatter
+ADD res/rawrepo-oai-formatter-jar/ $DROPWIZARD_HOME
 
-ADD pre/* $PAYARA_CFG/pre/
-ADD post/* $PAYARA_CFG/post/
-ADD res/rawrepo-oai-formatter.war $PAYARA_CFG/pre/
-RUN payara-setup $PAYARA_CFG/pre/
+LABEL RAWREPO_URL="Rawrepo-oai jdbc url. (required). Format: user:pass@host:port/base" \
+      POOL_SIZE="Size of JavaScript worker pool, and rawrepo jdbc pool. Default is 2 (optional)"
 
-LABEL RAWREPO_URL="Rawrepo jdbc url. (required). Ex.: 'user:pass@host:1234/dbname'" \
