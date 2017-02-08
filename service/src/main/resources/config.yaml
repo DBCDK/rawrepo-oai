@@ -8,7 +8,7 @@ noAuthentication: ${NO_AUTHENTICATION:-false}
 xForwardedFor: ${X_FORWARDED_FOR:-127.0.0.1 172.16.0.0/12}
 forsRightsUrl: ${FORS_RIGHTS_URL:-http://forsrights.addi.dk/1.2/}
 forsRightsRules: ${FORS_RIGHTS_RULES:-netpunkt.dk,500=bkm}
-formatService: ${FORMAT_SERVICE:-http://localhost/format.php?id=${id}&format=${format}&sets=${sets}}
+formatService: ${FORMAT_SERVICE:-http://localhost/format.php?id=%(id)&format=%(format)&sets=%(sets)}
 fetchRecordsTimeout: ${FETCH_RECORDS_TIMEOUT:-30}
 rawrepoOai:
   driverClass: org.postgresql.Driver

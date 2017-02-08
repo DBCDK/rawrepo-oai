@@ -87,7 +87,7 @@ public class RecordFormatter {
             return content;
         }
     }
-    private static final Pattern ENV_MATCHER = Pattern.compile("\\$\\{(\\w+)\\}");
+    private static final Pattern ENV_MATCHER = Pattern.compile("\\%\\((\\w+)\\)");
 
     /**
      * Fetch a record

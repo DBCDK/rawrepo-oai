@@ -21,6 +21,7 @@ package dk.dbc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.ImmutableMultimap;
+import dk.dbc.rawrepo.oai.OAIApplication;
 import dk.dbc.rawrepo.oai.OAIConfiuration;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.client.HttpClientBuilder;
@@ -47,7 +48,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author DBC {@literal <dbc.dk>}
  */
-public class DevelMain extends Main {
+public class DevelMain extends OAIApplication {
 
     private static final Logger log = LoggerFactory.getLogger(DevelMain.class);
 

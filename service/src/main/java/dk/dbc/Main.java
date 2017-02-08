@@ -18,66 +18,20 @@
  */
 package dk.dbc;
 
-import com.codahale.metrics.MetricRegistry;
-import dk.dbc.rawrepo.oai.ThrottleResource;
-import dk.dbc.rawrepo.oai.OAIResource;
-import dk.dbc.rawrepo.oai.AccessControl;
-import dk.dbc.rawrepo.oai.DBHealthCheck;
-import dk.dbc.rawrepo.oai.OAIConfiuration;
-import dk.dbc.rawrepo.oai.RecordFormatter;
-import dk.dbc.rawrepo.oai.Throttle;
-import io.dropwizard.Application;
-import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
-import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
-import javax.sql.DataSource;
+import dk.dbc.rawrepo.oai.OAIApplication;
 
 /**
  *
  * @author DBC {@literal <dbc.dk>}
  */
-public class Main extends Application<OAIConfiuration> {
+public class Main{
 
     public static void main(String[] args) {
         try {
-            new Main().run(args);
+            new OAIApplication().run(args);
         } catch (Exception ex) {
             System.err.println(ex.getMessage());
             System.exit(1);
         }
     }
-
-    @Override
-    public String getName() {
-        return "oai-service";
-    }
-
-    @Override
-    public void initialize(Bootstrap<OAIConfiuration> bootstrap) {
-        super.initialize(bootstrap);
-        bootstrap.setConfigurationSourceProvider(
-                new SubstitutingSourceProvider(
-                        bootstrap.getConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(false, true)));
-    }
-
-    @Override
-    public void run(OAIConfiuration config, Environment env) throws Exception {
-        MetricRegistry metrics = env.metrics();
-        DataSource datasource = config.getDataSourceFactory()
-                .build(metrics, getName());
-
-        Throttle throttle = new Throttle();
-        RecordFormatter recordFormatter = new RecordFormatter(config, metrics);
-        AccessControl accessControl = new AccessControl(config, datasource, metrics);
-        OAIResource oaiResource = new OAIResource(config, datasource, accessControl, throttle, recordFormatter);
-        env.jersey().register(oaiResource);
-
-        ThrottleResource throttleResource = new ThrottleResource(throttle);
-        env.jersey().register(throttleResource);
-
-        env.healthChecks().register("db", new DBHealthCheck(datasource));
-    }
-
 }
