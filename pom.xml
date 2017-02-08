@@ -42,6 +42,10 @@
     <name>rawrepo-oai</name>
     <url>http://oss.dbc.dk</url>
 
+    <properties>
+        <dropwizard.version>1.0.6</dropwizard.version>
+    </properties>
+
     <modules>
         <module>schema</module>
         <module>service</module>
@@ -49,7 +53,7 @@
         <module>docker</module>
         <!-- This needs to be last, otherwise all following tools are not a part of the package --> 
         <!-- <module>debian</module> -->
-  </modules>
+    </modules>
 
     <build>
         <plugins>
