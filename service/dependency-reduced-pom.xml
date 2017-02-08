@@ -190,8 +190,5 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  <properties>
-    <dropwizard.version>1.0.5</dropwizard.version>
-  </properties>
 </project>
 

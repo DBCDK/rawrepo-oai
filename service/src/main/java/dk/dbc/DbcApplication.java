@@ -21,7 +21,6 @@ package dk.dbc;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
-import org.apache.commons.lang3.text.StrSubstitutor;
 
 /**
  *
