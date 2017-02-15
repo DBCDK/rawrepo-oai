@@ -391,4 +391,143 @@ UnitTest.addFixture( "Test", function( ) {
 
 } );
 
+UnitTest.addFixture( "test removeLocalFieldsIfAny", function( ) {
+
+    var recordString = (
+        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+        '<marcx:subfield code="a">52331048</marcx:subfield>' +
+        '<marcx:subfield code="b">870970</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+        '<marcx:subfield code="r">n</marcx:subfield>' +
+        '<marcx:subfield code="a">e</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="008">' +
+        '<marcx:subfield code="t">m</marcx:subfield>' +
+        '<marcx:subfield code="u">f</marcx:subfield>' +
+        '<marcx:subfield code="a">2017</marcx:subfield>' +
+        '<marcx:subfield code="b">dk</marcx:subfield>' +
+        '<marcx:subfield code="k">b</marcx:subfield>' +
+        '<marcx:subfield code="l">per</marcx:subfield>' +
+        '<marcx:subfield code="n">a</marcx:subfield>' +
+        '<marcx:subfield code="x">06</marcx:subfield>' +
+        '<marcx:subfield code="v">0</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="009">' +
+        '<marcx:subfield code="a">m</marcx:subfield>' +
+        '<marcx:subfield code="g">xe</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="032">' +
+        '<marcx:subfield code="x">ACC201707</marcx:subfield>' +
+        '<marcx:subfield code="a">DBI201709</marcx:subfield>' +
+        '<marcx:subfield code="x">BKM201709</marcx:subfield>' +
+        '<marcx:subfield code="x">FSB201709</marcx:subfield>' +
+        '<marcx:subfield code="x">FSC201709</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="041">' +
+        '<marcx:subfield code="a">per</marcx:subfield>' +
+        '<marcx:subfield code="c">dan</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="245">' +
+        '<marcx:subfield code="a">Sonita</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="260">' +
+        '<marcx:subfield code="b">[Det Danske Filminstitut]</marcx:subfield>' +
+        '<marcx:subfield code="c">[2017]</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="504">' +
+        '<marcx:subfield code="&#38;">1</marcx:subfield>' +
+        '<marcx:subfield code="a">I Iran lever 15-aarige Sonita som illegal flygtning</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="508">' +
+        '<marcx:subfield code="a">Persisk tale</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="517">' +
+        '<marcx:subfield code="&#38;">1</marcx:subfield>' +
+        '<marcx:subfield code="a">Maerkning: Tilladt for boern over 11 aar</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="600">' +
+        '<marcx:subfield code="1"/>' +
+        '<marcx:subfield code="a">Alizadeh</marcx:subfield>' +
+        '<marcx:subfield code="h">Sonita</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="s12">' +
+        '<marcx:subfield code="t">TeamBMV201707</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="z99">' +
+        '<marcx:subfield code="a">noe</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    var expected = (
+        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+        '<marcx:subfield code="a">52331048</marcx:subfield>' +
+        '<marcx:subfield code="b">870970</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+        '<marcx:subfield code="r">n</marcx:subfield>' +
+        '<marcx:subfield code="a">e</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="008">' +
+        '<marcx:subfield code="t">m</marcx:subfield>' +
+        '<marcx:subfield code="u">f</marcx:subfield>' +
+        '<marcx:subfield code="a">2017</marcx:subfield>' +
+        '<marcx:subfield code="b">dk</marcx:subfield>' +
+        '<marcx:subfield code="k">b</marcx:subfield>' +
+        '<marcx:subfield code="l">per</marcx:subfield>' +
+        '<marcx:subfield code="n">a</marcx:subfield>' +
+        '<marcx:subfield code="x">06</marcx:subfield>' +
+        '<marcx:subfield code="v">0</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="009">' +
+        '<marcx:subfield code="a">m</marcx:subfield>' +
+        '<marcx:subfield code="g">xe</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="032">' +
+        '<marcx:subfield code="x">ACC201707</marcx:subfield>' +
+        '<marcx:subfield code="a">DBI201709</marcx:subfield>' +
+        '<marcx:subfield code="x">BKM201709</marcx:subfield>' +
+        '<marcx:subfield code="x">FSB201709</marcx:subfield>' +
+        '<marcx:subfield code="x">FSC201709</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="041">' +
+        '<marcx:subfield code="a">per</marcx:subfield>' +
+        '<marcx:subfield code="c">dan</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="245">' +
+        '<marcx:subfield code="a">Sonita</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="260">' +
+        '<marcx:subfield code="b">[Det Danske Filminstitut]</marcx:subfield>' +
+        '<marcx:subfield code="c">[2017]</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="504">' +
+        '<marcx:subfield code="&#38;">1</marcx:subfield>' +
+        '<marcx:subfield code="a">I Iran lever 15-aarige Sonita som illegal flygtning</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="508">' +
+        '<marcx:subfield code="a">Persisk tale</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="517">' +
+        '<marcx:subfield code="&#38;">1</marcx:subfield>' +
+        '<marcx:subfield code="a">Maerkning: Tilladt for boern over 11 aar</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="600">' +
+        '<marcx:subfield code="1"/>' +
+        '<marcx:subfield code="a">Alizadeh</marcx:subfield>' +
+        '<marcx:subfield code="h">Sonita</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    var actual = MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( recordString );
+
+    Assert.equalXml( "removeLocalFieldsIfAny - remove s12 and z99", actual, expected );
+
+} );
 

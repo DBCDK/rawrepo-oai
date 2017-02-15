@@ -35,7 +35,6 @@ var MarcXchangeToOaiMarcX = function() {
         Log.trace( "Entering MarcXchangeToOaiDc.createMarcXmlWithoutBkmFields" );
 
         var marcRecord = MarcXchange.marcXchangeToMarcRecord( marcXrecord );
-
         var modifiedRecord = marcRecord.clone();
 
         modifiedRecord.removeAll( "504" );
@@ -61,11 +60,47 @@ var MarcXchangeToOaiMarcX = function() {
 
     }
 
+    /**
+     * Function that removes local fields in the marcxchange record
+     * (local fields starts with a letter instead of a number) if there
+     * are any.
+     *
+     * @syntax MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( marcXrecord )
+     * @param {String} marcXrecord the marcxchange record to check for local fields
+     * @return {String} a new marcxchange record without local fields
+     * @type {function}
+     * @function
+     * @name MarcXchangeToOaiDc.removeLocalFieldsIfAny
+     */
+    function removeLocalFieldsIfAny( marcXrecord ) {
+
+        Log.trace( "Entering MarcXchangeToOaiDc.removeLocalFieldsIfAny" );
+
+        var marcRecord = MarcXchange.marcXchangeToMarcRecord( marcXrecord );
+        var modifiedRecord = marcRecord.clone();
+
+        var fieldMatcher = {
+            matchField: function( modifiedRecord, field ) {
+                //fields starting with a letter should be removed
+                return ( field.name.match( /^[a-z]/ ) );
+            }
+        };
+        modifiedRecord.removeWithMatcher( fieldMatcher );
+        var marcXml = MarcXchange.marcRecordToMarcXchange( modifiedRecord, "danMARC2", "Bibliographic" );
+        var marcXmlString = XmlUtil.toXmlString( marcXml );
+
+        Log.trace( "Leaving MarcXchangeToOaiDc.removeLocalFieldsIfAny" );
+
+        return marcXmlString;
+
+    }
+
 
     Log.info( "Leaving MarcXchangeToOaiMarcX module" );
 
     return {
-        createMarcXmlWithoutBkmFields: createMarcXmlWithoutBkmFields
+        createMarcXmlWithoutBkmFields: createMarcXmlWithoutBkmFields,
+        removeLocalFieldsIfAny: removeLocalFieldsIfAny
     }
 
 }();

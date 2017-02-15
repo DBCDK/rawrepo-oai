@@ -43,23 +43,24 @@ var format = function( content, format, allowedSets ) {
         case 'oai_dc':
             return XmlUtil.toXmlString( MarcXchangeToOaiDc.createDcXml( content ) );
         case 'marcx':
+            content = MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( content );
             var bkmRecordAllowed = ( allowedSets.indexOf( 'bkm' ) > -1 );
             if ( bkmRecordAllowed ) {
                 var marcXDoc = XmlUtil.fromString( content );
             } else {
-                marcXDoc = MarcXchangeToOaiMarcX.createMarcXml( content );
+                marcXDoc = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( content );
             }
             return XmlUtil.toXmlString( marcXDoc );
 
         default:
-            throw Error("Format not allowed");
+            throw Error( "Format: " + format + " not allowed" );
     }    
 };
 
 /**
  * Used for validating format
  * 
- * @returns {List} list of allowed formats
+ * @returns {Array} list of allowed formats
  */
 var allowedFormats = function() {
     return [ 'oai_dc', 'marcx' ];
