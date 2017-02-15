@@ -29,18 +29,26 @@ use( "MarcXchangeToOaiDc" );
  * 
  * @param {String} content The MarcX document
  * @param {String} format The format to return
- * @param {List} allowedSets List of strings
+ * @param {Array} allowedSets List of strings
  * @returns {String} DC or MarcX
  */
 var format = function( content, format, allowedSets ) {
-    
+
+    //lowercasing to make matching easier and avoid errors if input changes
+    for ( var i = 0; i < allowedSets.length; i++ ) {
+        allowedSets[ i ] = allowedSets[ i ].toLowerCase();
+    }
+
     switch( format ) {
         case 'oai_dc':
             return XmlUtil.toXmlString( MarcXchangeToOaiDc.createDcXml( content ) );
         case 'marcx':
-            
-            // create marcx
-            var marcXDoc = XmlUtil.fromString( content );
+            var bkmRecordAllowed = ( allowedSets.indexOf( 'bkm' ) > -1 );
+            if ( bkmRecordAllowed ) {
+                var marcXDoc = XmlUtil.fromString( content );
+            } else {
+                marcXDoc = MarcXchangeToOaiMarcX.createMarcXml( content );
+            }
             return XmlUtil.toXmlString( marcXDoc );
 
         default:
