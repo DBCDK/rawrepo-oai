@@ -59,6 +59,8 @@ var MarcXchangeToOaiDc = function() {
 
         marcRecord.eachFieldMap( map );
 
+        oaiDcXml = XmlUtil.sortElements( oaiDcXml );
+
         Log.trace( "Leaving MarcXchangeToOaiDc.createDcXml" );
 
         return oaiDcXml;
@@ -322,7 +324,7 @@ var MarcXchangeToOaiDc = function() {
      * @type {function}
      * @syntax MarcXchangeToOaiDc.__removeUnwantedCharacters( string )
      * @param {String} string The string that should have unwanted characters removed
-     * @return {String} The new string without unwanted characters
+     * @return {String} A new string without unwanted characters
      * @name MarcXchangeToOaiDc.__removeUnwantedCharacters
      * @function
      */
@@ -331,8 +333,7 @@ var MarcXchangeToOaiDc = function() {
         Log.trace( "Entering MarcXchangeToOai.__removeUnwantedCharacters" );
 
         var newString = string.replace( /\u00A4|\[|\]|/g, "" );
-        newString = newString.replace( /^ /, "" ); //remove possible whitespace at beginning of line
-        newString = newString.replace( / $/, "" ); //remove possible whitespace at end of line
+        newString = newString.trim( ); //remove whitespaces at beginning and end of line
 
         Log.debug( "Changed string: '", string, "' to: '", newString, "'" );
 
@@ -354,7 +355,7 @@ var MarcXchangeToOaiDc = function() {
      * @param {Function} func The add-element function to call
      * @param {Document} xml The xml to add element to
      * @param {Record} record The record from which to create the element
-     * @param {String} elementName Name of dc element to create
+     * @param {String} [elementName] Name of dc element to create
      * @return {Document} xml with added element
      * @name MarcXchangeToOaiDc.__callElementMethod
      * @function

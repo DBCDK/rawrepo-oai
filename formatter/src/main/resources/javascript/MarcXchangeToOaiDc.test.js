@@ -74,15 +74,15 @@ UnitTest.addFixture( "test createDcXml", function( ) {
        'xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" ' +
        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
        'xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">' +
-           '<dc:identifier>870970,23645564</dc:identifier>' +
-           '<dc:date>2001</dc:date>' +
-           '<dc:language>dan</dc:language>' +
-           '<dc:identifier>ISBN:87-7724-857-0</dc:identifier>' +
+           '<dc:contributor>Mette Holm</dc:contributor>' +
            '<dc:creator>Haruki Murakami</dc:creator>' +
+           '<dc:date>2001</dc:date>' +
+           '<dc:identifier>ISBN:87-7724-857-0</dc:identifier>' +
+           '<dc:identifier>870970,23645564</dc:identifier>' +
+           '<dc:language>dan</dc:language>' +
+           '<dc:publisher>Klim</dc:publisher>' +
            '<dc:source>Nejimaki-dori kuronikure</dc:source>' +
            '<dc:title>Traekopfuglens kroenike</dc:title>' +
-           '<dc:publisher>Klim</dc:publisher>' +
-           '<dc:contributor>Mette Holm</dc:contributor>' +
        '</oai_dc:dc>'
    );
 
