@@ -7,9 +7,10 @@ use( "MarcXchange" );
 EXPORTED_SYMBOLS = [ 'MarcXchangeToOaiMarcX' ];
 
 /**
- * Module with functions that creates .... for OAI harvest of records from RawRepo.
+ * Module with functions that removes certain fields in marc records
+ * for OAI harvest of records from RawRepo.
  *
- * This module contains functions to create marcxchange record
+ * This module contains functions to create modified marcxchange record
  *
  * @type {namespace}
  * @namespace
