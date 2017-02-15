@@ -1,0 +1,27 @@
+poolSize: ${POOL_SIZE:-2}
+rawrepo:
+  driverClass: org.postgresql.Driver
+  user: ${PGUSER:-user}
+  password: ${PGPASSWORD:-password}
+  url: jdbc:postgresql://${PGHOST:-localhost}:${PGPORT:-5432}/${PGBASE:-data}
+  properties:
+    charSet: UTF-8
+  maxWaitForConnection: 1s
+  validationQuery: "/* MyService Health Check */ SELECT 1"
+  validationQueryTimeout: 3s
+  initialSize: 1
+  minSize: 1
+  maxSize: ${POOL_SIZE:-2}
+  checkConnectionWhileIdle: false
+  evictionInterval: 10s
+  minIdleTime: 1 minute
+
+server:
+# *** logback requestlog
+  type: dbc
+  applicationConnectors:
+    - type: http
+      port: 8000
+  adminConnectors:
+    - type: http
+      port: 8001

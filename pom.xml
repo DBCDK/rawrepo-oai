@@ -49,6 +49,7 @@
     <modules>
         <module>schema</module>
         <module>service</module>
+        <module>setmatcher</module>
         <module>formatter</module>
         <module>docker</module>
         <!-- This needs to be last, otherwise all following tools are not a part of the package --> 
