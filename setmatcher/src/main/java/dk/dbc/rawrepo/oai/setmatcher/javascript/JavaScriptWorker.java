@@ -92,9 +92,9 @@ public class JavaScriptWorker {
      * @return
      * @throws Exception
      */
-    public String[] getOaiSets(int agencyId, String content) throws Exception {
+    public String[] getOaiSets(int agencyId, String content, RawRepoRecordFetcher rawrepo) throws Exception {
         return environment.getJavascriptObjectAsStringArray(
-                environment.callMethod(OAI_SET_MATCHER_METHOD, new Object[]{agencyId, content})
+                environment.callMethod(OAI_SET_MATCHER_METHOD, new Object[]{agencyId, content, rawrepo})
         );
     }
 

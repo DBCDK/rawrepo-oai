@@ -1,6 +1,6 @@
 /* global Assert, OaiSetMatcher, UnitTest */
 
-/** @file Module that contains unit tests for functions in MarcXchangeToOaiDc module */
+/** @file Module that contains unit tests for functions in OaiSetMatcher module */
 
 use( "OaiSetMatcher" );
 use( "UnitTest" );

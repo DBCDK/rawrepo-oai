@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dbc.rawrepo.oai.setmatcher.jms;
+package dk.dbc.rawrepo.oai.setmatcher.jobprocessor;
 
 import dk.dbc.rawrepo.RawRepoDAO;
 import dk.dbc.rawrepo.RawRepoException;
@@ -24,6 +24,7 @@ import dk.dbc.rawrepo.Record;
 import dk.dbc.rawrepo.oai.setmatcher.db.OaiSetMatcherDAO;
 import dk.dbc.rawrepo.oai.setmatcher.db.OaiSetMatcherDAO.RecordSet;
 import dk.dbc.rawrepo.oai.setmatcher.javascript.JavaScriptWorker;
+import dk.dbc.rawrepo.oai.setmatcher.javascript.RawRepoRecordFetcher;
 import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -86,7 +87,7 @@ public class RawRepoJobProcessor {
             } else {
                 rawRepoOaiDao.updateRecord(pid, false);                
                 String content = new String(record.getContent(), "UTF-8");
-                toBeIncludedIn = new HashSet<>(Arrays.asList(jsWorker.getOaiSets(agencyId, content)));
+                toBeIncludedIn = new HashSet<>(Arrays.asList(jsWorker.getOaiSets(agencyId, content, new RawRepoRecordFetcher(rawrepoDao))));
             }
 
             // Make sure record is gone from any set it is no longer included in
