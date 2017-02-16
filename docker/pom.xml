@@ -25,6 +25,7 @@
         <module>postgres</module>
         <module>service</module>
         <module>formatter</module>
+        <module>setmatcher</module>
     </modules>
 
 </project>
