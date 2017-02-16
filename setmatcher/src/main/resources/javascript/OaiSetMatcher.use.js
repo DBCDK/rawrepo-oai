@@ -26,7 +26,7 @@ var OaiSetMatcher = function() {
      * should be contained in.
      *
      * @syntax OaiSetMatcher.getOaiSets( agencyId, marcXrecord )
-     * @param {String} agencyId
+     * @param {Number} agencyId
      * @param {String} marcXrecord the marcxchange record
      * @param {Object} recordFetcher Access object for fetching MarcX records from rawrepo
      * @return {Array} string array of OAI set names
@@ -59,52 +59,30 @@ var OaiSetMatcher = function() {
      * Adds function to the MatchMap, which appends 'NAT' to oaiSets
      * if the given MarcX record should be contained in the NAT set.
      *
-     * @syntax OaiSetMatcher.checkNAT( oaiSets, map )
-     * @param {String} agencyId
-     * @param {Array} oaiSets Array of oai set names 
-     * @param {MatchMap} map
+     * @syntax OaiSetMatcher.checkNAT( agencyId, oaiSets, map )
+     * @param {Number} agencyId The agency that the record belongs to
+     * @param {Object} oaiSets Object of oai set names
+     * @param {MatchMap} map The map to register handler methods in
      * @type {function}
      * @function
      * @name OaiSetMatcher.checkNAT
      */
     function checkNAT( agencyId, oaiSets, map ) {
 
-        Log.trace( "Entering SetMatcher.checkNAT" );
+        Log.trace( "Entering OaiSetMatcher.checkNAT" );
         
-        if( agencyId !== 870970 && agencyId !== 870971 ) {
+        if ( 870970 !== agencyId && 870971 !== agencyId ) {
+            Log.trace( "Leaving OaiSetMatcher.checkNAT" );
             return;
         }
 
         map.put( "032", function( field ) {
-            field.eachSubField( "a", function( field, subfield ) {
-                var value = subfield.value.toUpperCase().trim();
-                switch( value ) {
-                    case 'DAN': 
-                    case 'DAR': 
-                    case 'DBF': 
-                    case 'DBI': 
-                    case 'DLF': 
-                    case 'DMO': 
-                    case 'GBF': 
-                    case 'GMO': 
-                    case 'DKF': 
-                    case 'DMF': 
-                    case 'DOP': 
-                    case 'DPF': 
-                    case 'DPO': 
-                    case 'FPF': 
-                    case 'GPF': 
-                    case 'KIP': 
-                    case 'FBL':
-                        oaiSets["NAT"] = true;
-                        break;
-                    default:
-                        break;
-                }       
-            } );
+            if ( field.exists( "a" ) ) {
+                oaiSets["NAT"] = true;
+            }
         } );
 
-        Log.trace( "Leaving SetMatcher.checkNAT" );
+        Log.trace( "Leaving OaiSetMatcher.checkNAT" );
 
     }
     
@@ -112,44 +90,45 @@ var OaiSetMatcher = function() {
      * Adds function to the MatchMap, which appends 'BKM' to oaiSets
      * if the given MarcX record should be contained in the BKM set.
      *
-     * @syntax OaiSetMatcher.checkBKM( oaiSets, map )
-     * @param {String} agencyId
-     * @param {Array} oaiSets Array of oai set names 
-     * @param {MatchMap} map
+     * @syntax OaiSetMatcher.checkBKM( agencyId, oaiSets, map )
+     * @param {Number} agencyId The agency that the record belongs to
+     * @param {Object} oaiSets Object of oai set names
+     * @param {MatchMap} map The map to register handler methods in
      * @type {function}
      * @function
      * @name OaiSetMatcher.checkBKM
      */
     function checkBKM( agencyId, oaiSets, map ) {
         
-        Log.trace( "Entering SetMatcher.checkBKM" );
+        Log.trace( "Entering OaiSetMatcher.checkBKM" );
         
-        if( agencyId !== 870970 ) {
+        if ( 870970 !== agencyId ) {
+            Log.trace( "Leaving SetMatcher.checkBKM" );
             return;
         }
         
         map.put( "032", function( field ) {
             field.eachSubField( "x", function( field, subfield ) {
-                var value = subfield.value.toUpperCase().trim();
-                if ( value.match(/^((BKM)|(SF.)|(AC.))$/) ) {
+                var value = subfield.value.trim();
+                if ( value.match( /^((BK[MRX])|(SF.)|(AC.)|(INV)|(UTI)|(NET))/i ) ) {
                     oaiSets["BKM"] = true;
                 }            
             } );
         } );
         
-        Log.trace( "Leaving SetMatcher.checkBKM" );
+        Log.trace( "Leaving OaiSetMatcher.checkBKM" );
     }
     
     /**
      * Returns keys of object as array of strings
      * 
-     * @param {Object} map
+     * @param {Object} obj
      * @returns {Array}
      */
-    function __keys( map ){
-        var result = [];
-        for( var key in map ) {
-            if( map.hasOwnProperty( key ) ) {
+    function __keys( obj ){
+        var result = [ ];
+        for ( var key in obj ) {
+            if ( obj.hasOwnProperty( key ) ) {
                 result.push( key );
             }
         }
@@ -163,9 +142,9 @@ var OaiSetMatcher = function() {
      *
      *
      * @type {function}
-     * @syntax OaiSetMatcher.__callElementMethod( func, record )
-     * @param {String} agencyId
+     * @syntax OaiSetMatcher.__callElementMethod( func, agencyId, record )
      * @param {Function} func the function to call
+     * @param {Number} agencyId
      * @param {Record} record The record to be inspected 
      * @return {Array} array of OAI set names
      * @name OaiSetMatcher.__callElementMethod
