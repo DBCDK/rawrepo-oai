@@ -20,10 +20,15 @@ package dk.dbc.rawrepo.oai.formatter.resources;
 
 import dk.dbc.rawrepo.oai.formatter.javascript.JavascriptWorkerPool;
 import dk.dbc.rawrepo.RawRepoDAO;
+import dk.dbc.rawrepo.RawRepoException;
 import dk.dbc.rawrepo.Record;
+import dk.dbc.rawrepo.RecordId;
 import dk.dbc.rawrepo.oai.formatter.javascript.JavascriptWorkerPool.JavaScriptWorker;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
@@ -68,11 +73,10 @@ public class OaiFormatterResource {
                 throw new NotFoundException();
             }
             
-            Record record = dao.fetchRecord(request.bibRecId, request.agencyId);
-            String content = new String(record.getContent(), "UTF-8");
-            
+            String[] records = fetchRecordCollection(request.agencyId, request.bibRecId, dao);
+
             try(JavaScriptWorker jsWorker = jsWorkerPool.borrowWorker()) {
-                String result = jsWorker.format(content, request.format, request.sets);
+                String result = jsWorker.format(records, request.format, request.sets);
                 return Response.ok(result).build();
             }
 
@@ -88,6 +92,35 @@ public class OaiFormatterResource {
             log.debug("Could not handle format request", id, format, sets, ex);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(cause).type(MediaType.TEXT_PLAIN).build();            
         }
+    }
+    
+    /**
+     * creates an array consisting of the content of a record + ancestors.
+     * Its ordered from closest to most distant ancestor
+     * @param agencyId
+     * @param bibRecId
+     * @param dao
+     * @return
+     * @throws RawRepoException
+     * @throws UnsupportedEncodingException 
+     */
+    static String[] fetchRecordCollection(int agencyId, String bibRecId, RawRepoDAO dao) throws RawRepoException, UnsupportedEncodingException{
+        ArrayList<String> collection = new ArrayList<>();
+        Record r = dao.fetchRecord(bibRecId, agencyId);
+        while(r != null) {
+            collection.add(new String(r.getContent(), "UTF-8"));
+
+            Set<RecordId> parents = dao.getRelationsParents(r.getId());
+            Record parent = null;
+            for (RecordId parentId : parents) {
+                if(parentId.getAgencyId() == r.getId().getAgencyId()) {
+                    parent = dao.fetchRecord(parentId.getBibliographicRecordId(), parentId.getAgencyId());
+                    break;
+                }
+            }
+            r = parent;
+        }
+        return collection.toArray(new String[collection.size()]);
     }
     
     public static class FormatRequest {

@@ -126,17 +126,17 @@ public class JavascriptWorkerPool {
         /**
          * Run script on content, adding data to solrInputDocument
          *
-         * @param content String containing marcxchange
+         * @param records String[] containing collection of marcX records
          * @param format The format to return
          * @param sets List of sets this request is allowed to see
          * @return
          * @throws Exception
          */
-        public String format(String content, String format, List<String> sets) throws Exception {
+        public String format(String[] records, String format, List<String> sets) throws Exception {
             if (!allowedFormats.contains(format)) {
                 throw new IllegalArgumentException("Format '" + format + "' not allowed. Formats allowed: " + allowedFormats);
             }
-            return (String) environment.callMethod(FORMATTER_METHOD, new Object[]{content, format, sets});
+            return (String) environment.callMethod(FORMATTER_METHOD, new Object[]{records, format, sets});
         }
         
         public HashSet<String> getAllowedFormats() throws Exception {

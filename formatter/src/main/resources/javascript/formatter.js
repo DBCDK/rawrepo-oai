@@ -17,51 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* global XmlUtil, Log */
+/* global OaiFormatter */
 
-use( "Log" );
-use( "XmlUtil" );
-use( "MarcXchangeToOaiDc" );
+use( "OaiFormatter" );
 
-/**
- * Formats a MarcX record, either producing a Dublin Core record
- * or a MarcX record
- * 
- * @param {String} content The MarcX document
- * @param {String} format The format to return
- * @param {Array} allowedSets List of strings
- * @returns {String} DC or MarcX
- */
-var format = function( content, format, allowedSets ) {
-
-    //lowercasing to make matching easier and avoid errors if input changes
-    for ( var i = 0; i < allowedSets.length; i++ ) {
-        allowedSets[ i ] = allowedSets[ i ].toLowerCase();
-    }
-
-    switch( format ) {
-        case 'oai_dc':
-            return XmlUtil.toXmlString( MarcXchangeToOaiDc.createDcXml( content ) );
-        case 'marcx':
-            content = MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( content );
-            var bkmRecordAllowed = ( allowedSets.indexOf( 'bkm' ) > -1 );
-            if ( bkmRecordAllowed ) {
-                var marcXDoc = XmlUtil.fromString( content );
-            } else {
-                marcXDoc = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( content );
-            }
-            return XmlUtil.toXmlString( marcXDoc );
-
-        default:
-            throw Error( "Format: " + format + " not allowed" );
-    }    
+var format = function( records, format, allowedSets ) {
+    return OaiFormatter.format( records, format, allowedSets); 
 };
-
-/**
- * Used for validating format
- * 
- * @returns {Array} list of allowed formats
- */
 var allowedFormats = function() {
-    return [ 'oai_dc', 'marcx' ];
+    return OaiFormatter.allowedFormats(); 
 };
