@@ -33,10 +33,6 @@ var OaiFormatter = function() {
      * @returns {String} DC or MarcX
      */
     var format = function( records, format, allowedSets ) {
-        
-        
-        //TODO throw error if records[0] is not a volume?
-        
 
         //lowercasing to make matching easier and avoid errors if input changes
         for ( var i = 0; i < allowedSets.length; i++ ) {
@@ -48,16 +44,16 @@ var OaiFormatter = function() {
                 return XmlUtil.toXmlString( MarcXchangeToOaiDc.createDcXml( records[0] ) );
             case 'marcx':
                 
-                var marcXCollection = XmlUtil.createDocument("collection", XmlNamespaces.marcx);
+                var marcXCollection = XmlUtil.createDocument( "collection", XmlNamespaces.marcx );
 
                 var bkmRecordAllowed = ( allowedSets.indexOf( 'bkm' ) > -1 );
                 
                 // Traverse from head to volume
-                for( var i = records.length - 1; i >= 0; i-- ) {
-                    var content = MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( records[ i ] );                
+                for ( var j = records.length - 1; j >= 0; j-- ) {
+                    var content = MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( records[ j ] );
                 
                     if ( bkmRecordAllowed ) {
-                        var marcXDoc = XmlUtil.fromString( content );
+                        var marcXDoc = MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType( content );
                     } else {
                         marcXDoc = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( content );
                     }

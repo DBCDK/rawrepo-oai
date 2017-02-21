@@ -3,7 +3,188 @@
 use( "MarcXchangeToOaiMarcX" );
 use( "UnitTest" );
 
-UnitTest.addFixture( "Test", function( ) {
+
+UnitTest.addFixture( "Test createMarcXmlWithRightRecordType", function( ) {
+
+    var recordString = (
+        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+        '<marcx:subfield code="a">20049278</marcx:subfield>' +
+        '<marcx:subfield code="b">870970</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+        '<marcx:subfield code="r">n</marcx:subfield>' +
+        '<marcx:subfield code="a">e</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="008">' +
+        '<marcx:subfield code="a">1992</marcx:subfield>' +
+        '<marcx:subfield code="z">2016</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="009">' +
+        '<marcx:subfield code="a">a</marcx:subfield>' +
+        '<marcx:subfield code="g">xx</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="032">' +
+        '<marcx:subfield code="a">DBF201709</marcx:subfield>' +
+        '<marcx:subfield code="x">BKM201709</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="100">' +
+        '<marcx:subfield code="a">Madsen</marcx:subfield>' +
+        '<marcx:subfield code="h">Peter</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="245">' +
+        '<marcx:subfield code="a">Frejas smykke</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="300">' +
+        '<marcx:subfield code="a">48 sider</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="440">' +
+        '<marcx:subfield code="0"/>' +
+        '<marcx:subfield code="a">Valhalla</marcx:subfield>' +
+        '<marcx:subfield code="v">8</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="504">' +
+        '<marcx:subfield code="&#38;">1</marcx:subfield>' +  //subfield &
+        '<marcx:subfield code="a">Kaerlighedsgudinden Freja er i besiddelse af et kostbart halssmykke</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="520">' +
+        '<marcx:subfield code="&#38;">1</marcx:subfield>' +  //subfield &
+        '<marcx:subfield code="a">Originaludgave: 1992</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="520">' +
+        '<marcx:subfield code="a">Tidligere: 1. udgave. 1992</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="521">' +
+        '<marcx:subfield code="b">4. oplag</marcx:subfield><marcx:subfield code="c">2016</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="652">' +
+        '<marcx:subfield code="o">sk</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="700">' +
+        '<marcx:subfield code="a">Kure</marcx:subfield>' +
+        '<marcx:subfield code="h">Henning</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="945">' +
+        '<marcx:subfield code="a">Peter Madsens Valhalla</marcx:subfield>' +
+        '<marcx:subfield code="z">440(a)</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="996">' +
+        '<marcx:subfield code="a">DBC</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    var expected = XmlUtil.fromString(
+        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+        '<marcx:subfield code="a">20049278</marcx:subfield>' +
+        '<marcx:subfield code="b">870970</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+        '<marcx:subfield code="r">n</marcx:subfield>' +
+        '<marcx:subfield code="a">e</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="008">' +
+        '<marcx:subfield code="a">1992</marcx:subfield>' +
+        '<marcx:subfield code="z">2016</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="009">' +
+        '<marcx:subfield code="a">a</marcx:subfield>' +
+        '<marcx:subfield code="g">xx</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="032">' +
+        '<marcx:subfield code="a">DBF201709</marcx:subfield>' +
+        '<marcx:subfield code="x">BKM201709</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="100">' +
+        '<marcx:subfield code="a">Madsen</marcx:subfield>' +
+        '<marcx:subfield code="h">Peter</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="245">' +
+        '<marcx:subfield code="a">Frejas smykke</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="300">' +
+        '<marcx:subfield code="a">48 sider</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="440">' +
+        '<marcx:subfield code="0"/>' +
+        '<marcx:subfield code="a">Valhalla</marcx:subfield>' +
+        '<marcx:subfield code="v">8</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="504">' +
+        '<marcx:subfield code="&#38;">1</marcx:subfield>' +  //subfield &
+        '<marcx:subfield code="a">Kaerlighedsgudinden Freja er i besiddelse af et kostbart halssmykke</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="520">' +
+        '<marcx:subfield code="&#38;">1</marcx:subfield>' +  //subfield &
+        '<marcx:subfield code="a">Originaludgave: 1992</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="520">' +
+        '<marcx:subfield code="a">Tidligere: 1. udgave. 1992</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="521">' +
+        '<marcx:subfield code="b">4. oplag</marcx:subfield><marcx:subfield code="c">2016</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="652">' +
+        '<marcx:subfield code="o">sk</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="700">' +
+        '<marcx:subfield code="a">Kure</marcx:subfield>' +
+        '<marcx:subfield code="h">Henning</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="945">' +
+        '<marcx:subfield code="a">Peter Madsens Valhalla</marcx:subfield>' +
+        '<marcx:subfield code="z">440(a)</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="996">' +
+        '<marcx:subfield code="a">DBC</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    var actual = MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType( recordString );
+
+    Assert.equalXml( "createMarcXmlWithRightRecordType - bibliographic", actual, expected );
+
+
+    recordString = (
+        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+        '<marcx:subfield code="a">12345678</marcx:subfield>' +
+        '<marcx:subfield code="b">870970</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+        '<marcx:subfield code="r">n</marcx:subfield>' +
+        '<marcx:subfield code="a">h</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    expected = XmlUtil.fromString(
+        '<marcx:record format="danMARC2" type="BibliographicMain" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+        '<marcx:subfield code="a">12345678</marcx:subfield>' +
+        '<marcx:subfield code="b">870970</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+        '<marcx:subfield code="r">n</marcx:subfield>' +
+        '<marcx:subfield code="a">h</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    actual = MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType( recordString );
+
+    Assert.equalXml( "createMarcXmlWithRightRecordType - bibliographicMain", actual, expected );
+
+} );
+
+
+UnitTest.addFixture( "Test createMarcXmlWithoutBkmFields", function( ) {
 
     var recordString = (
         '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
@@ -389,6 +570,112 @@ UnitTest.addFixture( "Test", function( ) {
 
     Assert.equalXml( "createMarcXmlWithoutBkmFields (no field 504, 600, 610, 666, 990, 991)", actual, expected );
 
+    recordString = (
+        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+                '<marcx:subfield code="a">20775084</marcx:subfield>' +
+                '<marcx:subfield code="b">870970</marcx:subfield>' +
+                '<marcx:subfield code="c">20060901135613</marcx:subfield>' +
+                '<marcx:subfield code="d">19941116</marcx:subfield>' +
+                '<marcx:subfield code="f">a</marcx:subfield>' +
+                '<marcx:subfield code="o">c</marcx:subfield>' +
+            '</marcx:datafield>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+                '<marcx:subfield code="r">n</marcx:subfield>' +
+                '<marcx:subfield code="a">b</marcx:subfield>' +
+            '</marcx:datafield>' +
+        '</marcx:record>' );
+
+    expected = XmlUtil.fromString(
+        '<marcx:record format="danMARC2" type="BibliographicVolume" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+                '<marcx:subfield code="a">20775084</marcx:subfield>' +
+                '<marcx:subfield code="b">870970</marcx:subfield>' +
+                '<marcx:subfield code="c">20060901135613</marcx:subfield>' +
+                '<marcx:subfield code="d">19941116</marcx:subfield>' +
+                '<marcx:subfield code="f">a</marcx:subfield>' +
+                '<marcx:subfield code="o">c</marcx:subfield>' +
+            '</marcx:datafield>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+                '<marcx:subfield code="r">n</marcx:subfield>' +
+                '<marcx:subfield code="a">b</marcx:subfield>' +
+            '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    actual = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( recordString );
+
+    Assert.equalXml( "createMarcXmlWithoutBkmFields (type=BibliographicVolume)", actual, expected );
+
+
+    recordString = (
+        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+                '<marcx:subfield code="a">12345678</marcx:subfield>' +
+                '<marcx:subfield code="b">870970</marcx:subfield>' +
+            '</marcx:datafield>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+                '<marcx:subfield code="r">n</marcx:subfield>' +
+                '<marcx:subfield code="a">s</marcx:subfield>' +
+            '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    expected = XmlUtil.fromString(
+        '<marcx:record format="danMARC2" type="BibliographicSection" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+                '<marcx:subfield code="a">12345678</marcx:subfield>' +
+                '<marcx:subfield code="b">870970</marcx:subfield>' +
+            '</marcx:datafield>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+                '<marcx:subfield code="r">n</marcx:subfield>' +
+                '<marcx:subfield code="a">s</marcx:subfield>' +
+            '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    actual = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( recordString );
+
+    Assert.equalXml( "createMarcXmlWithoutBkmFields (type=BibliographicSection)", actual, expected );
+
+
+    recordString = (
+        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+                '<marcx:subfield code="a">12345678</marcx:subfield>' +
+                '<marcx:subfield code="b">870970</marcx:subfield>' +
+            '</marcx:datafield>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+                '<marcx:subfield code="r">n</marcx:subfield>' +
+                '<marcx:subfield code="a">h</marcx:subfield>' +
+            '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    expected = XmlUtil.fromString(
+        '<marcx:record format="danMARC2" type="BibliographicMain" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+                '<marcx:subfield code="a">12345678</marcx:subfield>' +
+                '<marcx:subfield code="b">870970</marcx:subfield>' +
+            '</marcx:datafield>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+                '<marcx:subfield code="r">n</marcx:subfield>' +
+                '<marcx:subfield code="a">h</marcx:subfield>' +
+            '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    actual = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( recordString );
+
+    Assert.equalXml( "createMarcXmlWithoutBkmFields (type=BibliographicMain)", actual, expected );
+
+
 } );
 
 UnitTest.addFixture( "test removeLocalFieldsIfAny", function( ) {
@@ -462,7 +749,7 @@ UnitTest.addFixture( "test removeLocalFieldsIfAny", function( ) {
         '</marcx:record>'
     );
 
-    var expected = (
+    var expected = XmlUtil.fromString(
         '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
         '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
         '<marcx:datafield ind1="0" ind2="0" tag="001">' +
@@ -579,7 +866,7 @@ UnitTest.addFixture( "test removeLocalFieldsIfAny", function( ) {
         '</marcx:record>'
     );
 
-    expected = (
+    expected = XmlUtil.fromString(
         '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
         '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
         '<marcx:datafield ind1="0" ind2="0" tag="001">' +
@@ -631,6 +918,48 @@ UnitTest.addFixture( "test removeLocalFieldsIfAny", function( ) {
     actual = MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( recordString );
 
     Assert.equalXml( "removeLocalFieldsIfAny - no local fields", actual, expected );
+
+} );
+
+UnitTest.addFixture( "Test getRecordType", function() {
+
+    var inputRecord = new Record();
+    inputRecord.fromString( '004 00 *ah *rn' );
+
+    var actual = MarcXchangeToOaiMarcX.getRecordType( inputRecord );
+
+    Assert.equalValue( "getRecordType - BibliographicMain (004a=h)", actual, "BibliographicMain" );
+
+
+    inputRecord = new Record();
+    inputRecord.fromString( '004 00 *as *rn' );
+
+    actual = MarcXchangeToOaiMarcX.getRecordType( inputRecord );
+
+    Assert.equalValue( "getRecordType - BibliographicSection (004a=s)", actual, "BibliographicSection" );
+
+    inputRecord = new Record();
+    inputRecord.fromString( '004 00 *ab *rn' );
+
+    actual = MarcXchangeToOaiMarcX.getRecordType( inputRecord );
+
+    Assert.equalValue( "getRecordType - BibliographicVolume (004a=b)", actual, "BibliographicVolume" );
+
+
+    inputRecord = new Record();
+    inputRecord.fromString( '004 00 *ae *rn' );
+
+    actual = MarcXchangeToOaiMarcX.getRecordType( inputRecord );
+
+    Assert.equalValue( "getRecordType - Bibliographic (004a=e)", actual, "Bibliographic" );
+
+
+    inputRecord = new Record();
+    inputRecord.fromString( '004 00 *ai *rn' );
+
+    actual = MarcXchangeToOaiMarcX.getRecordType( inputRecord );
+
+    Assert.equalValue( "getRecordType - Bibliographic (004a=i)", actual, "Bibliographic" );
 
 } );
 
