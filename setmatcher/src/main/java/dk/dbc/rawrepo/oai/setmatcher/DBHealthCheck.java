@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dbc.rawrepo.oai.setmatcher.healthchecks;
+package dk.dbc.rawrepo.oai.setmatcher;
 
 import com.codahale.metrics.health.HealthCheck;
 import java.sql.Connection;

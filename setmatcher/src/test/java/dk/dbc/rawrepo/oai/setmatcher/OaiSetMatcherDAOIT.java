@@ -16,8 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dbc.rawrepo.oai.setmatcher.db;
+package dk.dbc.rawrepo.oai.setmatcher;
 
+import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherDAO;
 import dk.dbc.commons.testutils.postgres.connection.PostgresITConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

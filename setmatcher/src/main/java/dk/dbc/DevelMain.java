@@ -21,7 +21,7 @@ package dk.dbc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.ImmutableMultimap;
-import dk.dbc.rawrepo.oai.setmatcher.configuration.OaiSetMatcherConfiguration;
+import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherConfiguration;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.servlets.tasks.Task;

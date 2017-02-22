@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dbc.rawrepo.oai.setmatcher.javascript;
+package dk.dbc.rawrepo.oai.setmatcher;
 
 import dk.dbc.jslib.ClasspathSchemeHandler;
 import dk.dbc.jslib.Environment;

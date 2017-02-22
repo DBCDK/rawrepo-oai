@@ -19,10 +19,10 @@
 package dk.dbc;
 
 import com.codahale.metrics.MetricRegistry;
-import dk.dbc.rawrepo.oai.setmatcher.configuration.OaiSetMatcherConfiguration;
-import dk.dbc.rawrepo.oai.setmatcher.healthchecks.DBHealthCheck;
-import dk.dbc.rawrepo.oai.setmatcher.javascript.JavaScriptWorker;
-import dk.dbc.rawrepo.oai.setmatcher.jobprocessor.RawRepoJobProcessor;
+import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherConfiguration;
+import dk.dbc.rawrepo.oai.setmatcher.DBHealthCheck;
+import dk.dbc.rawrepo.oai.setmatcher.JavaScriptWorker;
+import dk.dbc.rawrepo.oai.setmatcher.RawRepoJobProcessor;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;

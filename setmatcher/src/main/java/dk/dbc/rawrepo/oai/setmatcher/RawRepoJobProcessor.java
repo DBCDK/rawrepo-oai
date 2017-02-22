@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dbc.rawrepo.oai.setmatcher.jobprocessor;
+package dk.dbc.rawrepo.oai.setmatcher;
 
 import dk.dbc.rawrepo.RawRepoDAO;
 import dk.dbc.rawrepo.RawRepoException;
 import dk.dbc.rawrepo.Record;
-import dk.dbc.rawrepo.oai.setmatcher.db.OaiSetMatcherDAO;
-import dk.dbc.rawrepo.oai.setmatcher.db.OaiSetMatcherDAO.RecordSet;
-import dk.dbc.rawrepo.oai.setmatcher.javascript.JavaScriptWorker;
+import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherDAO;
+import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherDAO.RecordSet;
+import dk.dbc.rawrepo.oai.setmatcher.JavaScriptWorker;
 import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.SQLException;

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dbc.rawrepo.oai.setmatcher.configuration;
+package dk.dbc.rawrepo.oai.setmatcher;
 
 import dk.dbc.DbcConfiguration;
 import com.fasterxml.jackson.annotation.JsonProperty;
