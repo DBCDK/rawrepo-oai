@@ -18,7 +18,6 @@
  */
 package dk.dbc.rawrepo.oai.setmatcher;
 
-import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherDAO;
 import dk.dbc.commons.testutils.postgres.connection.PostgresITConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

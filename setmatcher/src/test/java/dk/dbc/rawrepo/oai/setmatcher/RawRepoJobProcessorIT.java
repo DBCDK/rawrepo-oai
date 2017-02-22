@@ -18,24 +18,19 @@
  */
 package dk.dbc.rawrepo.oai.setmatcher;
 
-import dk.dbc.rawrepo.oai.setmatcher.RawRepoJobProcessor;
 import dk.dbc.commons.testutils.postgres.connection.PostgresITConnection;
 import dk.dbc.rawrepo.RawRepoDAO;
 import dk.dbc.rawrepo.RawRepoException;
 import dk.dbc.rawrepo.Record;
-import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherDAO;
 import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherDAO.RecordSet;
-import dk.dbc.rawrepo.oai.setmatcher.JavaScriptWorker;
 import java.sql.SQLException;
 import org.junit.After;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Before;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-//import static org.mockito.Mockito.mock;
 
 /**
  *
@@ -187,6 +182,16 @@ public class RawRepoJobProcessorIT {
         
         assertEquals("nat", sets[1].setSpec);
         assertEquals(false, sets[1].gone);
+    }
+    
+    @Test
+    public void testProcessQueueJob_whenRecordIsOriginal_itIsNotAdded() throws Exception {
+        
+        String bibrecid = "notexisting";
+        JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
+        RawRepoJobProcessor.processQueueJob(bibrecid, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);        
+        RecordSet[] sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + bibrecid);
+        assertEquals(0, sets.length);        
     }
     
 }

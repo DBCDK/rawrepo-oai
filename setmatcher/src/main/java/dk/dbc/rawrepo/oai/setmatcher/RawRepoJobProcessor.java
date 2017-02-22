@@ -75,22 +75,29 @@ public class RawRepoJobProcessor {
             OaiSetMatcherDAO rawRepoOaiDao = new OaiSetMatcherDAO(rawrepoOaiConnection);
 
             // And we need the unmerged rawrepo record
-            Record record = rawrepoDao.fetchRecord(bibliographicRecordId, agencyId);
-            String pid = agencyId + ":" + bibliographicRecordId;
+            // and the sets which it is currently in
+            String pid = agencyId + ":" + bibliographicRecordId;   
+            Record record = rawrepoDao.fetchRecord(bibliographicRecordId, agencyId);                     
+            RecordSet[] currentSets = rawRepoOaiDao.fetchSets(pid);
 
             // Update records timestamp and state, and find the sets in which it is to be included
             HashSet<String> toBeIncludedIn;
-            if (record.isDeleted()) {
-                rawRepoOaiDao.updateRecord(pid, true);
+            if(record.isOriginal() || record.isDeleted()) {
                 toBeIncludedIn = new HashSet<>();
             } else {
                 rawRepoOaiDao.updateRecord(pid, false);                
                 String content = new String(record.getContent(), "UTF-8");
                 toBeIncludedIn = new HashSet<>(Arrays.asList(jsWorker.getOaiSets(agencyId, content)));
             }
+            
+            // Update the timestamp of record if it is currently contained
+            // or is going to be contained in any set
+            // OAI-record is either created or updated
+            if(currentSets.length > 0 || toBeIncludedIn.size() > 0) {
+                rawRepoOaiDao.updateRecord(pid, record.isDeleted());
+            }
 
             // Make sure record is gone from any set it is no longer included in
-            RecordSet[] currentSets = rawRepoOaiDao.fetchSets(pid);
             List<String> removedFrom = new ArrayList<>();
             for (RecordSet recordSet : currentSets) {
                 if (!toBeIncludedIn.contains(recordSet.setSpec.toUpperCase())) {
