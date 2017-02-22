@@ -86,15 +86,14 @@ public class JavaScriptWorker {
      * Run script on content, determining which OAI sets the MarcX record
      * belongs to.
      *
-     * @param bibliographicRecordId
      * @param agencyId
      * @param content String containing marcxchange
      * @return
      * @throws Exception
      */
-    public String[] getOaiSets(int agencyId, String content, RawRepoRecordFetcher rawrepo) throws Exception {
+    public String[] getOaiSets(int agencyId, String content) throws Exception {
         return environment.getJavascriptObjectAsStringArray(
-                environment.callMethod(OAI_SET_MATCHER_METHOD, new Object[]{agencyId, content, rawrepo})
+                environment.callMethod(OAI_SET_MATCHER_METHOD, new Object[]{agencyId, content})
         );
     }
 

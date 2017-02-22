@@ -28,18 +28,15 @@ var OaiSetMatcher = function() {
      * @syntax OaiSetMatcher.getOaiSets( agencyId, marcXrecord )
      * @param {Number} agencyId
      * @param {String} marcXrecord the marcxchange record
-     * @param {Object} recordFetcher Access object for fetching MarcX records from rawrepo
      * @return {Array} string array of OAI set names
      * @type {function}
      * @function
      * @name OaiSetMatcher.getOaiSets
      */
-    function getOaiSets( agencyId, marcXrecord, recordFetcher ) {
+    function getOaiSets( agencyId, marcXrecord ) {
 
         Log.trace( "Entering SetMatcher.getOaiSets" );
-        
-        // recordFetcher.fetchUnmerged( 870970, "bibRecId" );
-        
+                        
         var oaiSets = {};
         var marcRecord = MarcXchange.marcXchangeToMarcRecord( marcXrecord );
         var map = new MatchMap( );

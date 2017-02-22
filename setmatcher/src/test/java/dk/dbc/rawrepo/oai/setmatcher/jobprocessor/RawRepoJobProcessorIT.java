@@ -25,7 +25,6 @@ import dk.dbc.rawrepo.Record;
 import dk.dbc.rawrepo.oai.setmatcher.db.OaiSetMatcherDAO;
 import dk.dbc.rawrepo.oai.setmatcher.db.OaiSetMatcherDAO.RecordSet;
 import dk.dbc.rawrepo.oai.setmatcher.javascript.JavaScriptWorker;
-import dk.dbc.rawrepo.oai.setmatcher.javascript.RawRepoRecordFetcher;
 import java.sql.SQLException;
 import org.junit.After;
 import org.junit.Test;
@@ -82,7 +81,7 @@ public class RawRepoJobProcessorIT {
     public void testProcessQueueJob_partOfBKM() throws Exception {
         
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
-        when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")), any())).thenReturn(new String[]{"BKM"}); 
+        when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"BKM"}); 
 
         RawRepoJobProcessor.processQueueJob(BIB_REC_ID, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);
         
@@ -97,7 +96,7 @@ public class RawRepoJobProcessorIT {
     public void testProcessQueueJob_partOfNAT() throws Exception {
         
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
-        when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")), any())).thenReturn(new String[]{"NAT"}); 
+        when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT"}); 
 
         RawRepoJobProcessor.processQueueJob(BIB_REC_ID, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);
         
@@ -112,7 +111,7 @@ public class RawRepoJobProcessorIT {
     public void testProcessQueueJob_partOfNATandBKM() throws Exception {
         
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
-        when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")), any())).thenReturn(new String[]{"NAT", "BKM"}); 
+        when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT", "BKM"}); 
 
         RawRepoJobProcessor.processQueueJob(BIB_REC_ID, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);
         
@@ -131,7 +130,7 @@ public class RawRepoJobProcessorIT {
     public void testProcessQueueJob_whenRecordDeleted_goneFromAllSets() throws Exception {
         
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
-        when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")), any())).thenReturn(new String[]{"NAT", "BKM"}); 
+        when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT", "BKM"}); 
 
         RawRepoJobProcessor.processQueueJob(BIB_REC_ID, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);
         
@@ -163,7 +162,7 @@ public class RawRepoJobProcessorIT {
     public void testProcessQueueJob_whenRecordGoneFromSet_itIsGone() throws Exception {
         
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
-        when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")), any())).thenReturn(new String[]{"NAT", "BKM"}); 
+        when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT", "BKM"}); 
 
         RawRepoJobProcessor.processQueueJob(BIB_REC_ID, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);
         
@@ -176,7 +175,7 @@ public class RawRepoJobProcessorIT {
         assertEquals("nat", sets[1].setSpec);
         assertEquals(false, sets[1].gone);
         
-        when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")), any())).thenReturn(new String[]{"NAT"}); // Gone from BKM
+        when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT"}); // Gone from BKM
         RawRepoJobProcessor.processQueueJob(BIB_REC_ID, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);
         
         sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
