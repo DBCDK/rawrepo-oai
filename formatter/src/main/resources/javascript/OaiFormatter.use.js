@@ -67,7 +67,7 @@ var OaiFormatter = function() {
                 throw Error( "Format: " + format + " not allowed" );
         }    
     }
-    
+
     /**
      * Used for validating format
      * 
@@ -76,6 +76,7 @@ var OaiFormatter = function() {
     function getAllowedFormats( ) {
         return [ 'oai_dc', 'marcx' ];
     }
+
 
     Log.info( "Leaving OaiFormatter module" );
 

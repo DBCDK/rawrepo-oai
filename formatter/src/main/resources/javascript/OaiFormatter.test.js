@@ -494,8 +494,8 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm as allowed set)", fu
 
 UnitTest.addFixture( "Test formatRecords (format marcx, bkm NOT allowed set)", function() {
 
-    var format = 'marcx'; //applies to all tests in this Fixture
-    var allowedSets = [ "NAT" ]; //applies to all tests in this Fixture
+    var format = 'marcx';
+    var allowedSets = [ "NAT" ];
 
     var recordString = (
         '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
