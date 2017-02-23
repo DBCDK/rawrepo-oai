@@ -24,15 +24,18 @@ var OaiFormatter = function() {
 
 
     /**
-     * Formats a MarcX record, either producing a Dublin Core record
-     * or a MarcX record
-     * 
+     * Formats MarcX records, either producing a Dublin Core record
+     * or MarcX record(s)
+     *
+     * @function
+     * @type {function}
      * @param {Array} records Array consisting of record, and its ancestors (ordered from closest ancestor)
      * @param {String} format The format to return
      * @param {Array} allowedSets List of strings
      * @returns {String} DC or MarcX
+     * @name OaiFormatter.formatRecords
      */
-    var format = function( records, format, allowedSets ) {
+    function formatRecords( records, format, allowedSets ) {
 
         //lowercasing to make matching easier and avoid errors if input changes
         for ( var i = 0; i < allowedSets.length; i++ ) {
@@ -43,21 +46,17 @@ var OaiFormatter = function() {
             case 'oai_dc':
                 return XmlUtil.toXmlString( MarcXchangeToOaiDc.createDcXml( records[0] ) );
             case 'marcx':
-                
                 var marcXCollection = XmlUtil.createDocument( "collection", XmlNamespaces.marcx );
-
                 var bkmRecordAllowed = ( allowedSets.indexOf( 'bkm' ) > -1 );
                 
                 // Traverse from head to volume
                 for ( var j = records.length - 1; j >= 0; j-- ) {
                     var content = MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( records[ j ] );
-                
                     if ( bkmRecordAllowed ) {
                         var marcXDoc = MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType( content );
                     } else {
                         marcXDoc = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( content );
                     }
-
                     XmlUtil.appendChild( marcXCollection, marcXDoc );
                 }                
                 
@@ -66,14 +65,14 @@ var OaiFormatter = function() {
             default:
                 throw Error( "Format: " + format + " not allowed" );
         }    
-    };
+    }
     
     /**
      * Used for validating format
      * 
      * @returns {Array} list of allowed formats
      */
-    var allowedFormats = function() {
+    var getAllowedFormats = function() {
         return [ 'oai_dc', 'marcx' ];
     };
 
@@ -81,7 +80,7 @@ var OaiFormatter = function() {
     Log.info( "Leaving OaiFormatter module" );
 
     return {
-        format: format,
-        allowedFormats: allowedFormats
+        formatRecords: formatRecords,
+        getAllowedFormats: getAllowedFormats
     };
 }();

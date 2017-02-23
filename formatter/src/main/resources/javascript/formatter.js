@@ -22,8 +22,8 @@
 use( "OaiFormatter" );
 
 var format = function( records, format, allowedSets ) {
-    return OaiFormatter.format( records, format, allowedSets); 
+    return OaiFormatter.formatRecords( records, format, allowedSets);
 };
 var allowedFormats = function() {
-    return OaiFormatter.allowedFormats(); 
+    return OaiFormatter.getAllowedFormats();
 };
