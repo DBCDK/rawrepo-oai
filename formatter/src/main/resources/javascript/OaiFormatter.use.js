@@ -29,10 +29,10 @@ var OaiFormatter = function() {
      *
      * @function
      * @type {function}
-     * @param {Array} records Array consisting of record, and its ancestors (ordered from closest ancestor)
+     * @param {String[]} records Array consisting of record, and its ancestors (ordered from closest ancestor)
      * @param {String} format The format to return
-     * @param {Array} allowedSets List of strings
-     * @returns {String} DC or MarcX
+     * @param {String[]} allowedSets Names of allowed OAI sets
+     * @returns {String} DC or MarcX record(s)
      * @name OaiFormatter.formatRecords
      */
     function formatRecords( records, format, allowedSets ) {
@@ -44,6 +44,7 @@ var OaiFormatter = function() {
 
         switch( format ) {
             case 'oai_dc':
+                // Format the first record (if more records, the first one is volume)
                 return XmlUtil.toXmlString( MarcXchangeToOaiDc.createDcXml( records[0] ) );
             case 'marcx':
                 var marcXCollection = XmlUtil.createDocument( "collection", XmlNamespaces.marcx );
@@ -72,10 +73,9 @@ var OaiFormatter = function() {
      * 
      * @returns {Array} list of allowed formats
      */
-    var getAllowedFormats = function() {
+    function getAllowedFormats( ) {
         return [ 'oai_dc', 'marcx' ];
-    };
-
+    }
 
     Log.info( "Leaving OaiFormatter module" );
 
