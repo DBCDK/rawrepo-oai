@@ -129,6 +129,7 @@ public class OAIResource {
     }
 
     @GET
+    @Produces(MediaType.APPLICATION_XML)
     public Response getResponse(@Context UriInfo uriInfo,
                                 @Context HttpServletRequest req,
                                 @HeaderParam("Identity") String identityByHeader) {
