@@ -26,14 +26,15 @@ var MarcXchangeToOaiDc = function() {
     /**
      * Function that is entry to create a complete Dublin Core Record.
      *
-     * @syntax MarcXchangeToOaiDc.createDcXml( marcXrecord )
+     * @syntax MarcXchangeToOaiDc.createDcXml( marcXrecord, higherLevelIdentifiers )
      * @param {String} marcXrecord the marcxchange record to create DC from
+     * @param {String[]} higherLevelIdentifiers Array of possible identifiers of records on higher level (section/head)
      * @return {Document} the created DC record
      * @type {function}
      * @function
      * @name MarcXchangeToOaiDc.createDcXml
      */
-    function createDcXml( marcXrecord ) {
+    function createDcXml( marcXrecord, higherLevelIdentifiers ) {
 
         Log.trace( "Entering MarcXchangeToOaiDc.createDcXml" );
 
@@ -56,6 +57,7 @@ var MarcXchangeToOaiDc = function() {
         MarcXchangeToOaiDc.addDcIdentifierElement( oaiDcXml, map );
         MarcXchangeToOaiDc.addDcSourceElement( oaiDcXml, map );
         MarcXchangeToOaiDc.addDcLanguageElement( oaiDcXml, map );
+        MarcXchangeToOaiDc.addDcRelationElements( oaiDcXml, higherLevelIdentifiers );
 
         marcRecord.eachFieldMap( map );
 
@@ -316,6 +318,70 @@ var MarcXchangeToOaiDc = function() {
     }
 
     /**
+     * Function that puts eachField function on map to create dc:language from field 008 subfield l.
+     *
+     * @syntax MarcXchangeToOaiDc.addDcLanguageElement( oaiDcXml, map )
+     * @param {Document} oaiDcXml The document to add the dc element to
+     * @param {String[]} higherLevelIdentifiers Identifiers of possible section/head records
+     * @type {function}
+     * @function
+     * @name MarcXchangeToOaiDc.addDcLanguageElement
+     */
+    function addDcRelationElements( oaiDcXml, higherLevelIdentifiers ) {
+
+        Log.trace( "Entering MarcXchangeToOaiDc.addDcRelationElements" );
+
+        for ( var i = 0; i < higherLevelIdentifiers.length; i++ ) {
+            XmlUtil.appendChildElement( oaiDcXml, "relation", XmlNamespaces.dc, higherLevelIdentifiers[ i ] );
+        }
+
+        Log.trace( "Leaving MarcXchangeToOaiDc.addDcRelationElements" );
+
+    }
+
+    /**
+     * Function that gets an identifier for a higher level record; value from field 001 subfield b
+     * concatenated with comma and value from field 014 subfield a.
+     *
+     * @syntax MarcXchangeToOaiDc.getHigherLevelIdentifier( marcXrecord )
+     * @param {String} marcXrecord the marcxchange record to create DC from
+     * @return {String} the higher level identifier, empty string, if no value from field 014a
+     * @type {function}
+     * @function
+     * @name MarcXchangeToOaiDc.getHigherLevelIdentifier
+     */
+    function getHigherLevelIdentifier( marcXrecord ) {
+
+        Log.trace( "Entering MarcXchangeToOaiDc.getHigherLevelIdentifier" );
+
+        var marcRecord = MarcXchange.marcXchangeToMarcRecord( marcXrecord );
+
+        var map = new MatchMap();
+
+        var valueOf001b = "";
+        var valueOf014a = "";
+
+        map.put( "001", function( field ) {
+            valueOf001b = field.getValue( "b" );
+        } );
+
+        map.put( "014", function( field ) {
+            if ( !field.exists( "x" ) ) {
+                valueOf014a = field.getValue( "a" );
+            }
+        } );
+
+        marcRecord.eachFieldMap( map );
+
+        var higherLevelId = valueOf014a ? ( valueOf001b + "," + valueOf014a ) : "";
+
+        Log.trace( "Leaving MarcXchangeToOaiDc.getHigherLevelIdentifier" );
+
+        return higherLevelId;
+
+    }
+
+    /**
      * Function that takes the input string and creates a new string similar to the input
      * but without currency sign (skildpadde), sharp parentheses and a space character at the
      * beginning or end of the string.
@@ -330,14 +396,14 @@ var MarcXchangeToOaiDc = function() {
      */
     function __removeUnwantedCharacters( string ) {
 
-        Log.trace( "Entering MarcXchangeToOai.__removeUnwantedCharacters" );
+        Log.trace( "Entering MarcXchangeToOaiDc.__removeUnwantedCharacters" );
 
         var newString = string.replace( /\u00A4|\[|\]|/g, "" );
         newString = newString.trim( ); //remove whitespaces at beginning and end of line
 
         Log.debug( "Changed string: '", string, "' to: '", newString, "'" );
 
-        Log.trace( "Leaving MarcXchangeToOai.__removeUnwantedCharacters" );
+        Log.trace( "Leaving MarcXchangeToOaiDc.__removeUnwantedCharacters" );
 
         return newString;
 
@@ -381,6 +447,8 @@ var MarcXchangeToOaiDc = function() {
         addDcIdentifierElement: addDcIdentifierElement,
         addDcSourceElement: addDcSourceElement,
         addDcLanguageElement: addDcLanguageElement,
+        addDcRelationElements: addDcRelationElements,
+        getHigherLevelIdentifier: getHigherLevelIdentifier,
         __removeUnwantedCharacters: __removeUnwantedCharacters,
         __callElementMethod: __callElementMethod
     }

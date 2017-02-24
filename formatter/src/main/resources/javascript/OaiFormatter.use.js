@@ -44,8 +44,13 @@ var OaiFormatter = function() {
 
         switch( format ) {
             case 'oai_dc':
+                var higherLevelIdentifiers = [ ];
+                for ( var k = 0; k < records.length - 1; k++ ) {
+                    var higherLevelId = MarcXchangeToOaiDc.getHigherLevelIdentifier( records[ k ] );
+                    higherLevelIdentifiers.push( higherLevelId );
+                }
                 // Format the first record (if more records, the first one is volume)
-                return XmlUtil.toXmlString( MarcXchangeToOaiDc.createDcXml( records[0] ) );
+                return XmlUtil.toXmlString( MarcXchangeToOaiDc.createDcXml( records[0], higherLevelIdentifiers ) );
             case 'marcx':
                 var marcXCollection = XmlUtil.createDocument( "collection", XmlNamespaces.marcx );
                 var bkmRecordAllowed = ( allowedSets.indexOf( 'bkm' ) > -1 );

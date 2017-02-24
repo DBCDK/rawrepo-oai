@@ -104,6 +104,7 @@ UnitTest.addFixture( "Test formatRecords (format DC)", function() {
         'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
         'xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">' +
         '<dc:identifier>870970,44816687</dc:identifier>' +
+        '<dc:relation>870970,44783851</dc:relation>' +
         '<dc:title>4. bok</dc:title>' +
         '</oai_dc:dc>'
     );
@@ -185,6 +186,8 @@ UnitTest.addFixture( "Test formatRecords (format DC)", function() {
         'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
         'xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">' +
             '<dc:identifier>870970,23642468</dc:identifier>' +
+            '<dc:relation>870970,23641348</dc:relation>' +
+            '<dc:relation>870970,23642433</dc:relation>' +
             '<dc:title>Intern sikkerhedsdokumentation. 2.1</dc:title>' +
         '</oai_dc:dc>'
     );
