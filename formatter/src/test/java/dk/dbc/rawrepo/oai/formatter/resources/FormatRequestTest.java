@@ -19,9 +19,7 @@
 package dk.dbc.rawrepo.oai.formatter.resources;
 
 import dk.dbc.rawrepo.oai.formatter.resources.OaiFormatterResource.FormatRequest;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -31,7 +29,7 @@ import static org.junit.Assert.*;
  */
 public class FormatRequestTest {
     
-    List<String> SETS = Arrays.asList("set1", "set2");
+    String SETS = "set1,set2";
     
     @Test
     public void testParseRequest() {
@@ -39,7 +37,7 @@ public class FormatRequestTest {
         assertEquals(870970, request.agencyId);
         assertEquals("123456", request.bibRecId);
         assertEquals("oai_dc", request.format);
-        assertEquals(SETS, request.sets);
+        assertEquals(Arrays.asList("set1", "set2"), request.sets);
     }
     
     @Test(expected = IllegalArgumentException.class)
@@ -70,7 +68,7 @@ public class FormatRequestTest {
     }
     @Test(expected = IllegalArgumentException.class)
     public void testParseRequest_throwWhenSetsIsEmpty() {
-        FormatRequest.parse("870970:123456", "oai_dc", new ArrayList<>());
+        FormatRequest.parse("870970:123456", "oai_dc", "");
     }
     
 }

@@ -27,6 +27,7 @@ import dk.dbc.rawrepo.oai.formatter.javascript.JavascriptWorkerPool.JavaScriptWo
 import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import javax.sql.DataSource;
@@ -61,7 +62,7 @@ public class OaiFormatterResource {
     @Produces(MediaType.APPLICATION_XML)
     public Response format(@QueryParam("id") String id, 
                            @QueryParam("format") String format, 
-                           @QueryParam("sets") List<String> sets) {
+                           @QueryParam("sets") String sets) {
         
         try (Connection connection = rawrepo.getConnection()) {
             
@@ -137,7 +138,7 @@ public class OaiFormatterResource {
             this.sets = sets;            
         }
         
-        static FormatRequest parse(String id, String format, List<String> sets) {
+        static FormatRequest parse(String id, String format, String sets) {
             
             if(id == null || id.isEmpty()){
                 throw new IllegalArgumentException("Missing query param 'id'");
@@ -147,7 +148,7 @@ public class OaiFormatterResource {
                 throw new IllegalArgumentException("Missing query param 'format'");
             }
 
-            if(sets ==null || sets.isEmpty()){
+            if(sets == null || sets.isEmpty()){
                 throw new IllegalArgumentException("Missing query param 'sets'");
             }
             
@@ -162,7 +163,7 @@ public class OaiFormatterResource {
                 throw new IllegalArgumentException("Illegal value of 'id'. Required format: agencyId:bibRecId");
             }
             
-            return new FormatRequest(bibRecId, agencyId, format, sets);
+            return new FormatRequest(bibRecId, agencyId, format, Arrays.asList(sets.split(",")));
         }
     }
     
