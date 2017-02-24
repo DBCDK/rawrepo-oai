@@ -74,6 +74,35 @@ var OaiFormatter = function() {
     }
 
     /**
+     * Formats MarcX records, either producing a Dublin Core record
+     * or MarcX record(s)
+     *
+     * @function
+     * @syntax OaiFormatter.convertXmlRecordStringsToMarcObjects( records )
+     * @type {function}
+     * @param {String[]} records Array consisting of marcxchange record strings
+     * @returns {Record[]} new array of the same records in the same order but as Record objects
+     * @name OaiFormatter.convertXmlRecordStringsToMarcObjects
+     */
+    function convertXmlRecordStringsToMarcObjects( records ) {
+
+        Log.trace( "Entering OaiFormatter.convertXmlRecordStringsToMarcObjects" );
+
+        var recordObjects = [ ];
+
+        for ( var i = 0; records.length; i++ ) {
+            var recordObject = MarcXchange.marcXchangeToMarcRecord( marcXrecord );
+            recordObjects.push( recordObject );
+        }
+
+        Log.trace( "Leaving OaiFormatter.convertXmlRecordStringsToMarcObjects" );
+
+        return recordObjects;
+
+    }
+
+
+    /**
      * Used for validating format
      * 
      * @returns {Array} list of allowed formats
@@ -87,6 +116,7 @@ var OaiFormatter = function() {
 
     return {
         formatRecords: formatRecords,
+        convertXmlRecordStringsToMarcObjects: convertXmlRecordStringsToMarcObjects,
         getAllowedFormats: getAllowedFormats
     };
 }();

@@ -603,6 +603,110 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm NOT allowed set)", f
 
 } );
 
+UnitTest( "Test convertXmlRecordStringsToMarcObjects", function( ) {
+
+    var volumeRecordString = (
+        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+        '<marcx:subfield code="a">23642468</marcx:subfield>' +
+        '<marcx:subfield code="b">870970</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+        '<marcx:subfield code="r">n</marcx:subfield>' +
+        '<marcx:subfield code="a">b</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="014">' +
+        '<marcx:subfield code="a">23642433</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="245">' +
+        '<marcx:subfield code="g">2.1</marcx:subfield>' +
+        '<marcx:subfield code="a">Intern sikkerhedsdokumentation</marcx:subfield>' +
+        '<marcx:subfield code="e">udarbejdet af: Holstberg Management</marcx:subfield>' +
+        '<marcx:subfield code="e">forfatter: Anne Gram</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    var sectionRecordString = (
+        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+        '<marcx:subfield code="a">23642433</marcx:subfield>' +
+        '<marcx:subfield code="b">870970</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+        '<marcx:subfield code="r">n</marcx:subfield>' +
+        '<marcx:subfield code="a">s</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="014">' +
+        '<marcx:subfield code="a">23641348</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="245">' +
+        '<marcx:subfield code="n">2</marcx:subfield>' +
+        '<marcx:subfield code="o">Intern sikkerhedsdokumentation og -gennemgang</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    var headRecordString = (
+        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+        '<marcx:subfield code="a">23641348</marcx:subfield>' +
+        '<marcx:subfield code="b">870970</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+        '<marcx:subfield code="r">n</marcx:subfield>' +
+        '<marcx:subfield code="a">h</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="245">' +
+        '<marcx:subfield code="a">Forebyggelse af arbejdsulykker</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '</marcx:record>'
+    );
+
+    var records = [ volumeRecordString, sectionRecordString, headRecordString ];
+
+    var actual = OaiFormatter.convertXmlRecordStringsToMarcObjects( records );
+
+    var volumeRecordObject = new Record();
+    volumeRecordObject.fromString(
+        '001 00 *a23642468 *b870970\n' +
+        '004 00 *rn *ab\n' +
+        '014 00 *a23642433\n' +
+        '245 00 *g2.1 *aIntern sikkerhedsdokumentation *eudarbejdet af: Holstberg Management *eforfatter: Anne Gram'
+    );
+
+    var sectionRecordObject = new Record();
+    sectionRecordObject.fromString(
+        '001 00 *23642433 *b870970\n' +
+        '004 00 *rn *as\n' +
+        '014 00 *a23641348\n' +
+        '245 00 *n2 *oIntern sikkerhedsdokumentation og -gennemgang'
+    );
+
+    var headRecordObject = new Record();
+    headRecordObject.fromString(
+        '001 00 *23641348 *b870970\n' +
+        '004 00 *rn *ah\n' +
+        '245 00 *aForebyggelse af arbejdsulykker'
+    );
+
+    var expected = [ volumeRecordObject, sectionRecordObject, headRecordObject ];
+
+    var testName = "convertXmlRecordStringsToMarcObjects - first record";
+    Assert.equalValue( testName, String( actual[ 0 ] ), String( expected[ 0 ] ) );
+
+    testName = "convertXmlRecordStringsToMarcObjects - second record";
+    Assert.equalValue( testName, String( actual[ 1 ] ), String( expected[ 1 ] ) );
+
+    testName = "convertXmlRecordStringsToMarcObjects - third record";
+    Assert.equalValue( testName, String( actual[ 2 ] ), String( expected[ 2 ] ) );
+
+} );
+
+
 UnitTest.addFixture( "Test getAllowedFormats", function() {
 
     Assert.equalValue( "get allowed formats", OaiFormatter.getAllowedFormats(), [ 'oai_dc', 'marcx' ] );
