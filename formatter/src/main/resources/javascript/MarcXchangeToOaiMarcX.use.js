@@ -24,24 +24,20 @@ var MarcXchangeToOaiMarcX = function() {
     /**
      * Function that is entry to create a marcxchange record with the right
      * record type set (BibliographicVolume/BibliographicSection/BibliographicMain or
-     * Bibliographic) according to the actual type of the record. Input record will
-     * always have record type Bibliographic but we want to change it to distinguish
-     * between the types in the marcxchange collection.
+     * Bibliographic) according to the actual type of the record.
      *
-     * @syntax MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType( marcXrecord )
-     * @param {String} marcXrecord the marcxchange record to create modified record from
+     * @syntax MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType( marcRecord )
+     * @param {Record} marcRecord the marc record to create modified record from
      * @return {Document} the created marcXchange record with the right record type
      * @type {function}
      * @function
      * @name MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType
      */
-    function createMarcXmlWithRightRecordType( marcXrecord ) {
+    function createMarcXmlWithRightRecordType( marcRecord ) {
 
         Log.trace( "Entering MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType" );
 
-        var marcRecord = MarcXchange.marcXchangeToMarcRecord( marcXrecord );
         var recordType = MarcXchangeToOaiMarcX.getRecordType( marcRecord );
-
         var marcXml = MarcXchange.marcRecordToMarcXchange( marcRecord, "danMARC2", recordType );
 
         Log.trace( "Leaving MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType" );
@@ -55,18 +51,17 @@ var MarcXchangeToOaiMarcX = function() {
      * Function that is entry to create a marcxchange record with
      * only national bibliographic fields.
      *
-     * @syntax MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( marcXrecord )
-     * @param {String} marcXrecord the marcxchange record to create modified record from
+     * @syntax MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( marcRecord )
+     * @param {Record} marcRecord the marc record to create marcxchange record from
      * @return {Document} the created marcXchange record without fields that belong to BKM
      * @type {function}
      * @function
      * @name MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields
      */
-    function createMarcXmlWithoutBkmFields( marcXrecord ) {
+    function createMarcXmlWithoutBkmFields( marcRecord ) {
 
         Log.trace( "Entering MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields" );
 
-        var marcRecord = MarcXchange.marcXchangeToMarcRecord( marcXrecord );
         var modifiedRecord = marcRecord.clone();
 
         modifiedRecord.removeAll( "504" );
@@ -95,22 +90,21 @@ var MarcXchangeToOaiMarcX = function() {
     }
 
     /**
-     * Function that removes local fields in the marcxchange record
+     * Function that removes local fields in the marc record
      * (local fields starts with a letter instead of a number) if there
-     * are any.
+     * is any.
      *
-     * @syntax MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( marcXrecord )
-     * @param {String} marcXrecord the marcxchange record to check for local fields
-     * @return {String} a new marcxchange record without local fields
+     * @syntax MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( marcRecord )
+     * @param {Record} marcRecord the marc record to check for local fields
+     * @return {Record} a new record without local fields
      * @type {function}
      * @function
-     * @name MarcXchangeToOaiDc.removeLocalFieldsIfAny
+     * @name MarcXchangeToOaiMarcX.removeLocalFieldsIfAny
      */
-    function removeLocalFieldsIfAny( marcXrecord ) {
+    function removeLocalFieldsIfAny( marcRecord ) {
 
         Log.trace( "Entering MarcXchangeToOaiMarcX.removeLocalFieldsIfAny" );
 
-        var marcRecord = MarcXchange.marcXchangeToMarcRecord( marcXrecord );
         var modifiedRecord = marcRecord.clone();
 
         var fieldMatcher = {
@@ -120,12 +114,10 @@ var MarcXchangeToOaiMarcX = function() {
             }
         };
         modifiedRecord.removeWithMatcher( fieldMatcher );
-        var marcXml = MarcXchange.marcRecordToMarcXchange( modifiedRecord, "danMARC2", "Bibliographic" );
-        var marcXmlString = XmlUtil.toXmlString( marcXml );
 
         Log.trace( "Leaving MarcXchangeToOaiMarcX.removeLocalFieldsIfAny" );
 
-        return marcXmlString;
+        return modifiedRecord;
 
     }
 
@@ -133,7 +125,7 @@ var MarcXchangeToOaiMarcX = function() {
      * Function finds the record type to send to function MarcXchange.marcRecordToMarcXchange,
      * either "Bibliographic", "BibliographicMain", "BibliographicSection" or "BibliographicVolume".
      *
-     * @syntax MarcXchangeToOaiMarcX.getRecordType( marcXrecord )
+     * @syntax MarcXchangeToOaiMarcX.getRecordType( marcRecord )
      * @param {Record} marcRecord the record to get type for
      * @return {String} the type to send to MarcXchange.marcRecordToMarcXchange function
      * @type {function}

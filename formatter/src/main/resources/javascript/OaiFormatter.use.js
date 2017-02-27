@@ -45,6 +45,7 @@ var OaiFormatter = function() {
         var marcRecords;
 
         switch( format ) {
+
             case 'oai_dc':
                 marcRecords = OaiFormatter.convertXmlRecordStringsToMarcObjects( records );
                 var higherLevelIdentifiers = [ ];
@@ -54,19 +55,19 @@ var OaiFormatter = function() {
                 }
                 // Format the first record (if more records, the first one is volume)
                 return XmlUtil.toXmlString( MarcXchangeToOaiDc.createDcXml( marcRecords[0], higherLevelIdentifiers ) );
+
             case 'marcx':
                 marcRecords = OaiFormatter.convertXmlRecordStringsToMarcObjects( records );
-
                 var marcXCollection = XmlUtil.createDocument( "collection", XmlNamespaces.marcx );
                 var bkmRecordAllowed = ( allowedSets.indexOf( 'bkm' ) > -1 );
                 
                 // Traverse from head to volume
-                for ( var j = records.length - 1; j >= 0; j-- ) {
-                    var content = MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( records[ j ] );
+                for ( var j = marcRecords.length - 1; j >= 0; j-- ) {
+                    var marcRecord = MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( marcRecords[ j ] );
                     if ( bkmRecordAllowed ) {
-                        var marcXDoc = MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType( content );
+                        var marcXDoc = MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType( marcRecord );
                     } else {
-                        marcXDoc = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( content );
+                        marcXDoc = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( marcRecord );
                     }
                     XmlUtil.appendChild( marcXCollection, marcXDoc );
                 }                
