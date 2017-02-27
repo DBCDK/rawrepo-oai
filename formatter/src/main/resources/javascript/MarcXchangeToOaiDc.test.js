@@ -5,67 +5,19 @@ use( "UnitTest" );
 
 UnitTest.addFixture( "test createDcXml", function( ) {
 
-    var recordString = (
-        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
-        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="001">' +
-                '<marcx:subfield code="a">23645564</marcx:subfield>' +
-                '<marcx:subfield code="b">870970</marcx:subfield>' +
-                '<marcx:subfield code="c">20160525133413</marcx:subfield>' +
-                '<marcx:subfield code="d">20010824</marcx:subfield>' +
-                '<marcx:subfield code="f">a</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="004">' +
-                '<marcx:subfield code="r">n</marcx:subfield>' +
-                '<marcx:subfield code="a">e</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="008">' +
-                '<marcx:subfield code="t">m</marcx:subfield>' +
-                '<marcx:subfield code="u">r</marcx:subfield>' +
-                '<marcx:subfield code="a">2001</marcx:subfield>' +
-                '<marcx:subfield code="z">2003</marcx:subfield>' +
-                '<marcx:subfield code="b">dk</marcx:subfield>' +
-                '<marcx:subfield code="d">x</marcx:subfield>' +
-                '<marcx:subfield code="j">f</marcx:subfield>' +
-                '<marcx:subfield code="l">dan</marcx:subfield>' +
-                '<marcx:subfield code="v">0</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="009">' +
-                '<marcx:subfield code="a">a</marcx:subfield>' +
-            '<marcx:subfield code="g">xx</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="021">' +
-                '<marcx:subfield code="a">87-7724-857-0</marcx:subfield>' +
-                '<marcx:subfield code="c">ib.</marcx:subfield>' +
-                '<marcx:subfield code="d">kr. 169,95</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="041">' +
-                '<marcx:subfield code="a">dan</marcx:subfield>' +
-                '<marcx:subfield code="c">jpn</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="100">' +
-                '<marcx:subfield code="a">Murakami</marcx:subfield>' +
-                '<marcx:subfield code="h">Haruki</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="241">' +
-                '<marcx:subfield code="a">Nejimaki-dori kuronikure</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="245">' +
-                '<marcx:subfield code="a">Traekopfuglens kroenike</marcx:subfield>' +
-                '<marcx:subfield code="e">Haruki Murakami</marcx:subfield>' +
-                '<marcx:subfield code="f">oversat af Mette Holm</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="260">' +
-                '<marcx:subfield code="a">Aarhus</marcx:subfield>' +
-                '<marcx:subfield code="b">Klim</marcx:subfield>' +
-                '<marcx:subfield code="c">2003</marcx:subfield>' +
-                '<marcx:subfield code="k">tr.i udl.</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="700">' +
-                '<marcx:subfield code="a">Holm</marcx:subfield>' +
-                '<marcx:subfield code="h">Mette</marcx:subfield>' +
-            '</marcx:datafield>' +
-        '</marcx:record>'
+    var marcRecord = new Record();
+    marcRecord.fromString(
+        '001 00 *a23645564 *b870970 *c20160525133413 *d20010824 *fa\n' +
+        '004 00 *rn *ae\n' +
+        '008 00 *tm *ur *a2001 *z2003 *bdk *dx *jf *ldan *v0\n' +
+        '009 00 *aa *gxx\n' +
+        '021 00 *a87-7724-857-0 *cib. *dkr. 169,95\n' +
+        '041 00 *adan *cjpn\n' +
+        '100 00 *aMurakami *hHaruki\n' +
+        '241 00 *aNejimaki-dori kuronikure\n' +
+        '245 00 *aTraekopfuglens kroenike *eHaruki Murakami *foversat af Mette Holm\n' +
+        '260 00 *aAarhus *bKlim *c2003 *ktr.i udl.\n' +
+        '700 00 *aHolm *hMette'
     );
 
     var higherLevelIdentifiers = [ ];
@@ -88,65 +40,23 @@ UnitTest.addFixture( "test createDcXml", function( ) {
        '</oai_dc:dc>'
    );
 
-    var actual = MarcXchangeToOaiDc.createDcXml( recordString, higherLevelIdentifiers );
+    var actual = MarcXchangeToOaiDc.createDcXml( marcRecord, higherLevelIdentifiers );
 
     Assert.equalXml( "createDcXml - no higher level identifiers", actual, expected );
 
 
-    recordString = (
-        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
-        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="001">' +
-                '<marcx:subfield code="a">23642468</marcx:subfield>' +
-                '<marcx:subfield code="b">870970</marcx:subfield>' +
-                '<marcx:subfield code="c">20130118221228</marcx:subfield>' +
-                '<marcx:subfield code="d">20010823</marcx:subfield>' +
-                '<marcx:subfield code="f">a</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="004">' +
-                '<marcx:subfield code="r">n</marcx:subfield>' +
-                '<marcx:subfield code="a">b</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="008">' +
-                '<marcx:subfield code="t">m</marcx:subfield>' +
-                '<marcx:subfield code="u">f</marcx:subfield>' +
-                '<marcx:subfield code="a">2001</marcx:subfield>' +
-                '<marcx:subfield code="l">dan</marcx:subfield>' +
-                '<marcx:subfield code="v">0</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="014">' +
-                '<marcx:subfield code="a">23642433</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="032">' +
-                '<marcx:subfield code="a">IDO200137</marcx:subfield>' +
-                '<marcx:subfield code="x">NET200137</marcx:subfield>' +
-                '<marcx:subfield code="x">DAT991304</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="245">' +
-                '<marcx:subfield code="g">2.1</marcx:subfield>' +
-                '<marcx:subfield code="a">Intern sikkerhedsdokumentation</marcx:subfield>' +
-                '<marcx:subfield code="e">udarbejdet af: Holstberg Management</marcx:subfield>' +
-                '<marcx:subfield code="e">forfatter: Anne Gram</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="526">' +
-                '<marcx:subfield code="i">Hertil findes</marcx:subfield>' +
-                '<marcx:subfield code="t">Bilag 1-8</marcx:subfield>' +
-                '<marcx:subfield code="u">http://www.arbejdsulykker.dk/pdf/2_1_bilag.pdf</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="700">' +
-                '<marcx:subfield code="0"/>' +
-                '<marcx:subfield code="a">Gram</marcx:subfield>' +
-                '<marcx:subfield code="h">Anne</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="710">' +
-                '<marcx:subfield code="a">Holstberg Management</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="856">' +
-                '<marcx:subfield code="z">Adgangsmåde: Internet</marcx:subfield>' +
-                '<marcx:subfield code="u">http://www.arbejdsulykker.dk/pdf/met_2_1.pdf</marcx:subfield>' +
-                '<marcx:subfield code="z">Kræver læseprogrammet Acrobat Reader</marcx:subfield>' +
-            '</marcx:datafield>' +
-        '</marcx:record>'
+    marcRecord = new Record();
+    marcRecord.fromString(
+        '001 00 *a23642468 *b870970 *c20130118221228 *d20010823 *fa\n' +
+        '004 00 *rn *ab\n' +
+        '008 00 *tm *uf *a2001 *ldan *v0\n' +
+        '014 00 *a23642433\n' +
+        '032 00 *aIDO200137 *xNET200137 *xDAT991304\n' +
+        '245 00 *g2.1 *aIntern sikkerhedsdokumentation *eudarbejdet af: Holstberg Management *eforfatter: Anne Gram\n' +
+        '526 00 *iHertil findes *tBilag 1-8 *uhttp://www.arbejdsulykker.dk/pdf/2_1_bilag.pdf\n' +
+        '700 00 *0 *aGram *hAnne\n' +
+        '710 00 *aHolstberg Management\n' +
+        '856 00 *zAdgangsmaade: Internet *uhttp://www.arbejdsulykker.dk/pdf/met_2_1.pdf *zKraever laeseprogrammet Acrobat Reader'
     );
 
     higherLevelIdentifiers = [ "870970,23642433", "870970,23641348" ];
@@ -168,7 +78,7 @@ UnitTest.addFixture( "test createDcXml", function( ) {
         '</oai_dc:dc>'
     );
 
-    actual = MarcXchangeToOaiDc.createDcXml( recordString, higherLevelIdentifiers );
+    actual = MarcXchangeToOaiDc.createDcXml( marcRecord, higherLevelIdentifiers );
 
     Assert.equalXml( "createDcXml with higher level identifiers as dc:relation", actual, expected );
 
@@ -988,84 +898,46 @@ UnitTest.addFixture( "Test addDcLanguageElement", function( ) {
 
 UnitTest.addFixture( "Test getHigherLevelIdentifier", function( ) {
 
-    var recordString = (
-        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
-        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="001">' +
-                '<marcx:subfield code="a">23642433</marcx:subfield>' +
-                '<marcx:subfield code="b">870970</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="004">' +
-                '<marcx:subfield code="r">n</marcx:subfield>' +
-                '<marcx:subfield code="a">s</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="014">' +
-                '<marcx:subfield code="a">23641348</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="245">' +
-                '<marcx:subfield code="n">2</marcx:subfield>' +
-                '<marcx:subfield code="o">Intern sikkerhedsdokumentation og -gennemgang</marcx:subfield>' +
-            '</marcx:datafield>' +
-        '</marcx:record>'
+    var record = new Record();
+    record.fromString(
+        '001 00 *a23642433 *b870970\n' +
+        '004 00 *rn *as\n' +
+        '014 00 *a23641348\n' +
+        '245 00 *n2 *oIntern sikkerhedsdokumentation og -gennemgang'
     );
 
     var expected = "870970,23641348";
-    var actual = MarcXchangeToOaiDc.getHigherLevelIdentifier( recordString );
+    var actual = MarcXchangeToOaiDc.getHigherLevelIdentifier( record );
     var testName = "get higher level identifier";
 
     Assert.equalValue( testName, actual, expected );
 
 
-    recordString = (
-        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
-        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="001">' +
-                '<marcx:subfield code="a">23641348</marcx:subfield>' +
-                '<marcx:subfield code="b">870970</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="004">' +
-                '<marcx:subfield code="r">n</marcx:subfield>' +
-                '<marcx:subfield code="a">h</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="245">' +
-                '<marcx:subfield code="a">Forebyggelse af arbejdsulykker</marcx:subfield>' +
-            '</marcx:datafield>' +
-        '</marcx:record>'
+    record = new Record();
+    record.fromString(
+        '001 00 *a23641348 *b870970\n' +
+        '004 00 *rn *ah\n' +
+        '245 00 *aForebyggelse af arbejdsulykker'
     );
 
     expected = "";
-    actual = MarcXchangeToOaiDc.getHigherLevelIdentifier( recordString );
+    actual = MarcXchangeToOaiDc.getHigherLevelIdentifier( record );
     testName = "get higher level identifier - no field 014, return empty string";
 
     Assert.equalValue( testName, actual, expected );
 
 
-    recordString = (
-        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
-        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="001">' +
-        '<marcx:subfield code="a">37304239</marcx:subfield>' +
-        '<marcx:subfield code="b">870971</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="004">' +
-        '<marcx:subfield code="r">n</marcx:subfield>' +
-        '<marcx:subfield code="a">i</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="014">' +
-        '<marcx:subfield code="a">52971314</marcx:subfield>' +
-        '<marcx:subfield code="x">ANM</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="016">' +
-        '<marcx:subfield code="a">03243796</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="245">' +
-        '<marcx:subfield code="a">[Anmeldelse]</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '</marcx:record>'
+    record = new Record();
+    record.fromString(
+        '001 00 *a37304239 *b870970\n' +
+        '004 00 *rn *ai\n' +
+        '014 00 *a52971314 *xANM\n' +
+        '016 00 *a03243796\n' +
+        '245 00 *a[Anmeldelse]'
     );
 
     expected = "";
-    actual = MarcXchangeToOaiDc.getHigherLevelIdentifier( recordString );
+    actual = MarcXchangeToOaiDc.getHigherLevelIdentifier( record );
     testName = "get higher level identifier - field 014 has subfield x; return empty string";
 
     Assert.equalValue( testName, actual, expected );

@@ -42,16 +42,21 @@ var OaiFormatter = function() {
             allowedSets[ i ] = allowedSets[ i ].toLowerCase();
         }
 
+        var marcRecords;
+
         switch( format ) {
             case 'oai_dc':
+                marcRecords = OaiFormatter.convertXmlRecordStringsToMarcObjects( records );
                 var higherLevelIdentifiers = [ ];
-                for ( var k = 0; k < records.length - 1; k++ ) {
-                    var higherLevelId = MarcXchangeToOaiDc.getHigherLevelIdentifier( records[ k ] );
+                for ( var k = 0; k < marcRecords.length - 1; k++ ) {
+                    var higherLevelId = MarcXchangeToOaiDc.getHigherLevelIdentifier( marcRecords[ k ] );
                     higherLevelIdentifiers.push( higherLevelId );
                 }
                 // Format the first record (if more records, the first one is volume)
-                return XmlUtil.toXmlString( MarcXchangeToOaiDc.createDcXml( records[0], higherLevelIdentifiers ) );
+                return XmlUtil.toXmlString( MarcXchangeToOaiDc.createDcXml( marcRecords[0], higherLevelIdentifiers ) );
             case 'marcx':
+                marcRecords = OaiFormatter.convertXmlRecordStringsToMarcObjects( records );
+
                 var marcXCollection = XmlUtil.createDocument( "collection", XmlNamespaces.marcx );
                 var bkmRecordAllowed = ( allowedSets.indexOf( 'bkm' ) > -1 );
                 

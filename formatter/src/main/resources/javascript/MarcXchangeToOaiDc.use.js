@@ -26,19 +26,18 @@ var MarcXchangeToOaiDc = function() {
     /**
      * Function that is entry to create a complete Dublin Core Record.
      *
-     * @syntax MarcXchangeToOaiDc.createDcXml( marcXrecord, higherLevelIdentifiers )
-     * @param {String} marcXrecord the marcxchange record to create DC from
+     * @syntax MarcXchangeToOaiDc.createDcXml( marcRecord, higherLevelIdentifiers )
+     * @param {Record} marcRecord the marc record to create DC from
      * @param {String[]} higherLevelIdentifiers Array of possible identifiers of records on higher level (section/head)
      * @return {Document} the created DC record
      * @type {function}
      * @function
      * @name MarcXchangeToOaiDc.createDcXml
      */
-    function createDcXml( marcXrecord, higherLevelIdentifiers ) {
+    function createDcXml( marcRecord, higherLevelIdentifiers ) {
 
         Log.trace( "Entering MarcXchangeToOaiDc.createDcXml" );
 
-        var marcRecord = MarcXchange.marcXchangeToMarcRecord( marcXrecord );
         var oaiDcXml = XmlUtil.createDocument( "dc", XmlNamespaces.oai_dc );
         XmlUtil.addNamespace( oaiDcXml, XmlNamespaces.dc );
         XmlUtil.addNamespace( oaiDcXml, XmlNamespaces.xsi );
@@ -343,18 +342,16 @@ var MarcXchangeToOaiDc = function() {
      * Function that gets an identifier for a higher level record; value from field 001 subfield b
      * concatenated with comma and value from field 014 subfield a.
      *
-     * @syntax MarcXchangeToOaiDc.getHigherLevelIdentifier( marcXrecord )
-     * @param {String} marcXrecord the marcxchange record to create DC from
+     * @syntax MarcXchangeToOaiDc.getHigherLevelIdentifier( marcRecord )
+     * @param {Record} marcRecord the marc record to get higher level id from
      * @return {String} the higher level identifier, empty string, if no value from field 014a
      * @type {function}
      * @function
      * @name MarcXchangeToOaiDc.getHigherLevelIdentifier
      */
-    function getHigherLevelIdentifier( marcXrecord ) {
+    function getHigherLevelIdentifier( marcRecord ) {
 
         Log.trace( "Entering MarcXchangeToOaiDc.getHigherLevelIdentifier" );
-
-        var marcRecord = MarcXchange.marcXchangeToMarcRecord( marcXrecord );
 
         var map = new MatchMap();
 
