@@ -8,6 +8,14 @@
         <artifactId>rawrepo-oai</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
+
+    <repositories>
+        <repository>
+            <id>mavenrepo.dbc.dk</id>
+            <url>http://mavenrepo.dbc.dk/content/groups/public</url>
+        </repository>
+    </repositories>
+
     <groupId>dk.dbc</groupId>
     <artifactId>rawrepo-oai-formatter</artifactId>
     <version>1.0-SNAPSHOT</version>
