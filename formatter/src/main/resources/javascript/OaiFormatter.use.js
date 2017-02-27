@@ -90,8 +90,8 @@ var OaiFormatter = function() {
 
         var recordObjects = [ ];
 
-        for ( var i = 0; records.length; i++ ) {
-            var recordObject = MarcXchange.marcXchangeToMarcRecord( marcXrecord );
+        for ( var i = 0; i < records.length; i++ ) {
+            var recordObject = MarcXchange.marcXchangeToMarcRecord( records[ i ] );
             recordObjects.push( recordObject );
         }
 
