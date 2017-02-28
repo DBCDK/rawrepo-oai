@@ -575,8 +575,7 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm NOT allowed set)", f
 
     var error = new Error( "Format: illegal not allowed" );
 
-    use( "SafeAssert" );
-    SafeAssert.exception( "Throw error when format is not legal", function( ) {
+    Assert.exception( "Throw error when format is not legal", function( ) {
         OaiFormatter.formatRecords( records, format, allowedSets )
     }, error );
 
