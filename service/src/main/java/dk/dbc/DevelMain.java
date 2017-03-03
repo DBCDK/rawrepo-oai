@@ -1,14 +1,14 @@
 /*
  * Copyright (C) 2017 DBC A/S (http://dbc.dk/)
  *
- * This is part of dbc-rawrepo-oai-service-dw
+ * This is part of dbc-rawrepo-oai-service
  *
- * dbc-rawrepo-oai-service-dw is free software: you can redistribute it and/or modify
+ * dbc-rawrepo-oai-service is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * dbc-rawrepo-oai-service-dw is distributed in the hope that it will be useful,
+ * dbc-rawrepo-oai-service is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -36,6 +36,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import javax.xml.parsers.SAXParserFactory;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -43,6 +44,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  *
@@ -50,13 +53,35 @@ import org.slf4j.LoggerFactory;
  */
 public class DevelMain extends OAIApplication {
 
+    private static String mainClass;
     private static final Logger log = LoggerFactory.getLogger(DevelMain.class);
 
     private static final String YAML_FILE_NAME = "src/test/resources/config_devel.yaml";
     private static final String LOGBACK_XML = "src/test/resources/logback_devel.xml";
 
     public static void main(String[] args) {
+
         try {
+            SAXParserFactory.newInstance()
+                    .newSAXParser()
+                    .parse("pom.xml", new DefaultHandler() {
+                       String content;
+
+                       @Override
+                       public void characters(char[] chars, int i, int i1) throws SAXException {
+                           content = new String(chars, i, i1);
+                       }
+
+                       @Override
+                       public void endElement(String uri, String localName, String qName) throws SAXException {
+                           if (qName.equals("mainClass")) {
+                               mainClass = content;
+                           }
+                       }
+
+                   });
+            System.out.println("mainClass = " + mainClass);
+
             System.setProperty("logback.configurationFile", LOGBACK_XML);
             new DevelMain().run(new String[] {"server", YAML_FILE_NAME});
         } catch (Exception ex) {
@@ -66,7 +91,7 @@ public class DevelMain extends OAIApplication {
     }
 
     @Override
-    public void initialize(Bootstrap<OAIConfiuration> bootstrap) {
+    public void initialize(Bootstrap bootstrap) {
         try {
             CloseableHttpClient client = new HttpClientBuilder(bootstrap.getMetricRegistry())
                     .build("client");
