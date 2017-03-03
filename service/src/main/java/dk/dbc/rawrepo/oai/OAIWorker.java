@@ -43,7 +43,6 @@ import dk.dbc.oai.pmh.VerbType;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -57,8 +56,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -317,18 +314,18 @@ public class OAIWorker {
      * @return list of records
      */
     private List<RecordType> fetchRecordContent(List<OAIIdentifier> collection, String metadataPrefix) {
-        List<Future<RecordFormatter.RecordWithContent>> futures = collection.stream()
+        List<RecordFormatter.RecordWithContent> records = collection.stream()
                 .map(id -> recordFormatter.fetch(id, metadataPrefix, allowedSets))
                 .collect(Collectors.toList());
-        log.debug("futures = " + futures);
+        log.debug("futures = " + records);
         try {
             Instant timeout = Instant.now().plus(config.getFetchRecordsTimeout(), ChronoUnit.SECONDS);
-            List<RecordType> recordsWithContent = futures.stream()
-                    .map(future -> {
+            List<RecordType> recordsWithContent = records.stream()
+                    .map(rec -> {
                         try {
-                            long until = Math.max(0, Instant.now().until(timeout, ChronoUnit.SECONDS));
-                            log.debug("until = " + until);
-                            RecordFormatter.RecordWithContent rec = future.get(until, TimeUnit.SECONDS);
+                            long waitFor = Math.max(0, Instant.now().until(timeout, ChronoUnit.SECONDS));
+                            log.debug("waitFor (sec) = " + waitFor);
+                            rec.complete(waitFor);
                             RecordType record = rec.getOAIIdentifier().toRecord();
                             if (!rec.getOAIIdentifier().isDeleted()) {
                                 MetadataType metadata = OBJECT_FACTORY.createMetadataType();
@@ -356,9 +353,9 @@ public class OAIWorker {
                     .collect(Collectors.toList());
             return recordsWithContent;
         } catch (Exception e) {
-            futures.stream().forEach(future -> {
+            records.stream().forEach(record -> {
                 try {
-                    future.cancel(true);
+                    record.cancel(true);
                 } catch (Exception ex) {
                     log.debug("Error canceling request: " + ex.getMessage());
                 }

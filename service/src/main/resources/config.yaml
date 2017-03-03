@@ -25,6 +25,18 @@ rawrepoOai:
   checkConnectionWhileIdle: false
   evictionInterval: 10s
   minIdleTime: 1 minute
+restClient:
+  timeout: ${FETCH_RECORDS_TIMEOUT:-30}s
+  connectionTimeout: 500ms
+  timeToLive: 1 hour
+  cookiesEnabled: false
+  maxConnections: 1024
+  maxConnectionsPerRoute: 1024
+  keepAlive: 10s
+  minThreads: 1
+  maxThreads: 128
+  gzipEnabled: true
+  gzipEnabledForRequests: true
 
 server:
 # *** logback requestlog

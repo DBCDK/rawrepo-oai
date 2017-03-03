@@ -1,14 +1,14 @@
 /*
  * Copyright (C) 2017 DBC A/S (http://dbc.dk/)
  *
- * This is part of dbc-rawrepo-oai-service-dw
+ * This is part of dbc-rawrepo-oai-service
  *
- * dbc-rawrepo-oai-service-dw is free software: you can redistribute it and/or modify
+ * dbc-rawrepo-oai-service is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * dbc-rawrepo-oai-service-dw is distributed in the hope that it will be useful,
+ * dbc-rawrepo-oai-service is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -20,6 +20,7 @@ package dk.dbc.rawrepo.oai;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dk.dbc.DbcConfiguration;
+import io.dropwizard.client.JerseyClientConfiguration;
 import io.dropwizard.db.DataSourceFactory;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -177,5 +178,19 @@ public class OAIConfiuration extends DbcConfiguration {
         return database;
     }
 
+    @Valid
+    @NotNull
+    private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();
+
+
+    @JsonProperty("restClient")
+    public void setJerseyClientConfiguration(JerseyClientConfiguration httpClient) {
+        this.httpClient = httpClient;
+    }
+
+    @JsonProperty("restClient")
+    public JerseyClientConfiguration getJerseyClientConfiguration() {
+        return httpClient;
+    }
 
 }
