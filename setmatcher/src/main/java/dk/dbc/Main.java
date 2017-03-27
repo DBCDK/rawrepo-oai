@@ -1,14 +1,14 @@
 /*
  * Copyright (C) 2017 DBC A/S (http://dbc.dk/)
  *
- * This is part of dbc-rawrepo-oai-harvester-dw
+ * This is part of dbc-rawrepo-oai-setmatcher-dw
  *
- * dbc-rawrepo-oai-harvester-dw is free software: you can redistribute it and/or modify
+ * dbc-rawrepo-oai-setmatcher-dw is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * dbc-rawrepo-oai-harvester-dw is distributed in the hope that it will be useful,
+ * dbc-rawrepo-oai-setmatcher-dw is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -22,19 +22,27 @@ import com.codahale.metrics.MetricRegistry;
 import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherConfiguration;
 import dk.dbc.rawrepo.oai.setmatcher.DBHealthCheck;
 import dk.dbc.rawrepo.oai.setmatcher.JavaScriptWorker;
-import dk.dbc.rawrepo.oai.setmatcher.RawRepoJobProcessor;
+import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherProcessor;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import javax.sql.DataSource;
+import dk.dbc.dropwizard.DaemonMaster;
+import dk.dbc.rawrepo.jms.JMSFetcher;
+import io.dropwizard.db.ManagedDataSource;
+import javax.jms.JMSException;
 
 /**
  *
  * @author DBC {@literal <dbc.dk>}
  */
 public class Main extends Application<OaiSetMatcherConfiguration> {
+    
+    private MetricRegistry metrics;
+    private OaiSetMatcherConfiguration config;
+    private ManagedDataSource rawrepo;
+    private ManagedDataSource rawrepoOai;
     
     public static void main(String[] args) {
         try {
@@ -43,7 +51,7 @@ public class Main extends Application<OaiSetMatcherConfiguration> {
             System.err.println(ex.getMessage());
             System.exit(1);
         }
-    }
+    }        
     
     @Override
     public String getName() {
@@ -61,23 +69,28 @@ public class Main extends Application<OaiSetMatcherConfiguration> {
 
     @Override
     public void run(OaiSetMatcherConfiguration config, Environment env) throws Exception {
-        MetricRegistry metrics = env.metrics();
+        this.metrics = env.metrics();
+        this.config = config;
         
-        DataSource rawrepo = config.getRawRepoDataSourceFactory()
+        this.rawrepo = config.getRawRepoDataSourceFactory()
                 .build(metrics, "rawrepo");
         
-        DataSource rawrepoOai = config.getRawRepoOaiDataSourceFactory()
+        this.rawrepoOai = config.getRawRepoOaiDataSourceFactory()
                 .build(metrics, "rawrepo-oai");
-        
-        for (int i = 0; i < config.getPoolSize(); i++) {
-            new Thread(() -> {
-                RawRepoJobProcessor harvester = new RawRepoJobProcessor(rawrepo, rawrepoOai, new JavaScriptWorker());
-                harvester.start();
-            }).start();            
-        }
-        
+                
         env.healthChecks().register("rawrepo-db", new DBHealthCheck(rawrepo));
         env.healthChecks().register("rawrepo-oai-db", new DBHealthCheck(rawrepoOai));
+        
+        DaemonMaster.start(config.getPoolSize(), this::makeProcessor);
+    }
+    
+    OaiSetMatcherProcessor makeProcessor() {
+        try {
+            JMSFetcher jmsFetcher = new JMSFetcher(metrics, config.getQueueServer(), config.getQueues());
+            return new OaiSetMatcherProcessor(rawrepo, rawrepoOai, new JavaScriptWorker(), jmsFetcher);
+        } catch (JMSException ex) {
+            throw new RuntimeException(ex);
+        }
     }
     
 }

@@ -1,14 +1,14 @@
 /*
  * Copyright (C) 2017 DBC A/S (http://dbc.dk/)
  *
- * This is part of dbc-rawrepo-oai-harvester-dw
+ * This is part of dbc-rawrepo-oai-setmatcher-dw
  *
- * dbc-rawrepo-oai-harvester-dw is free software: you can redistribute it and/or modify
+ * dbc-rawrepo-oai-setmatcher-dw is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * dbc-rawrepo-oai-harvester-dw is distributed in the hope that it will be useful,
+ * dbc-rawrepo-oai-setmatcher-dw is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -19,9 +19,11 @@
 package dk.dbc.rawrepo.oai.setmatcher;
 
 import dk.dbc.commons.testutils.postgres.connection.PostgresITConnection;
+import dk.dbc.rawrepo.QueueJob;
 import dk.dbc.rawrepo.RawRepoDAO;
 import dk.dbc.rawrepo.RawRepoException;
 import dk.dbc.rawrepo.Record;
+import dk.dbc.rawrepo.RecordId;
 import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherDAO.RecordSet;
 import java.sql.SQLException;
 import org.junit.After;
@@ -36,7 +38,7 @@ import static org.mockito.Mockito.when;
  *
  * @author DBC {@literal <dbc.dk>}
  */
-public class RawRepoJobProcessorIT {
+public class OaiSetMatcherProcessorIT {
     
     private final String BIB_REC_ID = "bibrecid";
     private final int AGENCY_ID = 870970;
@@ -46,9 +48,8 @@ public class RawRepoJobProcessorIT {
     private RawRepoDAO rawrepoDao;
     private OaiSetMatcherDAO rawrepoOaiDao;
     private Record record;
-    
-    
-    
+    private QueueJob queueJob;
+            
     @Before
     public void setUp() throws SQLException, RawRepoException {
         rawrepo = new PostgresITConnection("rawrepo");
@@ -65,6 +66,15 @@ public class RawRepoJobProcessorIT {
         rawrepoDao.saveRecord(record);
         
         rawrepoOaiDao = new OaiSetMatcherDAO(rawrepoOai.getConnection());
+        
+        queueJob = createQueueJob(BIB_REC_ID, AGENCY_ID);
+    }
+    
+    private OaiSetMatcherProcessor createProcessor(JavaScriptWorker jsWorker){
+        OaiSetMatcherProcessor setMatcher = new OaiSetMatcherProcessor(null, null, jsWorker, null);
+        setMatcher.rawrepoConnection = rawrepo.getConnection();
+        setMatcher.rawrepoOAIConnection = rawrepoOai.getConnection();
+        return setMatcher;
     }
 
     @After
@@ -79,7 +89,8 @@ public class RawRepoJobProcessorIT {
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
         when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"BKM"}); 
 
-        RawRepoJobProcessor.processQueueJob(BIB_REC_ID, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);
+        OaiSetMatcherProcessor processor = createProcessor(jsWorker);
+        processor.process(queueJob);
         
         RecordSet[] sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(1, sets.length);
@@ -93,9 +104,10 @@ public class RawRepoJobProcessorIT {
         
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
         when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT"}); 
-
-        RawRepoJobProcessor.processQueueJob(BIB_REC_ID, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);
         
+        OaiSetMatcherProcessor processor = createProcessor(jsWorker);
+        processor.process(queueJob);
+                
         RecordSet[] sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(1, sets.length);
         
@@ -109,7 +121,8 @@ public class RawRepoJobProcessorIT {
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
         when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT", "BKM"}); 
 
-        RawRepoJobProcessor.processQueueJob(BIB_REC_ID, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);
+        OaiSetMatcherProcessor processor = createProcessor(jsWorker);
+        processor.process(queueJob);
         
         RecordSet[] sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(2, sets.length);
@@ -128,8 +141,9 @@ public class RawRepoJobProcessorIT {
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
         when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT", "BKM"}); 
 
-        RawRepoJobProcessor.processQueueJob(BIB_REC_ID, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);
-        
+        OaiSetMatcherProcessor processor = createProcessor(jsWorker);
+        processor.process(queueJob);
+                
         RecordSet[] sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(2, sets.length);
         
@@ -142,7 +156,7 @@ public class RawRepoJobProcessorIT {
         record.setDeleted(true);
         rawrepoDao.saveRecord(record);
         
-        RawRepoJobProcessor.processQueueJob(BIB_REC_ID, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);
+        processor.process(queueJob);
         
         sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(2, sets.length);
@@ -160,8 +174,9 @@ public class RawRepoJobProcessorIT {
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
         when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT", "BKM"}); 
 
-        RawRepoJobProcessor.processQueueJob(BIB_REC_ID, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);
-        
+        OaiSetMatcherProcessor processor = createProcessor(jsWorker);
+        processor.process(queueJob);
+                
         RecordSet[] sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(2, sets.length);
         
@@ -172,7 +187,7 @@ public class RawRepoJobProcessorIT {
         assertEquals(false, sets[1].gone);
         
         when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT"}); // Gone from BKM
-        RawRepoJobProcessor.processQueueJob(BIB_REC_ID, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);
+        processor.process(queueJob);
         
         sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(2, sets.length);
@@ -189,9 +204,18 @@ public class RawRepoJobProcessorIT {
         
         String bibrecid = "notexisting";
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
-        RawRepoJobProcessor.processQueueJob(bibrecid, AGENCY_ID, rawrepo.getConnection(), rawrepoOai.getConnection(), jsWorker);        
+        OaiSetMatcherProcessor processor = createProcessor(jsWorker);
+        processor.process(createQueueJob(bibrecid, AGENCY_ID));
+        
         RecordSet[] sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + bibrecid);
         assertEquals(0, sets.length);        
+    }
+    
+    private QueueJob createQueueJob(String bibrecid, int agencyId){
+        QueueJob job = mock(QueueJob.class);
+        RecordId recId = new RecordId(bibrecid, agencyId);
+        when(job.getJob()).thenReturn(recId); 
+        return job;
     }
     
 }

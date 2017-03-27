@@ -1,14 +1,14 @@
 /*
  * Copyright (C) 2017 DBC A/S (http://dbc.dk/)
  *
- * This is part of dbc-rawrepo-oai-harvester-dw
+ * This is part of dbc-rawrepo-oai-setmatcher-dw
  *
- * dbc-rawrepo-oai-harvester-dw is free software: you can redistribute it and/or modify
+ * dbc-rawrepo-oai-setmatcher-dw is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * dbc-rawrepo-oai-harvester-dw is distributed in the hope that it will be useful,
+ * dbc-rawrepo-oai-setmatcher-dw is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -18,13 +18,13 @@
  */
 package dk.dbc.rawrepo.oai.setmatcher;
 
+import dk.dbc.rawrepo.jms.JMSJobProcessor;
+import dk.dbc.rawrepo.QueueJob;
 import dk.dbc.rawrepo.RawRepoDAO;
-import dk.dbc.rawrepo.RawRepoException;
 import dk.dbc.rawrepo.Record;
-import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherDAO;
+import dk.dbc.rawrepo.RecordId;
+import dk.dbc.rawrepo.jms.JMSFetcher;
 import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherDAO.RecordSet;
-import dk.dbc.rawrepo.oai.setmatcher.JavaScriptWorker;
-import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -32,68 +32,67 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import javax.sql.DataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author DBC {@literal <dbc.dk>}
  */
-public class RawRepoJobProcessor {
+public class OaiSetMatcherProcessor extends JMSJobProcessor {
+        
+    final DataSource rawrepo;
+    final DataSource rawrepoOai;
+    final JavaScriptWorker jsWorker;
+    Connection rawrepoConnection;
+    Connection rawrepoOAIConnection;    
     
-    private static final Logger log = LoggerFactory.getLogger(RawRepoJobProcessor.class);
-    
-    private final DataSource rawrepo;
-    private final DataSource rawrepoOai;
-    private final JavaScriptWorker jsWorker;
-    
-    public RawRepoJobProcessor(DataSource rawrepo, DataSource rawrepoOai, JavaScriptWorker jsWorker){
+    public OaiSetMatcherProcessor(DataSource rawrepo, DataSource rawrepoOai, JavaScriptWorker jsWorker, JMSFetcher jmsFetcher) {
+        super(jmsFetcher);
         this.rawrepo = rawrepo;        
         this.rawrepoOai = rawrepoOai;
         this.jsWorker = jsWorker;
+        
+        log.info("Initialized OaiSetMatcherProcessor");
     }
     
-    public void start() {
-        while(true){
-            System.out.println("Ima harvesting");
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ex) {
-                
-            }
-        }
-    }
-    
-    static void processQueueJob(String bibliographicRecordId, int agencyId, 
-            Connection rawrepoConnection, Connection rawrepoOaiConnection,
-            JavaScriptWorker jsWorker) throws SQLException, RawRepoException, UnsupportedEncodingException, Exception {
+    @Override
+    protected void process(QueueJob job) throws Exception {
+        
+        log.info("Processing job {}", job);
+        
+        RecordId recordId = job.getJob();
+        int agencyId = recordId.getAgencyId();
+        String bibliographicRecordId = recordId.getBibliographicRecordId();
         
         if(agencyId == 870970 || agencyId == 870971) {
-
+            
+            if(rawrepoOAIConnection == null) {
+                setupConnections();
+            }
+                            
             // We need them DAO's
             RawRepoDAO rawrepoDao = RawRepoDAO.builder(rawrepoConnection).build();
-            OaiSetMatcherDAO rawRepoOaiDao = new OaiSetMatcherDAO(rawrepoOaiConnection);
+            OaiSetMatcherDAO rawRepoOaiDao = new OaiSetMatcherDAO(rawrepoOAIConnection);
 
             // And we need the unmerged rawrepo record
             // and the sets which it is currently in
-            String pid = agencyId + ":" + bibliographicRecordId;   
-            Record record = rawrepoDao.fetchRecord(bibliographicRecordId, agencyId);                     
+            String pid = agencyId + ":" + bibliographicRecordId;
+            Record record = rawrepoDao.fetchRecord(bibliographicRecordId, agencyId);
             RecordSet[] currentSets = rawRepoOaiDao.fetchSets(pid);
 
-            // Update records timestamp and state, and find the sets in which it is to be included
+            // find the sets in which it is to be included
             HashSet<String> toBeIncludedIn;
-            if(record.isOriginal() || record.isDeleted()) {
+            if (record.isOriginal() || record.isDeleted()) {
                 toBeIncludedIn = new HashSet<>();
             } else {
-                rawRepoOaiDao.updateRecord(pid, false);                
+                rawRepoOaiDao.updateRecord(pid, false);
                 String content = new String(record.getContent(), "UTF-8");
                 toBeIncludedIn = new HashSet<>(Arrays.asList(jsWorker.getOaiSets(agencyId, content)));
             }
-            
+
             // Update the timestamp of record if it is currently contained
             // or is going to be contained in any set
             // OAI-record is either created or updated
-            if(currentSets.length > 0 || toBeIncludedIn.size() > 0) {
+            if (currentSets.length > 0 || toBeIncludedIn.size() > 0) {
                 rawRepoOaiDao.updateRecord(pid, record.isDeleted());
             }
 
@@ -113,10 +112,46 @@ public class RawRepoJobProcessor {
 
             log.info("Harvest succes. Agency={}, bibRecId={}, sets={}, goneFrom={}",
                     agencyId, bibliographicRecordId, toBeIncludedIn, removedFrom);
-            
-            
+
         } else {
             log.debug("Agency not supported. Agency={}, bibRecId={}.", agencyId, bibliographicRecordId);
         }
     }            
+
+    @Override
+    protected void rollback() throws SQLException {
+        if(rawrepoOAIConnection == null) {
+            return;
+        }
+        // rollback oai conn, and close oai + rr
+        try(Connection oai = rawrepoOAIConnection; 
+                Connection rr = rawrepoConnection) {
+            oai.rollback();
+        } finally {
+            rawrepoOAIConnection = null;
+            rawrepoConnection = null;
+        }
+    }
+
+    @Override
+    protected void commit() throws SQLException {
+        if(rawrepoOAIConnection == null) {
+            return;
+        }
+        // commit oai conn, and close oai + rr
+        try(Connection oai = rawrepoOAIConnection; 
+                Connection rr = rawrepoConnection) {
+            oai.commit();
+            log.info("committed");
+        } finally {
+            rawrepoOAIConnection = null;
+            rawrepoConnection = null;
+        }
+    }
+    private void setupConnections() throws SQLException {
+        rawrepoConnection = rawrepo.getConnection();
+        rawrepoOAIConnection = rawrepoOai.getConnection();
+        rawrepoOAIConnection.setAutoCommit(false);
+    }
+    
 }

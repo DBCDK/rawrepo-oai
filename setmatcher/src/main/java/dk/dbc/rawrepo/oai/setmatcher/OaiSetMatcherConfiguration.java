@@ -1,14 +1,14 @@
 /*
  * Copyright (C) 2017 DBC A/S (http://dbc.dk/)
  *
- * This is part of dbc-rawrepo-oai-formatter-dw
+ * This is part of dbc-rawrepo-oai-setmatcher-dw
  *
- * dbc-rawrepo-oai-formatter-dw is free software: you can redistribute it and/or modify
+ * dbc-rawrepo-oai-setmatcher-dw is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * dbc-rawrepo-oai-formatter-dw is distributed in the hope that it will be useful,
+ * dbc-rawrepo-oai-setmatcher-dw is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -21,6 +21,8 @@ package dk.dbc.rawrepo.oai.setmatcher;
 import dk.dbc.DbcConfiguration;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.db.DataSourceFactory;
+import java.util.Arrays;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -40,6 +42,12 @@ public class OaiSetMatcherConfiguration extends DbcConfiguration {
     
     @NotNull
     private Integer poolSize;
+    
+    @NotNull
+    private String queues;
+    
+    @NotNull
+    private String queueServer;
 
     @JsonProperty("rawrepo")
     public void setRawRepoDataSourceFactory(DataSourceFactory factory) {
@@ -61,14 +69,30 @@ public class OaiSetMatcherConfiguration extends DbcConfiguration {
         return rawrepoOai;
     }
 
-    @JsonProperty("poolSize")
+    @JsonProperty("javaScriptPoolSize")
     public Integer getPoolSize() {
         return poolSize;
     }
 
-    @JsonProperty("poolSize")
+    @JsonProperty("javaScriptPoolSize")
     public void setPoolSize(Integer poolSize) {
         this.poolSize = poolSize;
+    }
+    
+    public List<String> getQueues() {
+        return Arrays.asList(queues.split("[\\s,]+"));
+    }
+
+    public void setQueues(String queues) {
+        this.queues = queues;
+    }
+
+    public String getQueueServer() {
+        return queueServer;
+    }
+
+    public void setQueueServer(String queueServer) {
+        this.queueServer = queueServer;
     }
     
 }

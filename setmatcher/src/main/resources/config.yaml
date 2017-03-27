@@ -1,4 +1,6 @@
 javaScriptPoolSize: ${POOL_SIZE:-2}
+queueServer: "${QUEUE_SERVER}"
+queues: "${QUEUE_NAMES}"
 rawrepo:
   driverClass: org.postgresql.Driver
   user: ${RAWREPO_URL_USER}
@@ -15,6 +17,27 @@ rawrepo:
   checkConnectionWhileIdle: false
   evictionInterval: 10s
   minIdleTime: 1 minute
+  checkConnectionOnBorrow: true
+
+  
+rawrepo-oai:
+  driverClass: org.postgresql.Driver
+  user: ${RAWREPO_OAI_URL_USER}
+  password: ${RAWREPO_OAI_URL_PASS}
+  url: jdbc:postgresql://${RAWREPO_OAI_URL_BASE}
+  properties:
+    charSet: UTF-8
+  maxWaitForConnection: 1s
+  validationQuery: "/* MyService Health Check */ SELECT 1"
+  validationQueryTimeout: 3s
+  initialSize: 1
+  minSize: 1
+  maxSize: ${POOL_SIZE:-2}
+  checkConnectionWhileIdle: false
+  evictionInterval: 10s
+  minIdleTime: 1 minute
+  checkConnectionOnBorrow: true
+
 
 server:
 # *** logback requestlog

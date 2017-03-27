@@ -44,6 +44,7 @@ var OaiSetMatcher = function() {
                         
         var oaiSets = {};
         var marcRecord = MarcXchange.marcXchangeToMarcRecord( marcXrecord );
+        Log.info(marcRecord)
         var map = new MatchMap( );
         
         OaiSetMatcher.checkNAT( agencyId, oaiSets, map );
