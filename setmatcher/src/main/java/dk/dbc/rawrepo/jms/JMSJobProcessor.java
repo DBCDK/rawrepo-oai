@@ -26,7 +26,11 @@ import javax.jms.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+/**
+ * An abstract JMS rawrepo job processor.
+ * Handles the connection to the JMS broker, and let the extending classes handle 
+ * the actual QueueJob processing.
+ */
 public abstract class JMSJobProcessor implements Runnable {
     
     protected static final Logger log = LoggerFactory.getLogger(JMSJobProcessor.class);
@@ -67,7 +71,6 @@ public abstract class JMSJobProcessor implements Runnable {
         while(true){
             QueueJob job = null;
             try {
-                
                 job = fetch();                
                 if (job != null) {
                     try(Timer.Context time = processJobTimer.time()){

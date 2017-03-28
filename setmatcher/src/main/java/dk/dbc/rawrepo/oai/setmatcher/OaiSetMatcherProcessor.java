@@ -19,7 +19,6 @@
 package dk.dbc.rawrepo.oai.setmatcher;
 
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.annotation.Timed;
 import dk.dbc.rawrepo.jms.JMSJobProcessor;
 import dk.dbc.rawrepo.QueueJob;
 import dk.dbc.rawrepo.RawRepoDAO;
@@ -56,7 +55,16 @@ public class OaiSetMatcherProcessor extends JMSJobProcessor {
         log.info("Initialized OaiSetMatcherProcessor");
     }
     
-    @Timed(name = "processQueueJob")
+    /**
+     * Processes a rawrepo queuejob in order to match a bibliographic item
+     * with its corresponding OAI sets.
+     * 
+     * Based on the result of the JavaScript that does the actual set matching, 
+     * this method will update the rawrepo-oai db.
+     * 
+     * @param job
+     * @throws Exception 
+     */
     @Override
     protected void process(QueueJob job) throws Exception {
         
