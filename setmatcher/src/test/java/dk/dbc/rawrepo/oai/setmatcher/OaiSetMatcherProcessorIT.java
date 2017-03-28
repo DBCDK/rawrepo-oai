@@ -18,6 +18,7 @@
  */
 package dk.dbc.rawrepo.oai.setmatcher;
 
+import com.codahale.metrics.MetricRegistry;
 import dk.dbc.commons.testutils.postgres.connection.PostgresITConnection;
 import dk.dbc.rawrepo.QueueJob;
 import dk.dbc.rawrepo.RawRepoDAO;
@@ -71,7 +72,7 @@ public class OaiSetMatcherProcessorIT {
     }
     
     private OaiSetMatcherProcessor createProcessor(JavaScriptWorker jsWorker){
-        OaiSetMatcherProcessor setMatcher = new OaiSetMatcherProcessor(null, null, jsWorker, null);
+        OaiSetMatcherProcessor setMatcher = new OaiSetMatcherProcessor(null, null, jsWorker, null, new MetricRegistry());
         setMatcher.rawrepoConnection = rawrepo.getConnection();
         setMatcher.rawrepoOAIConnection = rawrepoOai.getConnection();
         return setMatcher;

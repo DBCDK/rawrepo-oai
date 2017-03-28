@@ -18,6 +18,8 @@
  */
 package dk.dbc.rawrepo.oai.setmatcher;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.annotation.Timed;
 import dk.dbc.rawrepo.jms.JMSJobProcessor;
 import dk.dbc.rawrepo.QueueJob;
 import dk.dbc.rawrepo.RawRepoDAO;
@@ -45,8 +47,8 @@ public class OaiSetMatcherProcessor extends JMSJobProcessor {
     Connection rawrepoConnection;
     Connection rawrepoOAIConnection;    
     
-    public OaiSetMatcherProcessor(DataSource rawrepo, DataSource rawrepoOai, JavaScriptWorker jsWorker, JMSFetcher jmsFetcher) {
-        super(jmsFetcher);
+    public OaiSetMatcherProcessor(DataSource rawrepo, DataSource rawrepoOai, JavaScriptWorker jsWorker, JMSFetcher jmsFetcher, MetricRegistry metrics) {
+        super(jmsFetcher, metrics);
         this.rawrepo = rawrepo;        
         this.rawrepoOai = rawrepoOai;
         this.jsWorker = jsWorker;
@@ -54,6 +56,7 @@ public class OaiSetMatcherProcessor extends JMSJobProcessor {
         log.info("Initialized OaiSetMatcherProcessor");
     }
     
+    @Timed(name = "processQueueJob")
     @Override
     protected void process(QueueJob job) throws Exception {
         

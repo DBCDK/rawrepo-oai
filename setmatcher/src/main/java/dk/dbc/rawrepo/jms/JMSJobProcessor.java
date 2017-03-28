@@ -18,6 +18,8 @@
  */
 package dk.dbc.rawrepo.jms;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import dk.dbc.rawrepo.QueueJob;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -33,12 +35,19 @@ public abstract class JMSJobProcessor implements Runnable {
     private int fetchMessageTimeoutMs = 10000;
     private int commitInterval = 100;
     private final SleepHandler sleepHandler;
+    private final Timer processJobTimer;
+    private final Timer rollbackTimer;
+    private final Timer commitTimer;
     
-    public JMSJobProcessor(JMSFetcher jmsFetcher){
+    public JMSJobProcessor(JMSFetcher jmsFetcher, MetricRegistry metrics){
         this.jmsFetcher = jmsFetcher;  
         this.sleepHandler = new SleepHandler()
                 .withLowerLimit(10, 1000)
                 .withLowerLimit(100, 60000);
+        this.processJobTimer = metrics.timer(getClass().getCanonicalName() + ".processJob");
+        this.commitTimer = metrics.timer(getClass().getCanonicalName() + ".commit");
+        this.rollbackTimer = metrics.timer(getClass().getCanonicalName() + ".rollback");
+        
     }
     public JMSJobProcessor withCommitInterval(int commitInterval){
         this.commitInterval = commitInterval;
@@ -58,30 +67,34 @@ public abstract class JMSJobProcessor implements Runnable {
         while(true){
             QueueJob job = null;
             try {
+                
                 job = fetch();                
                 if (job != null) {
-                    process(job);
-                    if (processed++ % commitInterval == 0) {      
+                    try(Timer.Context time = processJobTimer.time()){
+                        process(job);
+                    }
+                }
+                if(job == null || processed++ % commitInterval == 0){
+                    try(Timer.Context time = commitTimer.time()){
                         commit();
                         jmsFetcher.commit();
                     }
-                } else {
-                    commit();
-                    jmsFetcher.commit();
                 }
                 sleepHandler.reset();
             } catch (Exception ex) {
                 log.error("Error processing job: {}, reason: {}", job, ex.getMessage());
                 log.debug("Error processing job: {}", job, ex);
-                try {
-                    rollback();
-                } catch (Exception e) {
-                    log.error("Error rolling back", e);
-                }
-                try {
-                    jmsFetcher.rollback();
-                } catch (Exception e) {
-                    log.error("Error rolling back", e);
+                try(Timer.Context time = rollbackTimer.time()){
+                    try {
+                        rollback();
+                    } catch (Exception e) {
+                        log.error("Error rolling back", e);
+                    }
+                    try {
+                        jmsFetcher.rollback();
+                    } catch (Exception e) {
+                        log.error("Error rolling back", e);
+                    }
                 }
                 sleepHandler.failure();
             }

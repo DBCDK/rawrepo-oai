@@ -18,6 +18,8 @@
  */
 package dk.dbc.rawrepo.oai.setmatcher;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import dk.dbc.jslib.ClasspathSchemeHandler;
 import dk.dbc.jslib.Environment;
 import dk.dbc.jslib.ModuleHandler;
@@ -53,9 +55,13 @@ public class JavaScriptWorker {
         "classpath:javascript/jscommon/util/",
         "classpath:javascript/jscommon/xml/"
     };
+    private final Timer initJsTimer;
+    private final Timer getOaiSetsTimer;
 
-    public JavaScriptWorker() {
-        try {
+    public JavaScriptWorker(MetricRegistry metrics) {
+        this.initJsTimer = metrics.timer(getClass().getCanonicalName() + ".initializeJS");
+        this.getOaiSetsTimer = metrics.timer(getClass().getCanonicalName() + ".getOaiSets");
+        try(Timer.Context time = initJsTimer.time()) {
             environment = new Environment();
             ModuleHandler mh = new ModuleHandler();
             mh.registerNonCompilableModule("Tables"); // Unlikely we need this module.
@@ -92,9 +98,11 @@ public class JavaScriptWorker {
      * @throws Exception
      */
     public String[] getOaiSets(int agencyId, String content) throws Exception {
-        return environment.getJavascriptObjectAsStringArray(
-                environment.callMethod(OAI_SET_MATCHER_METHOD, new Object[]{agencyId, content})
-        );
+        try(Timer.Context time = getOaiSetsTimer.time()) {
+            return environment.getJavascriptObjectAsStringArray(
+                    environment.callMethod(OAI_SET_MATCHER_METHOD, new Object[]{agencyId, content})
+            );
+        }
     }
 
 }
