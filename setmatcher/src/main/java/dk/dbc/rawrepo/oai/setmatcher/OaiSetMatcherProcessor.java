@@ -95,7 +95,6 @@ public class OaiSetMatcherProcessor extends JMSJobProcessor {
             if (record.isOriginal() || record.isDeleted()) {
                 toBeIncludedIn = new HashSet<>();
             } else {
-                rawRepoOaiDao.updateRecord(pid, false);
                 String content = new String(record.getContent(), "UTF-8");
                 toBeIncludedIn = new HashSet<>(Arrays.asList(jsWorker.getOaiSets(agencyId, content)));
             }
