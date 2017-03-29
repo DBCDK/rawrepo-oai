@@ -29,62 +29,64 @@ import java.util.ArrayList;
  * @author DBC {@literal <dbc.dk>}
  */
 public class OaiSetMatcherDAO {
+
     private final Connection c;
-    
+
     private static final String UPSERT_RECORD = "INSERT INTO oairecords( pid, deleted )"
-                                              + " values( ?, ? )"
-                                              + " ON CONFLICT ( pid )"
-                                              + " DO UPDATE SET deleted = EXCLUDED.deleted, changed = EXCLUDED.changed";
-    
+            + " values( ?, ? )"
+            + " ON CONFLICT ( pid )"
+            + " DO UPDATE SET deleted = EXCLUDED.deleted, changed = EXCLUDED.changed";
+
     private static final String UPSERT_RECORD_SET = "INSERT INTO oairecordsets( pid, setSpec, gone )"
-                                                  + " values( ?, ?, ? )"
-                                                  + " ON CONFLICT ( pid, setSpec )"
-                                                  + " DO UPDATE SET pid = EXCLUDED.pid, setSpec = EXCLUDED.setSpec, gone = EXCLUDED.gone";
-    
+            + " values( ?, ?, ? )"
+            + " ON CONFLICT ( pid, setSpec )"
+            + " DO UPDATE SET pid = EXCLUDED.pid, setSpec = EXCLUDED.setSpec, gone = EXCLUDED.gone";
+
     public OaiSetMatcherDAO(Connection c) {
-        this.c = c;     
+        this.c = c;
     }
-    
+
     public void updateRecord(String pid, boolean deleted) throws SQLException {
         try (PreparedStatement stmt = c.prepareStatement(UPSERT_RECORD)) {
             stmt.setString(1, pid);
             stmt.setBoolean(2, deleted);
             int res = stmt.executeUpdate();
-            if(res == 0) {
+            if (res == 0) {
                 throw new RuntimeException("Record not updated");
             }
         }
     }
-    
+
     public void updateSet(String pid, String setName, boolean gone) throws SQLException {
         try (PreparedStatement stmt = c.prepareStatement(UPSERT_RECORD_SET)) {
             stmt.setString(1, pid);
             stmt.setString(2, setName.toLowerCase());
             stmt.setBoolean(3, gone);
             int res = stmt.executeUpdate();
-            if(res == 0) {
+            if (res == 0) {
                 throw new RuntimeException("Record Set not updated");
             }
-        }        
+        }
     }
-    
+
     public RecordSet[] fetchSets(String pid) throws SQLException {
-        try (PreparedStatement stmt = c.prepareStatement("SELECT setSpec, gone FROM oairecordsets WHERE pid = ?")) {        
+        try (PreparedStatement stmt = c.prepareStatement("SELECT setSpec, gone FROM oairecordsets WHERE pid = ?")) {
             ArrayList<RecordSet> result = new ArrayList<>();
-            
+
             stmt.setString(1, pid);
-            ResultSet res = stmt.executeQuery();
-            while(res.next()) {
-                RecordSet s = new RecordSet();
-                s.setSpec = res.getString(1);
-                s.gone = res.getBoolean(2);
-                result.add(s);
+            try (ResultSet res = stmt.executeQuery()) {
+                while (res.next()) {
+                    RecordSet s = new RecordSet();
+                    s.setSpec = res.getString(1);
+                    s.gone = res.getBoolean(2);
+                    result.add(s);
+                }
             }
             return result.toArray(new RecordSet[result.size()]);
         }
-    } 
-    
-    public static class RecordSet {        
+    }
+
+    public static class RecordSet {
         public String setSpec;
         public boolean gone;
     }
