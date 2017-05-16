@@ -49,8 +49,7 @@ public abstract class JMSJobProcessor implements Runnable {
                 .withLowerLimit(100, 60000);
         this.processJobTimer = metrics.timer(getClass().getCanonicalName() + ".processJob");
         this.commitTimer = metrics.timer(getClass().getCanonicalName() + ".commit");
-        this.rollbackTimer = metrics.timer(getClass().getCanonicalName() + ".rollback");
-        
+        this.rollbackTimer = metrics.timer(getClass().getCanonicalName() + ".rollback");        
     }
     public JMSJobProcessor withCommitInterval(int commitInterval){
         this.commitInterval = commitInterval;
@@ -66,8 +65,8 @@ public abstract class JMSJobProcessor implements Runnable {
     public void run() {
         
         long processed = 0;
-        
-        while(true){
+            
+        while (true) {
             QueueJob job = null;
             try {
                 Message message = jmsFetcher.fetchMessage(fetchMessageTimeoutMs);
@@ -75,13 +74,13 @@ public abstract class JMSJobProcessor implements Runnable {
                     log.debug("Got no message");
                 } else {
                     job = QueueJob.fromMessage(message);
-                    try(Timer.Context time = processJobTimer.time()){
+                    try (Timer.Context time = processJobTimer.time()) {
                         process(job);
                         message.acknowledge();
                     }
-                }            
-                if(job == null || processed++ % commitInterval == 0){
-                    try(Timer.Context time = commitTimer.time()){
+                }
+                if (job == null || processed++ % commitInterval == 0) {
+                    try (Timer.Context time = commitTimer.time()) {
                         commit();
                         jmsFetcher.commit();
                     }
@@ -90,21 +89,21 @@ public abstract class JMSJobProcessor implements Runnable {
             } catch (Exception ex) {
                 log.error("Error processing job: {}, reason: {}", job, ex.getMessage());
                 log.debug("Error processing job: {}", job, ex);
-                try(Timer.Context time = rollbackTimer.time()){
+                try (Timer.Context time = rollbackTimer.time()) {
                     try {
                         rollback();
                     } catch (Exception e) {
                         log.error("Error rolling back", e);
                     }
-                    try {
-                        jmsFetcher.rollback();
-                    } catch (Exception e) {
-                        log.error("Error rolling back", e);
-                    }
+                    jmsFetcher.rollback();
+                    jmsFetcher.close();
+                    jmsFetcher.init();
+
                 }
                 sleepHandler.failure();
             }
-        }        
+        }
+        
     }
     
     protected abstract void process(QueueJob job) throws Exception;

@@ -22,6 +22,7 @@ import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
 import com.sun.messaging.ConnectionConfiguration;
 import com.sun.messaging.ConnectionFactory;
+import static dk.dbc.rawrepo.jms.JMSJobProcessor.log;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,26 +33,36 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Queue;
 import javax.jms.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author DBC {@literal <dbc.dk>}
  */
 public class JMSFetcher {
+    
+    protected static final Logger log = LoggerFactory.getLogger(JMSFetcher.class);
 
     private final HashMap<Destination, String> queueNames = new HashMap<>();
     private final ConnectionFactory connectionFactory;
-    private final JMSContext context;
-    private final List<JMSConsumer> queues;
+    private JMSContext context;
+    private List<JMSConsumer> queueConsumers;
     private final Counter taken;
+    private final List<String> queues;
 
     public JMSFetcher(MetricRegistry metrics, String address, List<String> queues) throws JMSException {
+        this.queues = queues;
         this.taken = metrics.counter(getClass().getCanonicalName() + ".taken");
         this.connectionFactory = new ConnectionFactory();
         connectionFactory.setProperty(ConnectionConfiguration.imqAddressList, address);
+    }
+    
+    public void init() {
+        log.info("Initializing JMS context");
         this.context = connectionFactory.createContext(Session.SESSION_TRANSACTED);
 
-        this.queues = queues.stream()
+        this.queueConsumers = queues.stream()
                 .map(queueName -> {
                     Queue queue = context.createQueue(queueName);
                     queueNames.put(queue, queueName);
@@ -63,11 +74,11 @@ public class JMSFetcher {
     }
 
     public Message fetchMessage(long timeout) {
-        Message message = queues.stream()
+        Message message = queueConsumers.stream()
                 .map(queue -> queue.receiveNoWait())
                 .filter(msg -> msg != null)
                 .findFirst()
-                .orElseGet(() -> queues.get(0).receive(timeout));
+                .orElseGet(() -> queueConsumers.get(0).receive(timeout));
         if (message != null) {
             taken.inc();
         }
@@ -81,8 +92,12 @@ public class JMSFetcher {
     }
 
     public void rollback() {
-        if (context.getTransacted()) {
-            context.rollback();
+        try {
+            if (context.getTransacted()) {
+                context.rollback();
+            }
+        } catch(RuntimeException e) {
+            log.warn("Error rolling back", e);
         }
     }
 
@@ -91,9 +106,13 @@ public class JMSFetcher {
     }
 
     public void close() {
-        context.stop();
-        queues.stream().forEach(queue -> queue.close());
-        context.close();
+        try {
+            context.stop();
+            queueConsumers.stream().forEach(queue -> queue.close());
+            context.close();
+        } catch(Exception e) {
+            log.warn("Unable to close jms context");
+        }
     }
 
 }

@@ -87,6 +87,7 @@ public class Main extends Application<OaiSetMatcherConfiguration> {
     OaiSetMatcherProcessor makeProcessor() {
         try {
             JMSFetcher jmsFetcher = new JMSFetcher(metrics, config.getQueueServer(), config.getQueues());
+            jmsFetcher.init();
             return new OaiSetMatcherProcessor(rawrepo, rawrepoOai, new JavaScriptWorker(metrics), jmsFetcher, metrics);
         } catch (JMSException ex) {
             throw new RuntimeException(ex);
