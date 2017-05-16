@@ -31,10 +31,22 @@ var OaiFormatter = function() {
     /**
      * Formats MarcX records, either producing a Dublin Core record
      * or MarcX record(s)
-     *
+     * 
      * @function
      * @type {function}
-     * @param {String[]} records Array consisting of record, and its ancestors (ordered from closest ancestor)
+     * @param {MarcXChangeWrapper[]} records Array consisting of record, and its 
+     * ancestors (ordered from closest ancestor). Array items are instances of the 
+     * MarcXChangeWrapper Java class.
+     * 
+     * Example use of records:
+     * var head = records[2] // Assuming records, contain volume, section and head
+     * var content = head.content  // The actual xml
+     * var children = head.children;   
+     * for( var i = 0; i < children.length; i++ ) {
+     *      children[i].recId;
+     *      children[i].agencyId;
+     * }
+     * 
      * @param {String} format The format to return
      * @param {String[]} allowedSets Names of allowed OAI sets
      * @returns {String} DC or MarcX record(s)
@@ -102,7 +114,7 @@ var OaiFormatter = function() {
         var recordObjects = [ ];
 
         for ( var i = 0; i < records.length; i++ ) {
-            var recordObject = MarcXchange.marcXchangeToMarcRecord( records[ i ] );
+            var recordObject = MarcXchange.marcXchangeToMarcRecord( records[ i ].content );
             recordObjects.push( recordObject );
         }
 

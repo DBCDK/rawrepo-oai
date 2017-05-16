@@ -35,7 +35,12 @@ UnitTest.addFixture( "Test formatRecords (format DC)", function() {
             '</marcx:datafield>' +
         '</marcx:record>';
 
-    var records = [ recordString ];
+    var records = [
+        {
+            content: recordString,
+            children: []
+        }
+    ];
 
     var expected =
         '<oai_dc:dc ' +
@@ -96,7 +101,21 @@ UnitTest.addFixture( "Test formatRecords (format DC)", function() {
             '</marcx:datafield>' +
         '</marcx:record>';
 
-    records = [ volumeRecordString, headRecordString ];
+    records = [
+        {
+            content: volumeRecordString,
+            children: []
+        },
+        {
+            content: headRecordString,
+            children: [
+                {
+                    recId: "44816687",
+                    agencyId: 870970
+                }
+            ]
+        }
+    ];
 
     expected =
         '<oai_dc:dc ' +
@@ -173,9 +192,32 @@ UnitTest.addFixture( "Test formatRecords (format DC)", function() {
             '<marcx:subfield code="a">Forebyggelse af arbejdsulykker</marcx:subfield>' +
             '</marcx:datafield>' +
         '</marcx:record>';
-
-    records = [ volumeRecordString, sectionRecordString, headRecordString ];
-
+    
+    records = [
+        {
+            content: volumeRecordString,
+            children: []
+        },
+        {
+            content: sectionRecordString,
+            children: [
+                {
+                    recId: "23642468",
+                    agencyId: 870970
+                }
+            ]
+        },
+        {
+            content: headRecordString,
+            children: [
+                {
+                    recId: "23642433",
+                    agencyId: 870970
+                }
+            ]
+        }
+    ];
+ 
     expected =
         '<oai_dc:dc ' +
         'xmlns:dc="http://purl.org/dc/elements/1.1/" ' +
@@ -230,7 +272,12 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm as allowed set)", fu
             '</marcx:datafield>' +
         '</marcx:record>';
 
-    var records = [ recordString ];
+    var records = [
+        {
+            content: recordString,
+            children: []
+        }
+    ];
 
     var expected =
         '<marcx:collection xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
@@ -306,8 +353,22 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm as allowed set)", fu
                 '<marcx:subfield code="c">roman</marcx:subfield>' +
             '</marcx:datafield>' +
         '</marcx:record>';
-
-    records = [ volumeRecordString, headRecordString ];
+                     
+    records = [
+        {
+            content: volumeRecordString,
+            children: []
+        },
+        {
+            content: headRecordString,
+            children: [
+                {
+                    recId: "44816687",
+                    agencyId: 870970
+                }
+            ]
+        }
+    ];
 
     expected =
         '<marcx:collection xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
@@ -414,8 +475,31 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm as allowed set)", fu
                 '<marcx:subfield code="a">Forebyggelse af arbejdsulykker</marcx:subfield>' +
             '</marcx:datafield>' +
         '</marcx:record>';
-
-    records = [ volumeRecordString, sectionRecordString, headRecordString ];
+                
+    records = [
+        {
+            content: volumeRecordString,
+            children: []
+        },
+        {
+            content: sectionRecordString,
+            children: [
+                {
+                    recId: "23642468",
+                    agencyId: 870970
+                }
+            ]
+        },
+        {
+            content: headRecordString,
+            children: [
+                {
+                    recId: "23642433",
+                    agencyId: 870970
+                }
+            ]
+        }
+    ];                              
 
     expected =
         '<marcx:collection xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
@@ -515,7 +599,12 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm NOT allowed set)", f
             '</marcx:datafield>' +
         '</marcx:record>';
 
-    var records = [ recordString ];
+    var records = [
+        {
+            content: recordString,
+            children: []
+        }
+    ];   
 
     var expected =
         '<marcx:collection xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
@@ -576,7 +665,12 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm NOT allowed set)", f
             '</marcx:datafield>' +
         '</marcx:record>';
 
-    var records = [ recordString ];
+    var records = [
+        {
+            content: recordString,
+            children: []
+        },
+    ];   
 
     var error = new Error( "Format: illegal not allowed" );
 
@@ -645,8 +739,31 @@ UnitTest.addFixture( "Test convertXmlRecordStringsToMarcObjects", function( ) {
         '<marcx:subfield code="a">Forebyggelse af arbejdsulykker</marcx:subfield>' +
         '</marcx:datafield>' +
         '</marcx:record>';
-
-    var records = [ volumeRecordString, sectionRecordString, headRecordString ];
+    
+    var records = [
+        {
+            content: volumeRecordString,
+            children: []
+        },
+        {
+            content: sectionRecordString,
+            children: [
+                {
+                    recId: "23642468",
+                    agencyId: 870970
+                }
+            ]
+        },
+        {
+            content: headRecordString,
+            children: [
+                {
+                    recId: "23642433",
+                    agencyId: 870970
+                }
+            ]
+        }
+    ];                                   
 
     var actual = OaiFormatter.convertXmlRecordStringsToMarcObjects( records );
 

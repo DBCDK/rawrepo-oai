@@ -18,7 +18,9 @@
  */
 package dk.dbc.rawrepo.oai.formatter.javascript;
 
+import dk.dbc.rawrepo.RecordId;
 import dk.dbc.rawrepo.oai.formatter.javascript.JavascriptWorkerPool.JavaScriptWorker;
+import java.util.Arrays;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -27,6 +29,42 @@ import static org.junit.Assert.*;
  * @author DBC {@literal <dbc.dk>}
  */
 public class JavascriptWorkerPoolTest {
+    
+    private static String HEAD = "<marcx:record format=\"danMARC2\" type=\"Bibliographic\" xmlns:marcx=\"info:lc/xmlns/marcxchange-v1\">" +
+        "<marcx:leader>00000c    2200000   4500</marcx:leader>" +
+            "<marcx:datafield ind1=\"0\" ind2=\"0\" tag=\"001\">" +
+                "<marcx:subfield code=\"a\">123456</marcx:subfield>" +
+                "<marcx:subfield code=\"b\">870970</marcx:subfield>" +
+            "</marcx:datafield>" +
+            "<marcx:datafield ind1=\"0\" ind2=\"0\" tag=\"004\">" +
+                "<marcx:subfield code=\"r\">c</marcx:subfield>" +
+                "<marcx:subfield code=\"a\">b</marcx:subfield>" +
+            "</marcx:datafield>" +
+            "<marcx:datafield ind1=\"0\" ind2=\"0\" tag=\"014\">" +
+                "<marcx:subfield code=\"a\">44783851</marcx:subfield>" +
+            "</marcx:datafield>" +
+            "<marcx:datafield ind1=\"0\" ind2=\"0\" tag=\"245\">" +
+                "<marcx:subfield code=\"g\">4. bok</marcx:subfield>" +
+            "</marcx:datafield>" +
+        "</marcx:record>";
+    
+    private static String VOLUME = "<marcx:record format=\"danMARC2\" type=\"Bibliographic\" xmlns:marcx=\"info:lc/xmlns/marcxchange-v1\">" +
+        "<marcx:leader>00000c    2200000   4500</marcx:leader>" +
+            "<marcx:datafield ind1=\"0\" ind2=\"0\" tag=\"001\">" +
+                "<marcx:subfield code=\"a\">234567</marcx:subfield>" +
+                "<marcx:subfield code=\"b\">870970</marcx:subfield>" +
+            "</marcx:datafield>" +
+            "<marcx:datafield ind1=\"0\" ind2=\"0\" tag=\"004\">" +
+                "<marcx:subfield code=\"r\">c</marcx:subfield>" +
+                "<marcx:subfield code=\"a\">b</marcx:subfield>" +
+            "</marcx:datafield>" +
+            "<marcx:datafield ind1=\"0\" ind2=\"0\" tag=\"014\">" +
+                "<marcx:subfield code=\"a\">44783851</marcx:subfield>" +
+            "</marcx:datafield>" +
+            "<marcx:datafield ind1=\"0\" ind2=\"0\" tag=\"245\">" +
+                "<marcx:subfield code=\"g\">4. bok</marcx:subfield>" +
+            "</marcx:datafield>" +
+        "</marcx:record>";
     
     final JavascriptWorkerPool pool = new JavascriptWorkerPool(1);
 
@@ -39,5 +77,23 @@ public class JavascriptWorkerPoolTest {
         try(JavaScriptWorker w = pool.borrowWorker()) {
             assertTrue(w.getAllowedFormats().size() > 0);
         }        
+    }
+    
+    /**
+     * Testing integration between Java and JavaScript.
+     * JavaScript processes a Java MarcXChangeWrapper[] array
+     * without throwing exception.
+     * @throws Exception 
+     */
+    @Test
+    public void testFormat() throws Exception {
+        try(JavaScriptWorker w = pool.borrowWorker()) {
+            MarcXChangeWrapper[] records = new MarcXChangeWrapper[] {
+                new MarcXChangeWrapper(VOLUME, new RecordId[]{new RecordId("123456", 870970)}),
+                new MarcXChangeWrapper(HEAD, new RecordId[]{new RecordId("234567", 870970)})
+            };
+        
+            w.format(records, "marcx", Arrays.asList("nat"));
+        }  
     }
 }

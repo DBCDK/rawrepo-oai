@@ -24,6 +24,7 @@ import dk.dbc.rawrepo.RawRepoException;
 import dk.dbc.rawrepo.Record;
 import dk.dbc.rawrepo.RecordId;
 import dk.dbc.rawrepo.oai.formatter.javascript.JavascriptWorkerPool.JavaScriptWorker;
+import dk.dbc.rawrepo.oai.formatter.javascript.MarcXChangeWrapper;
 import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -74,7 +75,8 @@ public class OaiFormatterResource {
                 throw new NotFoundException();
             }
             
-            String[] records = fetchRecordCollection(request.agencyId, request.bibRecId, dao);
+            
+            MarcXChangeWrapper[] records = fetchRecordCollection(request.agencyId, request.bibRecId, dao);
 
             try(JavaScriptWorker jsWorker = jsWorkerPool.borrowWorker()) {
                 String result = jsWorker.format(records, request.format, request.sets);
@@ -105,11 +107,10 @@ public class OaiFormatterResource {
      * @throws RawRepoException
      * @throws UnsupportedEncodingException 
      */
-    static String[] fetchRecordCollection(int agencyId, String bibRecId, RawRepoDAO dao) throws RawRepoException, UnsupportedEncodingException{
-        ArrayList<String> collection = new ArrayList<>();
+    static MarcXChangeWrapper[] fetchRecordCollection(int agencyId, String bibRecId, RawRepoDAO dao) throws RawRepoException, UnsupportedEncodingException{
+        ArrayList<MarcXChangeWrapper> collection = new ArrayList<>();
         Record r = dao.fetchRecord(bibRecId, agencyId);
         while(r != null) {
-            collection.add(new String(r.getContent(), "UTF-8"));
 
             Set<RecordId> parents = dao.getRelationsParents(r.getId());
             Record parent = null;
@@ -119,9 +120,15 @@ public class OaiFormatterResource {
                     break;
                 }
             }
+            
+            String content = new String(r.getContent(), "UTF-8");
+            Set<RecordId> children = dao.getRelationsChildren(r.getId());
+            MarcXChangeWrapper wrapper = new MarcXChangeWrapper(content, children.toArray(new RecordId[children.size()]));            
+            collection.add(wrapper);
+            
             r = parent;
         }
-        return collection.toArray(new String[collection.size()]);
+        return collection.toArray(new MarcXChangeWrapper[collection.size()]);
     }
     
     public static class FormatRequest {
