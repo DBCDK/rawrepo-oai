@@ -21,7 +21,6 @@ package dk.dbc.rawrepo.jms;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import dk.dbc.rawrepo.QueueJob;
-import javax.jms.JMSException;
 import javax.jms.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,12 +70,16 @@ public abstract class JMSJobProcessor implements Runnable {
         while(true){
             QueueJob job = null;
             try {
-                job = fetch();                
-                if (job != null) {
+                Message message = jmsFetcher.fetchMessage(fetchMessageTimeoutMs);
+                if (message == null) {
+                    log.debug("Got no message");
+                } else {
+                    job = QueueJob.fromMessage(message);
                     try(Timer.Context time = processJobTimer.time()){
                         process(job);
+                        message.acknowledge();
                     }
-                }
+                }            
                 if(job == null || processed++ % commitInterval == 0){
                     try(Timer.Context time = commitTimer.time()){
                         commit();
@@ -102,28 +105,6 @@ public abstract class JMSJobProcessor implements Runnable {
                 sleepHandler.failure();
             }
         }        
-    }
-    
-    private QueueJob fetch() throws JMSException {
-        
-        Message message = jmsFetcher.fetchMessage(fetchMessageTimeoutMs);
-        if (message == null) {
-            log.debug("Got no message");
-            return null;
-        }
-
-        Object body = message.getBody(Object.class);
-        String queueName = jmsFetcher.queueName(message);
- 
-        log.debug("got: " + body.toString() + " from: " + queueName);
-
-        try {
-            message.acknowledge();
-        } catch (JMSException ex) {
-            log.error("Could not ack: " + ex.getMessage());
-        }
-
-        return (QueueJob) body;
     }
     
     protected abstract void process(QueueJob job) throws Exception;
