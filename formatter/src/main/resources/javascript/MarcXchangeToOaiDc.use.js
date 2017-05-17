@@ -27,9 +27,6 @@ var MarcXchangeToOaiDc = function() {
 
     Log.info( "Entering MarcXchangeToOaiDc module" );
 
-    //test
-
-
     /**
      * Function that is entry to create a complete Dublin Core Record.
      *
