@@ -1,6 +1,6 @@
 repositoryName: ${REPOSITORY_NAME:-DBC OAI}
 baseUrl: ${BASE_URL:-http://dbc.dk/}
-recordsPrRequest: ${RECORDS_PR_REQUEST:-3}
+recordsPrRequest: ${RECORDS_PR_REQUEST:-10}
 identifiersPrRequest: ${IDENTIFIERS_PR_REQUEST:-5}
 tokenMaxAge: ${TOKEN_MAX_AGE:-4}
 noThrottle: ${NO_THROTTLE:-false}
