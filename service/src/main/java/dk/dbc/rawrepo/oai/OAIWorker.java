@@ -219,6 +219,7 @@ public class OAIWorker {
 
         oaipmh.setListIdentifiers(listIdetifiers);
     }
+
     /**
      * http://www.openarchives.org/OAI/openarchivesprotocol.html#ListMetadataFormats
      *
@@ -317,7 +318,6 @@ public class OAIWorker {
     private List<RecordType> fetchRecordContent(List<OAIIdentifier> collection, String metadataPrefix) {
         List<RecordFormatter.RecordWithContent> records = collection.stream()
                 .map(id -> recordFormatter.fetch(id, metadataPrefix, allowedSets))
-                .filter(RecordWithContent::is200)
                 .collect(Collectors.toList());
         log.debug("futures = " + records);
         try {
@@ -330,16 +330,16 @@ public class OAIWorker {
                             rec.complete(waitFor);
                             RecordType record = rec.getOAIIdentifier().toRecord();
                             if (!rec.getOAIIdentifier().isDeleted()) {
-                                MetadataType metadata = OBJECT_FACTORY.createMetadataType();
-                                String content = rec.getContent();
-                                if (content == null) {
-                                    log.error("Cannot get content for: " + rec.getOAIIdentifier().getIdentifier());
-                                    throw new ServerErrorException(Response.Status.INTERNAL_SERVER_ERROR, "Internal Error");
-                                }
-                                Element element = stringToElement(content);
-                                fixXmlNamespacePrefix(element, metadataPrefix);
-                                metadata.setAny(element);
-                                record.setMetadata(metadata);
+                                    MetadataType metadata = OBJECT_FACTORY.createMetadataType();
+                                    String content = rec.getContent();
+                                    if (content == null) {
+                                        log.error("Cannot get content for: " + rec.getOAIIdentifier().getIdentifier());
+                                        throw new ServerErrorException(Response.Status.INTERNAL_SERVER_ERROR, "Internal Error");
+                                    }
+                                    Element element = stringToElement(content);
+                                    fixXmlNamespacePrefix(element, metadataPrefix);
+                                    metadata.setAny(element);
+                                    record.setMetadata(metadata);
                             }
                             return record;
                         } catch (InterruptedException | ExecutionException ex) {

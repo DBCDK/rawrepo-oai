@@ -61,7 +61,7 @@ public class OAIIdentifier extends ArrayList<String> {
 
     private final String identifier;
     private final String timestamp;
-    private final boolean deleted;
+    private  boolean deleted;
 
     public OAIIdentifier(String identifier, Timestamp timestamp, boolean deleted) {
         this.identifier = identifier;
@@ -86,6 +86,18 @@ public class OAIIdentifier extends ArrayList<String> {
     public String getTimestamp() {
         return timestamp;
     }
+
+
+    /**
+     * In case of 404 from formatter set deleted state
+     *
+     * @param deleted state
+     */
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+
 
     /**
      * Has the record been tagged deleted in the database
