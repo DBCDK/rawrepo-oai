@@ -7,6 +7,7 @@
 
 /** @file Module that formats MarcX. */
 
+use( "DanMarc2Util" );
 use( "Log" );
 use( "XmlUtil" );
 use( "MarcXchangeToOaiDc" );
@@ -39,7 +40,7 @@ var OaiFormatter = function() {
      * MarcXChangeWrapper Java class.
      * 
      * Example use of records:
-     * var head = records[2] // Assuming records, contain volume, section and head
+     * var head = records[2] // Assuming records contain volume, section and head
      * var content = head.content  // The actual xml
      * var children = head.children;   
      * for( var i = 0; i < children.length; i++ ) {
@@ -60,11 +61,12 @@ var OaiFormatter = function() {
         }
 
         var marcRecords;
+        var includeField015 = false;
 
         switch( format ) {
 
             case 'oai_dc':
-                marcRecords = OaiFormatter.convertXmlRecordStringsToMarcObjects( records );
+                marcRecords = OaiFormatter.convertXmlRecordStringsToMarcObjects( records, includeField015 );
                 var higherLevelIdentifiers = [ ];
                 for ( var k = 0; k < marcRecords.length - 1; k++ ) {
                     var higherLevelId = MarcXchangeToOaiDc.getHigherLevelIdentifier( marcRecords[ k ] );
@@ -74,7 +76,8 @@ var OaiFormatter = function() {
                 return XmlUtil.toXmlString( MarcXchangeToOaiDc.createDcXml( marcRecords[0], higherLevelIdentifiers ) );
 
             case 'marcx':
-                marcRecords = OaiFormatter.convertXmlRecordStringsToMarcObjects( records );
+                includeField015 = true;
+                marcRecords = OaiFormatter.convertXmlRecordStringsToMarcObjects( records, includeField015 );
                 var marcXCollection = XmlUtil.createDocument( "collection", XmlNamespaces.marcx );
                 var bkmRecordAllowed = ( allowedSets.indexOf( 'bkm' ) > -1 );
                 
@@ -97,24 +100,58 @@ var OaiFormatter = function() {
     }
 
     /**
-     * Formats MarcX records, either producing a Dublin Core record
-     * or MarcX record(s)
+     * Converts xml marc records to marc record objects, adding fields 015 with identifiers
+     * of children for the record if includeField015 is set to true.
      *
      * @function
-     * @syntax OaiFormatter.convertXmlRecordStringsToMarcObjects( records )
+     * @syntax OaiFormatter.convertXmlRecordStringsToMarcObjects( records, includeField015 )
      * @type {function}
-     * @param {String[]} records Array consisting of marcxchange record strings
+     * @param {MarcXChangeWrapper[]} records Array consisting of record, and its
+     * ancestors (ordered from closest ancestor). Array items are instances of the
+     * MarcXChangeWrapper Java class.
+     *
+     * Example use of records:
+     * var head = records[2] // Assuming records contain volume, section and head
+     * var content = head.content  // The actual xml
+     * var children = head.children;
+     * for( var i = 0; i < children.length; i++ ) {
+     *      children[i].recId;
+     *      children[i].agencyId;
+     * }
+     * @param {Boolean} includeField015 true if fields 015 should be added to the record
      * @returns {Record[]} new array of the same records in the same order but as Record objects
      * @name OaiFormatter.convertXmlRecordStringsToMarcObjects
      */
-    function convertXmlRecordStringsToMarcObjects( records ) {
+    function convertXmlRecordStringsToMarcObjects( records, includeField015 ) {
 
         Log.trace( "Entering OaiFormatter.convertXmlRecordStringsToMarcObjects" );
 
         var recordObjects = [ ];
 
+        var __identifiersForField015 = function( record ) {
+            var childrenObjects = record.children;
+            var childrenIdentifiers = [];
+            for ( var j = 0; j < childrenObjects.length; j++ ) {
+                childrenIdentifiers.push( childrenObjects[ j ].recId );
+            }
+            return childrenIdentifiers;
+        };
+
+        var __addFields015ToRecordObject = function( recordObject, childrenIdentifiers ) {
+            for ( var k = 0; k < childrenIdentifiers.length; k++ ) {
+                var field015 = new Field( "015", "00" );
+                field015.append( "a", childrenIdentifiers[ k ] );
+                recordObject.append( field015 );
+            }
+        };
+
         for ( var i = 0; i < records.length; i++ ) {
-            var recordObject = MarcXchange.marcXchangeToMarcRecord( records[ i ].content );
+            var record = records[ i ];
+            var recordObject = MarcXchange.marcXchangeToMarcRecord( record.content );
+            if ( includeField015 ) {
+                __addFields015ToRecordObject( recordObject, __identifiersForField015( record ) );
+                recordObject = DanMarc2Util.sortFields( recordObject );
+            }
             recordObjects.push( recordObject );
         }
 
