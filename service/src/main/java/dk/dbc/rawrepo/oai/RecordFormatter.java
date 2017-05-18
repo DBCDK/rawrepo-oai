@@ -40,6 +40,8 @@ import org.slf4j.LoggerFactory;
  */
 public class RecordFormatter {
 
+    public static final String STATUS_404 = "404";
+
     private static final Logger log = LoggerFactory.getLogger(RecordFormatter.class);
 
     private final OAIConfiuration config;
@@ -77,16 +79,26 @@ public class RecordFormatter {
 
         public void complete(long seconds) throws InterruptedException, ExecutionException, TimeoutException {
             if (response != null) {
-                Response resp = response.get(10, TimeUnit.SECONDS);
-                if (resp.getStatus() != 200) {
-                    throw new RuntimeException("Error fetching record: " + resp.getStatusInfo());
+                Response resp = response.get(seconds, TimeUnit.SECONDS);
+                switch (resp.getStatus()) {
+                    case 200:
+                        content = resp.readEntity(String.class);
+                        break;
+                    case 404:
+                        content = STATUS_404;
+                        break;
+                    default:
+                        throw new RuntimeException("Error fetching record: " + resp.getStatusInfo());
                 }
-                content = resp.readEntity(String.class);
             }
         }
 
         public String getContent() {
             return content;
+        }
+
+        public boolean is200() {
+            return content != STATUS_404;
         }
 
         public void cancel(boolean n) {

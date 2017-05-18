@@ -40,6 +40,7 @@ import dk.dbc.oai.pmh.RecordType;
 import dk.dbc.oai.pmh.RequestType;
 import dk.dbc.oai.pmh.SetType;
 import dk.dbc.oai.pmh.VerbType;
+import dk.dbc.rawrepo.oai.RecordFormatter.RecordWithContent;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
@@ -316,6 +317,7 @@ public class OAIWorker {
     private List<RecordType> fetchRecordContent(List<OAIIdentifier> collection, String metadataPrefix) {
         List<RecordFormatter.RecordWithContent> records = collection.stream()
                 .map(id -> recordFormatter.fetch(id, metadataPrefix, allowedSets))
+                .filter(RecordWithContent::is200)
                 .collect(Collectors.toList());
         log.debug("futures = " + records);
         try {
