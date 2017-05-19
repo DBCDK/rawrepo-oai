@@ -22,14 +22,16 @@ import dk.dbc.rawrepo.oai.formatter.javascript.JavascriptWorkerPool;
 import dk.dbc.rawrepo.RawRepoDAO;
 import dk.dbc.rawrepo.RawRepoException;
 import dk.dbc.rawrepo.Record;
-import dk.dbc.rawrepo.RecordId;
 import dk.dbc.rawrepo.oai.formatter.javascript.JavascriptWorkerPool.JavaScriptWorker;
+import dk.dbc.rawrepo.oai.formatter.javascript.MarcXChangeWrapper;
+import dk.dbc.rawrepo.oai.formatter.javascript.MarcXChangeWrapper.RecordId;
 import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import static java.util.stream.Collectors.toList;
 import javax.sql.DataSource;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
@@ -74,7 +76,8 @@ public class OaiFormatterResource {
                 throw new NotFoundException();
             }
             
-            String[] records = fetchRecordCollection(request.agencyId, request.bibRecId, dao);
+            
+            MarcXChangeWrapper[] records = fetchRecordCollection(request.agencyId, request.bibRecId, dao);
 
             try(JavaScriptWorker jsWorker = jsWorkerPool.borrowWorker()) {
                 String result = jsWorker.format(records, request.format, request.sets);
@@ -105,23 +108,31 @@ public class OaiFormatterResource {
      * @throws RawRepoException
      * @throws UnsupportedEncodingException 
      */
-    static String[] fetchRecordCollection(int agencyId, String bibRecId, RawRepoDAO dao) throws RawRepoException, UnsupportedEncodingException{
-        ArrayList<String> collection = new ArrayList<>();
+    static MarcXChangeWrapper[] fetchRecordCollection(int agencyId, String bibRecId, RawRepoDAO dao) throws RawRepoException, UnsupportedEncodingException{
+        ArrayList<MarcXChangeWrapper> collection = new ArrayList<>();
         Record r = dao.fetchRecord(bibRecId, agencyId);
         while(r != null) {
-            collection.add(new String(r.getContent(), "UTF-8"));
 
-            Set<RecordId> parents = dao.getRelationsParents(r.getId());
+            Set<dk.dbc.rawrepo.RecordId> parents = dao.getRelationsParents(r.getId());
             Record parent = null;
-            for (RecordId parentId : parents) {
+            for (dk.dbc.rawrepo.RecordId parentId : parents) {
                 if(parentId.getAgencyId() == r.getId().getAgencyId()) {
                     parent = dao.fetchRecord(parentId.getBibliographicRecordId(), parentId.getAgencyId());
                     break;
                 }
             }
+            
+            String content = new String(r.getContent(), "UTF-8");
+            List<RecordId> children = dao.getRelationsChildren(r.getId()).stream()
+                    .map(x -> new RecordId(x.getBibliographicRecordId(),x.getAgencyId()))
+                    .collect(toList());
+            
+            MarcXChangeWrapper wrapper = new MarcXChangeWrapper(content, children.toArray(new RecordId[children.size()]));            
+            collection.add(wrapper);
+            
             r = parent;
         }
-        return collection.toArray(new String[collection.size()]);
+        return collection.toArray(new MarcXChangeWrapper[collection.size()]);
     }
     
     public static class FormatRequest {
