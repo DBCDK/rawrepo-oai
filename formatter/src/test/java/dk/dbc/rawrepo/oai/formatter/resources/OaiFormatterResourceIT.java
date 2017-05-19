@@ -90,16 +90,16 @@ public class OaiFormatterResourceIT {
         assertEquals(0, collection[0].children.length);
         
         assertEquals(new HashSet<>(Arrays.asList(
-                new MarcXChangeWrapper.Record(volume1.getId().getBibliographicRecordId(), 
+                new MarcXChangeWrapper.RecordId(volume1.getId().getBibliographicRecordId(), 
                         volume1.getId().getAgencyId()),
-                new MarcXChangeWrapper.Record(volume2.getId().getBibliographicRecordId(), 
+                new MarcXChangeWrapper.RecordId(volume2.getId().getBibliographicRecordId(), 
                         volume2.getId().getAgencyId()))), 
                 new HashSet<>(Arrays.asList(collection[1].children)));
         
         assertEquals(new HashSet<>(Arrays.asList(
-                new MarcXChangeWrapper.Record(section1.getId().getBibliographicRecordId(), 
+                new MarcXChangeWrapper.RecordId(section1.getId().getBibliographicRecordId(), 
                         section1.getId().getAgencyId()),
-                new MarcXChangeWrapper.Record(section2.getId().getBibliographicRecordId(), 
+                new MarcXChangeWrapper.RecordId(section2.getId().getBibliographicRecordId(), 
                         section2.getId().getAgencyId()))), 
                 new HashSet<>(Arrays.asList(collection[2].children)));
     }
@@ -127,9 +127,9 @@ public class OaiFormatterResourceIT {
         assertEquals(0, collection[0].children.length);
         
         assertEquals(new HashSet<>(Arrays.asList(
-                new MarcXChangeWrapper.Record(volume1.getId().getBibliographicRecordId(), 
+                new MarcXChangeWrapper.RecordId(volume1.getId().getBibliographicRecordId(), 
                         volume1.getId().getAgencyId()),
-                new MarcXChangeWrapper.Record(volume2.getId().getBibliographicRecordId(), 
+                new MarcXChangeWrapper.RecordId(volume2.getId().getBibliographicRecordId(), 
                         volume2.getId().getAgencyId()))), 
                 new HashSet<>(Arrays.asList(collection[1].children)));
 

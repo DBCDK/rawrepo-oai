@@ -18,7 +18,6 @@
  */
 package dk.dbc.rawrepo.oai.formatter.javascript;
 
-import dk.dbc.rawrepo.RecordId;
 import java.util.Objects;
 
 /*
@@ -26,32 +25,28 @@ import java.util.Objects;
  */
 public class MarcXChangeWrapper {    
     public final String content;
-    public final Record[] children;
+    public final RecordId[] children;
     
     public MarcXChangeWrapper(String content, RecordId[] children) {
         this.content = content;
-        this.children = new Record[children.length];
-        for (int i = 0; i < children.length; i++) {
-            RecordId child = children[i];
-            this.children[i] = new Record(child.getBibliographicRecordId(), child.getAgencyId());
-        }
+        this.children = children;        
     }
     
-    public static class Record {
+    public static class RecordId {
         public final String recId;
         public final int agencyId;
         
-        public Record(String recId, int agencyId) {
+        public RecordId(String recId, int agencyId) {
             this.recId = recId;
             this.agencyId = agencyId;            
         }
         
         @Override
         public boolean equals(Object o) {
-            if(!(o instanceof Record)) {
+            if(!(o instanceof RecordId)) {
                 return false;
             }
-            Record other = (Record) o;
+            RecordId other = (RecordId) o;
             if(this.agencyId == other.agencyId && this.recId.equals(other.recId)) {
                 return true;
             }

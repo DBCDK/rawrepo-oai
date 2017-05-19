@@ -18,8 +18,8 @@
  */
 package dk.dbc.rawrepo.oai.formatter.javascript;
 
-import dk.dbc.rawrepo.RecordId;
 import dk.dbc.rawrepo.oai.formatter.javascript.JavascriptWorkerPool.JavaScriptWorker;
+import dk.dbc.rawrepo.oai.formatter.javascript.MarcXChangeWrapper.RecordId;
 import java.util.Arrays;
 import org.junit.Test;
 import static org.junit.Assert.*;

@@ -22,15 +22,16 @@ import dk.dbc.rawrepo.oai.formatter.javascript.JavascriptWorkerPool;
 import dk.dbc.rawrepo.RawRepoDAO;
 import dk.dbc.rawrepo.RawRepoException;
 import dk.dbc.rawrepo.Record;
-import dk.dbc.rawrepo.RecordId;
 import dk.dbc.rawrepo.oai.formatter.javascript.JavascriptWorkerPool.JavaScriptWorker;
 import dk.dbc.rawrepo.oai.formatter.javascript.MarcXChangeWrapper;
+import dk.dbc.rawrepo.oai.formatter.javascript.MarcXChangeWrapper.RecordId;
 import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import static java.util.stream.Collectors.toList;
 import javax.sql.DataSource;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
@@ -112,9 +113,9 @@ public class OaiFormatterResource {
         Record r = dao.fetchRecord(bibRecId, agencyId);
         while(r != null) {
 
-            Set<RecordId> parents = dao.getRelationsParents(r.getId());
+            Set<dk.dbc.rawrepo.RecordId> parents = dao.getRelationsParents(r.getId());
             Record parent = null;
-            for (RecordId parentId : parents) {
+            for (dk.dbc.rawrepo.RecordId parentId : parents) {
                 if(parentId.getAgencyId() == r.getId().getAgencyId()) {
                     parent = dao.fetchRecord(parentId.getBibliographicRecordId(), parentId.getAgencyId());
                     break;
@@ -122,7 +123,10 @@ public class OaiFormatterResource {
             }
             
             String content = new String(r.getContent(), "UTF-8");
-            Set<RecordId> children = dao.getRelationsChildren(r.getId());
+            List<RecordId> children = dao.getRelationsChildren(r.getId()).stream()
+                    .map(x -> new RecordId(x.getBibliographicRecordId(),x.getAgencyId()))
+                    .collect(toList());
+            
             MarcXChangeWrapper wrapper = new MarcXChangeWrapper(content, children.toArray(new RecordId[children.size()]));            
             collection.add(wrapper);
             
