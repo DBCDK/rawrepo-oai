@@ -1,6 +1,7 @@
 javaScriptPoolSize: ${POOL_SIZE:-2}
-queueServer: "${QUEUE_SERVER}"
-queues: "${QUEUE_NAMES}"
+rawrepoWorker: "${WORKER}"
+commitInterval: ${COMMIT_INTERVAL:-50}
+pollIntervalMs: ${POLL_INTERVAL_MS:-5000}
 rawrepo:
   driverClass: org.postgresql.Driver
   user: ${RAWREPO_URL_USER}

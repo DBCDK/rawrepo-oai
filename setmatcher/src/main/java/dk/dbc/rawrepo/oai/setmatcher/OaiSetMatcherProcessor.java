@@ -19,12 +19,11 @@
 package dk.dbc.rawrepo.oai.setmatcher;
 
 import com.codahale.metrics.MetricRegistry;
-import dk.dbc.rawrepo.jms.JMSJobProcessor;
+import com.codahale.metrics.Timer;
 import dk.dbc.rawrepo.QueueJob;
 import dk.dbc.rawrepo.RawRepoDAO;
 import dk.dbc.rawrepo.Record;
 import dk.dbc.rawrepo.RecordId;
-import dk.dbc.rawrepo.jms.JMSFetcher;
 import dk.dbc.rawrepo.oai.setmatcher.OaiSetMatcherDAO.RecordSet;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -33,24 +32,47 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import javax.sql.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author DBC {@literal <dbc.dk>}
  */
-public class OaiSetMatcherProcessor extends JMSJobProcessor {
-        
-    final DataSource rawrepo;
-    final DataSource rawrepoOai;
-    final JavaScriptWorker jsWorker;
-    Connection rawrepoConnection;
-    Connection rawrepoOAIConnection;    
+public class OaiSetMatcherProcessor implements Runnable {
     
-    public OaiSetMatcherProcessor(DataSource rawrepo, DataSource rawrepoOai, JavaScriptWorker jsWorker, JMSFetcher jmsFetcher, MetricRegistry metrics) {
-        super(jmsFetcher, metrics);
+    protected static final Logger log = LoggerFactory.getLogger(OaiSetMatcherProcessor.class);
+        
+    private final DataSource rawrepo;
+    private final DataSource rawrepoOai;
+    private final JavaScriptWorker jsWorker;
+    private final String worker;
+    private final int commitInterval;
+    private final int pollIntervalMs; 
+    private final SleepHandler sleepHandler;
+    private final Timer dequeueTimer;
+    private final Timer processJobTimer;
+    private final Timer commitTimer;
+    
+    
+    public OaiSetMatcherProcessor(DataSource rawrepo, DataSource rawrepoOai, JavaScriptWorker jsWorker, 
+            String worker, int commitInterval, int pollIntervalMs, MetricRegistry metrics) {
+        
         this.rawrepo = rawrepo;        
         this.rawrepoOai = rawrepoOai;
         this.jsWorker = jsWorker;
+        this.worker = worker;
+        this.commitInterval = commitInterval;
+        this.pollIntervalMs = pollIntervalMs;
+        
+        sleepHandler = new SleepHandler()
+                            .withLowerLimit( 5, 1000 )      //adjacent failures > 5 -> sleep 1s
+                            .withLowerLimit( 10, 10000 )    //adjacent failures > 10 -> sleep 10s
+                            .withLowerLimit( 100, 60000 );  //adjacent failures > 100 -> sleep 60s
+        
+        dequeueTimer = metrics.timer("dequeueTimer");
+        processJobTimer = metrics.timer("processJobTimer");
+        commitTimer = metrics.timer("commitTimer");
         
         log.info("Initialized OaiSetMatcherProcessor");
     }
@@ -65,8 +87,8 @@ public class OaiSetMatcherProcessor extends JMSJobProcessor {
      * @param job
      * @throws Exception 
      */
-    @Override
-    protected void process(QueueJob job) throws Exception {
+    static void process(QueueJob job, RawRepoDAO rawrepoDao, OaiSetMatcherDAO rawRepoOaiDao, 
+            JavaScriptWorker jsWorker) throws Exception {
         
         log.info("Processing job {}", job);
         
@@ -76,15 +98,7 @@ public class OaiSetMatcherProcessor extends JMSJobProcessor {
         
         if(agencyId == 870970 || agencyId == 870971) {
             
-            if(rawrepoOAIConnection == null) {
-                setupConnections();
-            }
-                            
-            // We need them DAO's
-            RawRepoDAO rawrepoDao = RawRepoDAO.builder(rawrepoConnection).build();
-            OaiSetMatcherDAO rawRepoOaiDao = new OaiSetMatcherDAO(rawrepoOAIConnection);
-
-            // And we need the unmerged rawrepo record
+            // we need the unmerged rawrepo record
             // and the sets which it is currently in
             String pid = agencyId + ":" + bibliographicRecordId;
             Record record = rawrepoDao.fetchRecord(bibliographicRecordId, agencyId);
@@ -129,39 +143,65 @@ public class OaiSetMatcherProcessor extends JMSJobProcessor {
     }            
 
     @Override
-    protected void rollback() throws SQLException {
-        if(rawrepoOAIConnection == null) {
-            return;
-        }
-        // rollback oai conn, and close oai + rr
-        try(Connection oai = rawrepoOAIConnection; 
-                Connection rr = rawrepoConnection) {
-            oai.rollback();
-        } finally {
-            rawrepoOAIConnection = null;
-            rawrepoConnection = null;
-        }
-    }
+    public void run() {                
+                
+        while(true) {
+            
+            try(Connection rawrepoOaiConn = rawrepoOai.getConnection();
+                    Connection rawrepoConn = rawrepo.getConnection()) {
+                
+                try {
+                    RawRepoDAO rawRepoDao = RawRepoDAO.builder(rawrepoConn).build();
+                    OaiSetMatcherDAO oaiSetMatcherDAO = new OaiSetMatcherDAO(rawrepoOaiConn);
+                    
+                    Timer.Context time = dequeueTimer.time();
+                    List<QueueJob> jobs = rawRepoDao.dequeue(worker, commitInterval);
+                    time.close();
+                    
+                    if(jobs != null && !jobs.isEmpty()) {
+                        
+                        for (QueueJob job : jobs) {
+                            time = processJobTimer.time();
+                            process(job, rawRepoDao, oaiSetMatcherDAO, jsWorker);
+                            time.stop();
+                        }
+                        
+                        time = commitTimer.time();
+                        rawrepoOaiConn.commit();
+                        rawrepoConn.commit();
+                        time.stop();
+                        
+                        log.info("Processed and committed {} jobs", jobs.size());
+                        sleepHandler.reset();
+                    } else {
+                        log.debug("Nothing to process, waiting {} ms", pollIntervalMs);
+                        Thread.sleep(pollIntervalMs);                        
+                    }
+                    
+                } catch(Exception ex) {
+                    log.error("Error ocurred, rolling back", ex);
+                    
+                    try {
+                        rawrepoOaiConn.rollback();                        
+                    } catch(SQLException e) {
+                        log.error("Failed to roll back SetMatcher connection");
+                    }
+                    
+                    try {
+                        rawrepoConn.rollback();                        
+                    } catch(SQLException e) {
+                        log.error("Failed to roll back RawRepo connection");
+                    }
+                    sleepHandler.failure();                    
+                }
+            
+            } catch (SQLException ex) {
+                log.error("Failed to get connection", ex);
+                sleepHandler.failure(); 
+            }
 
-    @Override
-    protected void commit() throws SQLException {
-        if(rawrepoOAIConnection == null) {
-            return;
-        }
-        // commit oai conn, and close oai + rr
-        try(Connection oai = rawrepoOAIConnection; 
-                Connection rr = rawrepoConnection) {
-            oai.commit();
-            log.info("committed");
-        } finally {
-            rawrepoOAIConnection = null;
-            rawrepoConnection = null;
-        }
-    }
-    private void setupConnections() throws SQLException {
-        rawrepoConnection = rawrepo.getConnection();
-        rawrepoOAIConnection = rawrepoOai.getConnection();
-        rawrepoOAIConnection.setAutoCommit(false);
+        }        
+        
     }
     
 }

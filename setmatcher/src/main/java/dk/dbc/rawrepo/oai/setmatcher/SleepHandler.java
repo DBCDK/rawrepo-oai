@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package dk.dbc.rawrepo.jms;
+package dk.dbc.rawrepo.oai.setmatcher;
 
 import java.util.ArrayList;
 import java.util.List;

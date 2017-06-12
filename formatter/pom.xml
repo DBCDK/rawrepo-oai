@@ -151,7 +151,6 @@
                                 <artifactItem>
                                     <groupId>dk.dbc</groupId>
                                     <artifactId>rawrepo-access</artifactId>
-                                    <version>1.4-SNAPSHOT</version>
                                     <overWrite>true</overWrite>
                                 </artifactItem>
                             </artifactItems>
@@ -257,7 +256,6 @@
         <dependency>
             <groupId>dk.dbc</groupId>
             <artifactId>rawrepo-access</artifactId>
-            <version>1.4-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
         <dependency>
