@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.logging.Level;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,6 +148,9 @@ public class OaiSetMatcherProcessor implements Runnable {
                 
         while(true) {
             
+            boolean failed = false;
+            int processed = 0;
+            
             try(Connection rawrepoOaiConn = rawrepoOai.getConnection();
                     Connection rawrepoConn = rawrepo.getConnection()) {
                 
@@ -169,35 +173,47 @@ public class OaiSetMatcherProcessor implements Runnable {
                         time = commitTimer.time();
                         rawrepoOaiConn.commit();
                         rawrepoConn.commit();
-                        time.stop();
+                        time.stop();   
                         
-                        log.info("Processed and committed {} jobs", jobs.size());
-                        sleepHandler.reset();
-                    } else {
-                        log.debug("Nothing to process, waiting {} ms", pollIntervalMs);
-                        Thread.sleep(pollIntervalMs);                        
-                    }
+                        processed = jobs.size();                       
+                    } 
                     
                 } catch(Exception ex) {
-                    log.error("Error ocurred, rolling back", ex);
+                    log.debug("Error ocurred, rolling back", ex);
                     
                     try {
                         rawrepoOaiConn.rollback();                        
                     } catch(SQLException e) {
-                        log.error("Failed to roll back SetMatcher connection");
+                        log.warn("Failed to roll back SetMatcher connection");
                     }
                     
                     try {
                         rawrepoConn.rollback();                        
                     } catch(SQLException e) {
-                        log.error("Failed to roll back RawRepo connection");
+                        log.warn("Failed to roll back RawRepo connection");
                     }
-                    sleepHandler.failure();                    
+                    
+                    throw ex;
                 }
             
-            } catch (SQLException ex) {
-                log.error("Failed to get connection", ex);
-                sleepHandler.failure(); 
+            } catch (Exception ex) {
+                log.error("Failed to process jobs", ex);
+                failed = true;                
+            }
+
+            
+            if(failed) {
+                sleepHandler.failure();
+            } else if(processed > 0) {
+                log.info("Processed and committed {} jobs", processed);
+                sleepHandler.reset();                        
+            } else {
+                log.debug("Nothing to process, sleeping for {} ms", pollIntervalMs);
+                try {                    
+                    Thread.sleep(pollIntervalMs);
+                } catch (InterruptedException ex) {
+                    log.info("Interrupted while sleeping");
+                }
             }
 
         }        
