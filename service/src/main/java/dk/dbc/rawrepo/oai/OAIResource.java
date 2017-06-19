@@ -325,18 +325,20 @@ public class OAIResource {
      * @param params
      */
     private void logQuery(MultivaluedMap<String, String> params) {
-        List<String> idetities = params.get("identity");
-        if (idetities != null) {
-            params.replace("identity", idetities.stream().map(s -> {
-                       String[] split = s.split("[:/]");
-                       if (split.length >= 3) {
-                           s = split[0] + ":" + split[1] + ":********";
-                       }
-                       return s;
-                   }).collect(Collectors.toList()));
-
-        }
-        log.debug("query: " + params);
+        log.debug("query: " +
+                  params.entrySet().stream()
+                          .collect(Collectors.toMap(e -> e.getKey(),
+                                                    e -> e.getKey().equals("identity") ?
+                                                         e.getValue().stream()
+                                                                 .map(s -> {
+                                                                     String[] parts = s.split("[:/]");
+                                                                     if (parts.length >= 3) {
+                                                                         s = parts[0] + ":" + parts[1] + ":********";
+                                                                     }
+                                                                     return s;
+                                                                 })
+                                                                 .collect(Collectors.toList()) :
+                                                         e.getValue())));
     }
 
     /**
