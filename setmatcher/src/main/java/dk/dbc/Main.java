@@ -29,9 +29,7 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import dk.dbc.dropwizard.DaemonMaster;
-import dk.dbc.rawrepo.jms.JMSFetcher;
 import io.dropwizard.db.ManagedDataSource;
-import javax.jms.JMSException;
 
 /**
  *
@@ -84,14 +82,9 @@ public class Main extends Application<OaiSetMatcherConfiguration> {
         DaemonMaster.start(config.getPoolSize(), this::makeProcessor);
     }
     
-    OaiSetMatcherProcessor makeProcessor() {
-        try {
-            JMSFetcher jmsFetcher = new JMSFetcher(metrics, config.getQueueServer(), config.getQueues());
-            jmsFetcher.init();
-            return new OaiSetMatcherProcessor(rawrepo, rawrepoOai, new JavaScriptWorker(metrics), jmsFetcher, metrics);
-        } catch (JMSException ex) {
-            throw new RuntimeException(ex);
-        }
+    OaiSetMatcherProcessor makeProcessor() {        
+        return new OaiSetMatcherProcessor(rawrepo, rawrepoOai, new JavaScriptWorker(metrics), 
+                config.getWorker(), config.getCommitInterval(), config.getPollIntervalMs(), metrics);
     }
     
 }

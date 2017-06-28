@@ -21,8 +21,6 @@ package dk.dbc.rawrepo.oai.setmatcher;
 import dk.dbc.DbcConfiguration;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.db.DataSourceFactory;
-import java.util.Arrays;
-import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -44,11 +42,14 @@ public class OaiSetMatcherConfiguration extends DbcConfiguration {
     private Integer poolSize;
     
     @NotNull
-    private String queues;
+    private String worker;
     
     @NotNull
-    private String queueServer;
-
+    private int commitInterval; 
+    
+    @NotNull
+    private int pollIntervalMs;
+    
     @JsonProperty("rawrepo")
     public void setRawRepoDataSourceFactory(DataSourceFactory factory) {
         this.rawrepo = factory;
@@ -78,21 +79,35 @@ public class OaiSetMatcherConfiguration extends DbcConfiguration {
     public void setPoolSize(Integer poolSize) {
         this.poolSize = poolSize;
     }
-    
-    public List<String> getQueues() {
-        return Arrays.asList(queues.split("[\\s,]+"));
+
+    @JsonProperty("rawrepoWorker")
+    public String getWorker() {
+        return worker;
     }
 
-    public void setQueues(String queues) {
-        this.queues = queues;
+    @JsonProperty("rawrepoWorker")
+    public void setWorker(String worker) {
+        this.worker = worker;
     }
 
-    public String getQueueServer() {
-        return queueServer;
+    @JsonProperty("commitInterval")
+    public int getCommitInterval() {
+        return commitInterval;
     }
 
-    public void setQueueServer(String queueServer) {
-        this.queueServer = queueServer;
+    @JsonProperty("commitInterval")
+    public void setCommitInterval(int commitInterval) {
+        this.commitInterval = commitInterval;
+    }
+
+    @JsonProperty("pollIntervalMs")
+    public int getPollIntervalMs() {
+        return pollIntervalMs;
+    }
+
+    @JsonProperty("pollIntervalMs")
+    public void setPollIntervalMs(int pollIntervalMs) {
+        this.pollIntervalMs = pollIntervalMs;
     }
     
 }

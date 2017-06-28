@@ -55,6 +55,16 @@
         <!-- This needs to be last, otherwise all following tools are not a part of the package --> 
         <!-- <module>debian</module> -->
     </modules>
+    
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>dk.dbc</groupId>
+                <artifactId>rawrepo-access</artifactId>
+                <version>1.5-SNAPSHOT</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>

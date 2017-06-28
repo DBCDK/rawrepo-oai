@@ -18,7 +18,6 @@
  */
 package dk.dbc.rawrepo.oai.setmatcher;
 
-import com.codahale.metrics.MetricRegistry;
 import dk.dbc.commons.testutils.postgres.connection.PostgresITConnection;
 import dk.dbc.rawrepo.QueueJob;
 import dk.dbc.rawrepo.RawRepoDAO;
@@ -71,12 +70,6 @@ public class OaiSetMatcherProcessorIT {
         queueJob = createQueueJob(BIB_REC_ID, AGENCY_ID);
     }
     
-    private OaiSetMatcherProcessor createProcessor(JavaScriptWorker jsWorker){
-        OaiSetMatcherProcessor setMatcher = new OaiSetMatcherProcessor(null, null, jsWorker, null, new MetricRegistry());
-        setMatcher.rawrepoConnection = rawrepo.getConnection();
-        setMatcher.rawrepoOAIConnection = rawrepoOai.getConnection();
-        return setMatcher;
-    }
 
     @After
     public void tearDown() throws SQLException {
@@ -90,8 +83,7 @@ public class OaiSetMatcherProcessorIT {
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
         when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"BKM"}); 
 
-        OaiSetMatcherProcessor processor = createProcessor(jsWorker);
-        processor.process(queueJob);
+        OaiSetMatcherProcessor.process(queueJob, rawrepoDao, rawrepoOaiDao, jsWorker);
         
         RecordSet[] sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(1, sets.length);
@@ -106,8 +98,7 @@ public class OaiSetMatcherProcessorIT {
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
         when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT"}); 
         
-        OaiSetMatcherProcessor processor = createProcessor(jsWorker);
-        processor.process(queueJob);
+        OaiSetMatcherProcessor.process(queueJob, rawrepoDao, rawrepoOaiDao, jsWorker);
                 
         RecordSet[] sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(1, sets.length);
@@ -122,8 +113,7 @@ public class OaiSetMatcherProcessorIT {
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
         when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT", "BKM"}); 
 
-        OaiSetMatcherProcessor processor = createProcessor(jsWorker);
-        processor.process(queueJob);
+        OaiSetMatcherProcessor.process(queueJob, rawrepoDao, rawrepoOaiDao, jsWorker);
         
         RecordSet[] sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(2, sets.length);
@@ -142,8 +132,7 @@ public class OaiSetMatcherProcessorIT {
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
         when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT", "BKM"}); 
 
-        OaiSetMatcherProcessor processor = createProcessor(jsWorker);
-        processor.process(queueJob);
+        OaiSetMatcherProcessor.process(queueJob, rawrepoDao, rawrepoOaiDao, jsWorker);
                 
         RecordSet[] sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(2, sets.length);
@@ -157,7 +146,7 @@ public class OaiSetMatcherProcessorIT {
         record.setDeleted(true);
         rawrepoDao.saveRecord(record);
         
-        processor.process(queueJob);
+        OaiSetMatcherProcessor.process(queueJob, rawrepoDao, rawrepoOaiDao, jsWorker);
         
         sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(2, sets.length);
@@ -175,8 +164,7 @@ public class OaiSetMatcherProcessorIT {
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
         when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT", "BKM"}); 
 
-        OaiSetMatcherProcessor processor = createProcessor(jsWorker);
-        processor.process(queueJob);
+        OaiSetMatcherProcessor.process(queueJob, rawrepoDao, rawrepoOaiDao, jsWorker);
                 
         RecordSet[] sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(2, sets.length);
@@ -188,7 +176,7 @@ public class OaiSetMatcherProcessorIT {
         assertEquals(false, sets[1].gone);
         
         when(jsWorker.getOaiSets(eq(AGENCY_ID), eq(new String(RECORD_CONTENT, "UTF-8")))).thenReturn(new String[]{"NAT"}); // Gone from BKM
-        processor.process(queueJob);
+        OaiSetMatcherProcessor.process(queueJob, rawrepoDao, rawrepoOaiDao, jsWorker);
         
         sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + BIB_REC_ID);
         assertEquals(2, sets.length);
@@ -205,8 +193,8 @@ public class OaiSetMatcherProcessorIT {
         
         String bibrecid = "notexisting";
         JavaScriptWorker jsWorker = mock(JavaScriptWorker.class);
-        OaiSetMatcherProcessor processor = createProcessor(jsWorker);
-        processor.process(createQueueJob(bibrecid, AGENCY_ID));
+        OaiSetMatcherProcessor.process(createQueueJob(bibrecid, AGENCY_ID), 
+                rawrepoDao, rawrepoOaiDao, jsWorker);
         
         RecordSet[] sets = rawrepoOaiDao.fetchSets(AGENCY_ID + ":" + bibrecid);
         assertEquals(0, sets.length);        
