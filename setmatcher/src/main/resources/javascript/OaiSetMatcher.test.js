@@ -151,6 +151,77 @@ UnitTest.addFixture( "test OaiSetMatcher.checkBKM (record not in BKM)", function
 
 } );
 
+UnitTest.addFixture( "test OaiSetMatcher.checkART (record in ART)", function( ) {
+
+    var record = new Record( );
+    record.fromString(
+        '001 00 *a87654321 *b870971\n' +
+        '014 00 *a12345678\n'
+    );
+
+    var expected = [ "ART" ];
+
+    var actual = OaiSetMatcher.__callElementMethod( OaiSetMatcher.checkART, 870971, record );
+
+    Assert.equalValue( "Record is contained in ART set (one field 014 with no subfield x)", actual, expected );
+
+    record = new Record( );
+    record.fromString(
+        '001 00 *a87654321 *b870971\n' +
+        '014 00 *a12345678 *xDEB\n'
+    );
+
+    expected = [ "ART" ];
+
+    actual = OaiSetMatcher.__callElementMethod( OaiSetMatcher.checkART, 870971, record );
+
+    Assert.equalValue( "Record is contained in ART set (one field 014 with subfield x=DEB)", actual, expected );
+
+    //TODO: Is this desired behaviour, is it a realistic scenario?:
+    record = new Record( );
+    record.fromString(
+        '001 00 *a87654321 *b870971\n' +
+        '014 00 *a12345678\n' +
+        '014 00 *a24686420 *xANM'
+    );
+
+    expected = [ 'ART' ];
+
+    actual = OaiSetMatcher.__callElementMethod( OaiSetMatcher.checkART, 870971, record );
+
+    Assert.equalValue( "Record is contained in ART set (two fields 014, one without 'ANM' in subfield x)", actual, expected );
+
+} );
+
+UnitTest.addFixture( "test OaiSetMatcher.checkART (record NOT in ART)", function( ) {
+
+    var record = new Record( );
+    record.fromString(
+        '001 00 *a87654321 *b870971\n' +
+        '014 00 *a12345678 *xANM\n' +
+        '014 00 *a24686420 *xANM'
+    );
+
+    var expected = [ ];
+
+    var actual = OaiSetMatcher.__callElementMethod( OaiSetMatcher.checkART, 870971, record );
+
+    Assert.equalValue( "Record is NOT contained in ART set (two fields 014 with subfield x=ANM)", actual, expected );
+
+    record = new Record( );
+    record.fromString(
+        '001 00 *a87654321 *b870970\n' +
+        '014 00 *a12345678'
+    );
+
+    expected = [ ];
+
+    actual = OaiSetMatcher.__callElementMethod( OaiSetMatcher.checkART, 870970, record );
+
+    Assert.equalValue( "Record is NOT contained in ART set (record from 870970)", actual, expected );
+
+} );
+
 
 
 

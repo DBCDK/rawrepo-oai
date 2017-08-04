@@ -81,7 +81,7 @@ var OaiSetMatcher = function() {
 
         map.put( "032", function( field ) {
             if ( field.exists( "a" ) ) {
-                oaiSets["NAT"] = true;
+                oaiSets[ "NAT" ] = true;
             }
         } );
 
@@ -114,14 +114,50 @@ var OaiSetMatcher = function() {
             field.eachSubField( "x", function( field, subfield ) {
                 var value = subfield.value.trim();
                 if ( value.match( /^((BK[MRX])|(SF.)|(AC.)|(INV)|(UTI)|(NET))/i ) ) {
-                    oaiSets["BKM"] = true;
+                    oaiSets[ "BKM" ] = true;
                 }            
             } );
         } );
         
         Log.trace( "Leaving OaiSetMatcher.checkBKM" );
     }
-    
+
+    /**
+     * Adds function to the MatchMap, which appends 'ART' to oaiSets
+     * if the given MarcX record should be contained in the ART set.
+     *
+     * Members of 'ART' are records from 870971 which do not have value
+     * 'ANM' in field 014 subfield x
+     *
+     * @syntax OaiSetMatcher.checkART( agencyId, oaiSets, map )
+     * @param {Number} agencyId The agency that the record belongs to
+     * @param {Object} oaiSets Object of oai set names
+     * @param {MatchMap} map The map to register handler methods in
+     * @type {function}
+     * @function
+     * @name OaiSetMatcher.checkNAT
+     */
+    function checkART( agencyId, oaiSets, map ) {
+
+        Log.trace( "Entering OaiSetMatcher.checkART" );
+
+        if ( 870971 !== agencyId ) {
+            Log.trace( "Leaving OaiSetMatcher.checkART" );
+            return;
+        }
+
+        map.put( "014", function( field ) {
+            if ( "ANM" !== field.getValue( "x" ) ) {
+                oaiSets[ "ART" ] = true;
+            }
+        } );
+
+        Log.trace( "Leaving OaiSetMatcher.checkART" );
+
+    }
+
+
+
     /**
      * Returns keys of object as array of strings
      * 
@@ -155,8 +191,8 @@ var OaiSetMatcher = function() {
      */
     function __callElementMethod( func, agencyId, record ) {
 
-        var oaiSets = {};
-        var map = new MatchMap();
+        var oaiSets = { };
+        var map = new MatchMap( );
         func( agencyId, oaiSets, map );
         record.eachFieldMap( map );
 
@@ -170,6 +206,7 @@ var OaiSetMatcher = function() {
         getOaiSets: getOaiSets,
         checkNAT: checkNAT,
         checkBKM: checkBKM,
+        checkART: checkART,
         __callElementMethod: __callElementMethod
     };
 
