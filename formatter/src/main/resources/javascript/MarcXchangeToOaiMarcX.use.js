@@ -1,8 +1,3 @@
-/*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GNU GPL v3
- * See license text at https://opensource.dbc.dk/licenses/gpl-3.0
- */
-
 /** @file Module that creates marcXchange record for OAI harvested records. */
 
 use( "Log" );
@@ -53,21 +48,21 @@ var MarcXchangeToOaiMarcX = function() {
 
 
     /**
-     * Function that is entry to create a marcxchange record with
-     * only national bibliographic fields.
+     * Function that clones the input record and removes fields created for BKM
+     * from the cloned record.
      *
-     * @syntax MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( marcRecord )
-     * @param {Record} marcRecord the marc record to create marcxchange record from
-     * @return {Document} the created marcXchange record without fields that belong to BKM
+     * @syntax MarcXchangeToOaiMarcX.removeBkmFields( marcRecord )
+     * @param {Record} marcRecord the marc record to remove BKM fields from
+     * @return {Record} new record without fields that belong to BKM
      * @type {function}
      * @function
-     * @name MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields
+     * @name MarcXchangeToOaiMarcX.removeBkmFields
      */
-    function createMarcXmlWithoutBkmFields( marcRecord ) {
+    function removeBkmFields( marcRecord ) {
 
-        Log.trace( "Entering MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields" );
+        Log.trace( "Entering MarcXchangeToOaiMarcX.removeBkmFields" );
 
-        var modifiedRecord = marcRecord.clone();
+        var modifiedRecord = marcRecord.clone( );
 
         modifiedRecord.removeAll( "504" );
         modifiedRecord.removeAll( "600" );
@@ -84,15 +79,12 @@ var MarcXchangeToOaiMarcX = function() {
         };
         modifiedRecord.removeWithMatcher( fieldMatcher );
 
-        var recordType = MarcXchangeToOaiMarcX.getRecordType( modifiedRecord );
+        Log.trace( "Leaving MarcXchangeToOaiMarcX.removeBkmFields" );
 
-        var marcXml = MarcXchange.marcRecordToMarcXchange( modifiedRecord, "danMARC2", recordType );
-
-        Log.trace( "Leaving MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields" );
-
-        return marcXml;
+        return modifiedRecord;
 
     }
+
 
     /**
      * Function that removes local fields in the marc record
@@ -125,6 +117,40 @@ var MarcXchangeToOaiMarcX = function() {
         return modifiedRecord;
 
     }
+
+
+    /**
+     * Function that removes local subfields (&) in the marc record if there
+     * is any.
+     *
+     * @syntax MarcXchangeToOaiMarcX.removeLocalSubfieldsIfAny( marcRecord )
+     * @param {Record} marcRecord the marc record to check for local fields
+     * @return {Record} a new record without local fields
+     * @type {function}
+     * @function
+     * @name MarcXchangeToOaiMarcX.removeLocalSubfieldsIfAny
+     */
+    function removeLocalSubfieldsIfAny( marcRecord ) {
+
+        Log.trace( "Entering MarcXchangeToOaiMarcX.removeLocalSubfieldsIfAny" );
+
+        var modifiedRecord = marcRecord.clone();
+
+        modifiedRecord.eachField( /./, function( field ) {
+            var subfieldMatcher = {
+                matchSubField: function( field, subfield ) {
+                    return ( subfield.name === '&' );  //bug21248
+                }
+            };
+            field.removeWithMatcher( subfieldMatcher );
+        } );
+
+        Log.trace( "Leaving MarcXchangeToOaiMarcX.removeLocalSubfieldsIfAny" );
+
+        return modifiedRecord;
+
+    }
+
 
     /**
      * Function finds the record type to send to function MarcXchange.marcRecordToMarcXchange,
@@ -167,8 +193,9 @@ var MarcXchangeToOaiMarcX = function() {
 
     return {
         createMarcXmlWithRightRecordType: createMarcXmlWithRightRecordType,
-        createMarcXmlWithoutBkmFields: createMarcXmlWithoutBkmFields,
+        removeBkmFields: removeBkmFields,
         removeLocalFieldsIfAny: removeLocalFieldsIfAny,
+        removeLocalSubfieldsIfAny: removeLocalSubfieldsIfAny,
         getRecordType: getRecordType
     }
 

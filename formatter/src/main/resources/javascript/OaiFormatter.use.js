@@ -84,11 +84,11 @@ var OaiFormatter = function() {
                 // Traverse from head to volume
                 for ( var j = marcRecords.length - 1; j >= 0; j-- ) {
                     var marcRecord = MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( marcRecords[ j ] );
-                    if ( bkmRecordAllowed ) {
-                        var marcXDoc = MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType( marcRecord );
-                    } else {
-                        marcXDoc = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( marcRecord );
+                    if ( !bkmRecordAllowed ) {
+                        marcRecord = MarcXchangeToOaiMarcX.removeBkmFields( marcRecord );
                     }
+                    marcRecord = MarcXchangeToOaiMarcX.removeLocalSubfieldsIfAny( marcRecord );
+                    var marcXDoc = MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType( marcRecord );
                     XmlUtil.appendChild( marcXCollection, marcXDoc );
                 }                
                 

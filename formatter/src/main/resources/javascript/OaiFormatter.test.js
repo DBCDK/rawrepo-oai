@@ -264,7 +264,14 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm as allowed set)", fu
                 '<marcx:subfield code="e">Haruki Murakami</marcx:subfield>' +
                 '<marcx:subfield code="f">oversat af Mette Holm</marcx:subfield>' +
             '</marcx:datafield>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="260">' +
+                '<marcx:subfield code="&#38;">1</marcx:subfield>' +  //subfield &
+                '<marcx:subfield code="a">Århus</marcx:subfield>' +
+                '<marcx:subfield code="b">Klim</marcx:subfield>' +
+                '<marcx:subfield code="c">2003</marcx:subfield>' +
+            '</marcx:datafield>' +
             '<marcx:datafield ind1="0" ind2="0" tag="504">' +
+                '<marcx:subfield code="&#38;">1</marcx:subfield>' +  //subfield &
                 '<marcx:subfield code="a">Det japanske samfund og sindets afkroge</marcx:subfield>' +
             '</marcx:datafield>' +
             '<marcx:datafield ind1="0" ind2="0" tag="z99">' +
@@ -300,6 +307,11 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm as allowed set)", fu
                     '<marcx:subfield code="e">Haruki Murakami</marcx:subfield>' +
                     '<marcx:subfield code="f">oversat af Mette Holm</marcx:subfield>' +
                 '</marcx:datafield>' +
+                '<marcx:datafield ind1="0" ind2="0" tag="260">' +
+                    '<marcx:subfield code="a">Århus</marcx:subfield>' +
+                    '<marcx:subfield code="b">Klim</marcx:subfield>' +
+                    '<marcx:subfield code="c">2003</marcx:subfield>' +
+                '</marcx:datafield>' +
                 '<marcx:datafield ind1="0" ind2="0" tag="504">' +
                     '<marcx:subfield code="a">Det japanske samfund og sindets afkroge</marcx:subfield>' +
                 '</marcx:datafield>' +
@@ -308,7 +320,7 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm as allowed set)", fu
 
     var actual = OaiFormatter.formatRecords( records, format, allowedSets );
 
-    var testName = "Format single record to marcxchange + bkm allowed set + remove local fields";
+    var testName = "Format single record to marcxchange + bkm allowed set + remove local fields and subfields";
 
     Assert.equalValue( testName, actual, expected );
 
@@ -616,7 +628,14 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm NOT allowed set)", f
                 '<marcx:subfield code="e">Haruki Murakami</marcx:subfield>' +
                 '<marcx:subfield code="f">oversat af Mette Holm</marcx:subfield>' +
             '</marcx:datafield>' +
+            '<marcx:datafield ind1="0" ind2="0" tag="260">' +
+                '<marcx:subfield code="&#38;">1</marcx:subfield>' +  //subfield &
+                '<marcx:subfield code="a">Århus</marcx:subfield>' +
+                '<marcx:subfield code="b">Klim</marcx:subfield>' +
+                '<marcx:subfield code="c">2003</marcx:subfield>' +
+            '</marcx:datafield>' +
             '<marcx:datafield ind1="0" ind2="0" tag="504">' +
+                '<marcx:subfield code="&#38;">1</marcx:subfield>' +  //subfield &
                 '<marcx:subfield code="a">Det japanske samfund og sindets afkroge</marcx:subfield>' +
             '</marcx:datafield>' +
             '<marcx:datafield ind1="0" ind2="0" tag="z99">' +
@@ -652,18 +671,23 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm NOT allowed set)", f
                     '<marcx:subfield code="e">Haruki Murakami</marcx:subfield>' +
                     '<marcx:subfield code="f">oversat af Mette Holm</marcx:subfield>' +
                 '</marcx:datafield>' +
+                '<marcx:datafield ind1="0" ind2="0" tag="260">' +
+                    '<marcx:subfield code="a">Århus</marcx:subfield>' +
+                    '<marcx:subfield code="b">Klim</marcx:subfield>' +
+                    '<marcx:subfield code="c">2003</marcx:subfield>' +
+                '</marcx:datafield>' +
             '</marcx:record>' +
         '</marcx:collection>';
 
     var actual = OaiFormatter.formatRecords( records, format, allowedSets );
 
-    var testName = "Format single record to marcxchange - BKM not allowed set + remove local fields";
+    var testName = "Format single record to marcxchange - BKM not allowed set + remove local fields and subfields";
 
     Assert.equalValue( testName, actual, expected );
 
 } );
 
-UnitTest.addFixture( "Test formatRecords (format marcx, bkm NOT allowed set)", function() {
+UnitTest.addFixture( "Test formatRecords (unknown format name)", function() {
 
     var format = 'illegal';
     var allowedSets = [ "BKM", "NAT" ];
