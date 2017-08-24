@@ -188,7 +188,6 @@ UnitTest.addFixture( "Test createMarcXmlWithRightRecordType", function( ) {
 } );
 
 
-
 UnitTest.addFixture( "Test removeBkmFields", function( ) {
 
     var marcRecord = new Record();
@@ -235,7 +234,7 @@ UnitTest.addFixture( "Test removeBkmFields", function( ) {
 
     var testName = "removeBkmFields (no field 504 or 520 (with subfield &))";
 
-    Assert.equalXml( testName, String( actual ), String( expected ) );
+    Assert.equalValue( testName, actual.toString( ), expected.toString( ) );
 
 
     marcRecord = new Record();
@@ -273,7 +272,7 @@ UnitTest.addFixture( "Test removeBkmFields", function( ) {
 
     testName = "removeBkmFields (no field 504, 517 (with subfield &) and 600)";
 
-    Assert.equalXml( testName, String( actual ), String( expected ) );
+    Assert.equalValue( testName, actual.toString( ), expected.toString( ) );
 
 
     marcRecord = new Record();
@@ -314,7 +313,7 @@ UnitTest.addFixture( "Test removeBkmFields", function( ) {
 
     testName = "removeBkmFields (no field 504, 600, 610, 666, 990, 991)";
 
-    Assert.equalXml( testName, String( actual ), String( expected ) );
+    Assert.equalValue( testName, actual.toString( ), expected.toString( ) );
 
 
     marcRecord = new Record();
@@ -352,7 +351,7 @@ UnitTest.addFixture( "Test removeBkmFields", function( ) {
 
     testName = "removeBkmFields (no field 504, 517 (with subfield &) and 600)";
 
-    Assert.equalXml( testName, String( actual ), String( expected ) );
+    Assert.equalValue( testName, actual.toString( ), expected.toString( ) );
 
 } );
 
