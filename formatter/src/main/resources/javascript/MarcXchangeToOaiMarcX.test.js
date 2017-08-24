@@ -131,241 +131,30 @@ UnitTest.addFixture( "Test createMarcXmlWithRightRecordType", function( ) {
 
     Assert.equalXml( "createMarcXmlWithRightRecordType - bibliographicMain", actual, expected );
 
-} );
 
-
-UnitTest.addFixture( "Test createMarcXmlWithoutBkmFields", function( ) {
-
-    var marcRecord = new Record();
+    marcRecord = new Record();
     marcRecord.fromString(
-        '001 00 *a20049278 *b870970\n' +
-        '004 00 *rn *ae\n' +
-        '008 00 *a1992 *z2016\n' +
-        '009 00 *aa *gxx\n' +
-        '032 00 *aDBF201709 *xBKM201709\n' +
-        '100 00 *aMadsen *hPeter\n' +
-        '245 00 *aFrejas smykke\n' +
-        '300 00 *a48 sider\n' +
-        '440 00 *0 *aValhalla *v8\n' +
-        '504 00 *&1 *aKaerlighedsgudinden Freja er i besiddelse af et kostbart halssmykke\n' +
-        '520 00 *&1 *aOriginaludgave: 1992\n' +
-        '520 00 *aTidligere: 1. udgave. 1992\n' +
-        '521 00 *b4. oplag *c2016\n' +
-        '652 00 *osk\n' +
-        '700 00 *aKure *hHenning\n' +
-        '945 00 *aPeter Madsens Valhalla *z440(a)\n' +
-        '996 00 *aDBC'
+        '001 00 *a12345678 *b870970\n' +
+        '004 00 *rn *as'
     );
 
-    var expected = XmlUtil.fromString(
-        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+    expected = XmlUtil.fromString(
+        '<marcx:record format="danMARC2" type="BibliographicSection" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
         '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
             '<marcx:datafield ind1="0" ind2="0" tag="001">' +
-                '<marcx:subfield code="a">20049278</marcx:subfield>' +
+                '<marcx:subfield code="a">12345678</marcx:subfield>' +
                 '<marcx:subfield code="b">870970</marcx:subfield>' +
             '</marcx:datafield>' +
             '<marcx:datafield ind1="0" ind2="0" tag="004">' +
                 '<marcx:subfield code="r">n</marcx:subfield>' +
-                '<marcx:subfield code="a">e</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="008">' +
-                '<marcx:subfield code="a">1992</marcx:subfield>' +
-                '<marcx:subfield code="z">2016</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="009">' +
-                '<marcx:subfield code="a">a</marcx:subfield>' +
-                '<marcx:subfield code="g">xx</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="032">' +
-                '<marcx:subfield code="a">DBF201709</marcx:subfield>' +
-                '<marcx:subfield code="x">BKM201709</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="100">' +
-                '<marcx:subfield code="a">Madsen</marcx:subfield>' +
-                '<marcx:subfield code="h">Peter</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="245">' +
-                '<marcx:subfield code="a">Frejas smykke</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="300">' +
-                '<marcx:subfield code="a">48 sider</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="440">' +
-                '<marcx:subfield code="0"/>' +
-                '<marcx:subfield code="a">Valhalla</marcx:subfield>' +
-                '<marcx:subfield code="v">8</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="520">' +
-                '<marcx:subfield code="a">Tidligere: 1. udgave. 1992</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="521">' +
-                '<marcx:subfield code="b">4. oplag</marcx:subfield>' +
-            '<marcx:subfield code="c">2016</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="652">' +
-                '<marcx:subfield code="o">sk</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="700">' +
-                '<marcx:subfield code="a">Kure</marcx:subfield>' +
-                '<marcx:subfield code="h">Henning</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="945">' +
-                '<marcx:subfield code="a">Peter Madsens Valhalla</marcx:subfield>' +
-                '<marcx:subfield code="z">440(a)</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="996">' +
-                '<marcx:subfield code="a">DBC</marcx:subfield>' +
+                '<marcx:subfield code="a">s</marcx:subfield>' +
             '</marcx:datafield>' +
         '</marcx:record>'
     );
 
-    var actual = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( marcRecord );
+    actual = MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType( marcRecord );
 
-    Assert.equalXml( "createMarcXmlWithoutBkmFields (no field 504 or 520 (with subfield &))", actual, expected );
-
-
-    marcRecord = new Record();
-    marcRecord.fromString(
-        '001 00 *a52331048 *b870970\n' +
-        '004 00 *rn *ae\n' +
-        '006 00 *d11 *2b\n' +
-        '008 00 *tm *uf *a2017 *bdk *kb *lper *na *x06 *v0\n' +
-        '009 00 *am *gxe\n' +
-        '032 00 *xACC201707 *aDBI201709 *xBKM201709 *xFSB201709 *xFSC201709\n' +
-        '041 00 *aper *cdan\n' +
-        '245 00 *aSonita\n' +
-        '260 00 *b[Det Danske Filminstitut] *c[2017]\n' +
-        '504 00 *&1 *aI Iran lever 15-aarige Sonita som illegal flygtning\n' +
-        '508 00 *aPersisk tale\n' +
-        '517 00 *&1 *aMaerkning: Tilladt for boern over 11 aar\n' +
-        '600 00 *1 *aAlizadeh *hSonita'
-    );
-
-    expected = XmlUtil.fromString(
-        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
-        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="001">' +
-                '<marcx:subfield code="a">52331048</marcx:subfield>' +
-                '<marcx:subfield code="b">870970</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="004">' +
-                '<marcx:subfield code="r">n</marcx:subfield>' +
-                '<marcx:subfield code="a">e</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="006">' +
-                '<marcx:subfield code="d">11</marcx:subfield>' +
-                '<marcx:subfield code="2">b</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="008">' +
-                '<marcx:subfield code="t">m</marcx:subfield>' +
-                '<marcx:subfield code="u">f</marcx:subfield>' +
-                '<marcx:subfield code="a">2017</marcx:subfield>' +
-                '<marcx:subfield code="b">dk</marcx:subfield>' +
-                '<marcx:subfield code="k">b</marcx:subfield>' +
-                '<marcx:subfield code="l">per</marcx:subfield>' +
-                '<marcx:subfield code="n">a</marcx:subfield>' +
-                '<marcx:subfield code="x">06</marcx:subfield>' +
-                '<marcx:subfield code="v">0</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="009">' +
-                '<marcx:subfield code="a">m</marcx:subfield>' +
-                '<marcx:subfield code="g">xe</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="032">' +
-                '<marcx:subfield code="x">ACC201707</marcx:subfield>' +
-                '<marcx:subfield code="a">DBI201709</marcx:subfield>' +
-                '<marcx:subfield code="x">BKM201709</marcx:subfield>' +
-                '<marcx:subfield code="x">FSB201709</marcx:subfield>' +
-                '<marcx:subfield code="x">FSC201709</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="041">' +
-                '<marcx:subfield code="a">per</marcx:subfield>' +
-                '<marcx:subfield code="c">dan</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="245">' +
-                '<marcx:subfield code="a">Sonita</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="260">' +
-                '<marcx:subfield code="b">[Det Danske Filminstitut]</marcx:subfield>' +
-                '<marcx:subfield code="c">[2017]</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="508">' +
-                '<marcx:subfield code="a">Persisk tale</marcx:subfield>' +
-            '</marcx:datafield>' +
-        '</marcx:record>'
-    );
-
-    actual = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( marcRecord );
-
-    Assert.equalXml( "createMarcXmlWithoutBkmFields (no field 504, 517 (with subfield &) and 600)", actual, expected );
-
-
-    marcRecord = new Record();
-    marcRecord.fromString(
-        '001 00 *a 52714524 *b 870970\n' +
-        '004 00 *r n *a e\n' +
-        '008 00 *t m *a 2016 *b dk *l dan\n' +
-        '009 00 *a a *g xe\n' +
-        '021 00 *e 9788740037258\n' +
-        '032 00 *x ACC201644 *a DBF201650 *x BKM201650\n' +
-        '041 00 *a dan *c nor\n' +
-        '245 00 *a Vores historie\n' +
-        '504 00 *& 1 *a Marcus og Martinus Gunnarsen (f. 2002) er to helt normale norske drenge\n' +
-        '512 00 *a Downloades i EPUB-format\n' +
-        '600 00 *a Gunnarsen *h Marcus *1\n' +
-        '600 00 *a Gunnarsen *h Martinus *1\n' +
-        '610 00 *a Marcus & Martinus *1\n' +
-        '666 00 *0 *f sangere\n' +
-        '666 00 *0 *e Norge\n' +
-        '990 00 *o 201650 *b b\n' +
-        '991 00 *o Trykt version med lektoerudtalelse (5 272 376 0)'
-    );
-
-    expected = XmlUtil.fromString(
-        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
-        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="001">' +
-        '<marcx:subfield code="a">52714524</marcx:subfield>' +
-        '<marcx:subfield code="b">870970</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="004">' +
-        '<marcx:subfield code="r">n</marcx:subfield>' +
-        '<marcx:subfield code="a">e</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="008">' +
-        '<marcx:subfield code="t">m</marcx:subfield>' +
-        '<marcx:subfield code="a">2016</marcx:subfield>' +
-        '<marcx:subfield code="b">dk</marcx:subfield>' +
-        '<marcx:subfield code="l">dan</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="009">' +
-        '<marcx:subfield code="a">a</marcx:subfield>' +
-        '<marcx:subfield code="g">xe</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="021">' +
-        '<marcx:subfield code="e">9788740037258</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="032">' +
-        '<marcx:subfield code="x">ACC201644</marcx:subfield>' +
-        '<marcx:subfield code="a">DBF201650</marcx:subfield>' +
-        '<marcx:subfield code="x">BKM201650</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="041">' +
-        '<marcx:subfield code="a">dan</marcx:subfield>' +
-        '<marcx:subfield code="c">nor</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="245">' +
-        '<marcx:subfield code="a">Vores historie</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '<marcx:datafield ind1="0" ind2="0" tag="512">' +
-        '<marcx:subfield code="a">Downloades i EPUB-format</marcx:subfield>' +
-        '</marcx:datafield>' +
-        '</marcx:record>'
-    );
-
-    actual = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( marcRecord );
-
-    Assert.equalXml( "createMarcXmlWithoutBkmFields (no field 504, 600, 610, 666, 990, 991)", actual, expected );
+    Assert.equalXml( "createMarcXmlWithRightRecordType - BibliographicSection", actual, expected );
 
 
     marcRecord = new Record();
@@ -392,62 +181,180 @@ UnitTest.addFixture( "Test createMarcXmlWithoutBkmFields", function( ) {
         '</marcx:record>'
     );
 
-    actual = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( marcRecord );
+    actual = MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType( marcRecord );
 
-    Assert.equalXml( "createMarcXmlWithoutBkmFields (type=BibliographicVolume)", actual, expected );
-
-
-    marcRecord = new Record();
-    marcRecord.fromString(
-        '001 00 *a12345678 *b870970\n' +
-        '004 00 *rn *as'
-    );
-
-    expected = XmlUtil.fromString(
-        '<marcx:record format="danMARC2" type="BibliographicSection" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
-        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="001">' +
-                '<marcx:subfield code="a">12345678</marcx:subfield>' +
-                '<marcx:subfield code="b">870970</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="004">' +
-                '<marcx:subfield code="r">n</marcx:subfield>' +
-                '<marcx:subfield code="a">s</marcx:subfield>' +
-            '</marcx:datafield>' +
-        '</marcx:record>'
-    );
-
-    actual = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( marcRecord );
-
-    Assert.equalXml( "createMarcXmlWithoutBkmFields (type=BibliographicSection)", actual, expected );
-
-
-    marcRecord = new Record();
-    marcRecord.fromString(
-        '001 00 *a12345678 *b870970\n' +
-        '004 00 *rn *ah'
-    );
-
-    expected = XmlUtil.fromString(
-        '<marcx:record format="danMARC2" type="BibliographicMain" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
-        '<marcx:leader>00000n    2200000   4500</marcx:leader>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="001">' +
-                '<marcx:subfield code="a">12345678</marcx:subfield>' +
-                '<marcx:subfield code="b">870970</marcx:subfield>' +
-            '</marcx:datafield>' +
-            '<marcx:datafield ind1="0" ind2="0" tag="004">' +
-                '<marcx:subfield code="r">n</marcx:subfield>' +
-                '<marcx:subfield code="a">h</marcx:subfield>' +
-            '</marcx:datafield>' +
-        '</marcx:record>'
-    );
-
-    actual = MarcXchangeToOaiMarcX.createMarcXmlWithoutBkmFields( marcRecord );
-
-    Assert.equalXml( "createMarcXmlWithoutBkmFields (type=BibliographicMain)", actual, expected );
-
+    Assert.equalXml( "createMarcXmlWithRightRecordType - BibliographicVolume", actual, expected );
 
 } );
+
+
+UnitTest.addFixture( "Test removeBkmFields", function( ) {
+
+    var marcRecord = new Record();
+    marcRecord.fromString(
+        '001 00 *a20049278 *b870970\n' +
+        '004 00 *rn *ae\n' +
+        '008 00 *a1992 *z2016\n' +
+        '009 00 *aa *gxx\n' +
+        '032 00 *aDBF201709 *xBKM201709\n' +
+        '100 00 *aMadsen *hPeter\n' +
+        '245 00 *aFrejas smykke\n' +
+        '300 00 *a48 sider\n' +
+        '440 00 *0 *aValhalla *v8\n' +
+        '504 00 *&1 *aKaerlighedsgudinden Freja er i besiddelse af et kostbart halssmykke\n' +
+        '520 00 *&1 *aOriginaludgave: 1992\n' +
+        '520 00 *aTidligere: 1. udgave. 1992\n' +
+        '521 00 *b4. oplag *c2016\n' +
+        '652 00 *osk\n' +
+        '700 00 *aKure *hHenning\n' +
+        '945 00 *aPeter Madsens Valhalla *z440(a)\n' +
+        '996 00 *aDBC'
+    );
+
+    var expected = new Record( );
+    expected.fromString(
+        '001 00 *a20049278 *b870970\n' +
+        '004 00 *rn *ae\n' +
+        '008 00 *a1992 *z2016\n' +
+        '009 00 *aa *gxx\n' +
+        '032 00 *aDBF201709 *xBKM201709\n' +
+        '100 00 *aMadsen *hPeter\n' +
+        '245 00 *aFrejas smykke\n' +
+        '300 00 *a48 sider\n' +
+        '440 00 *0 *aValhalla *v8\n' +
+        '520 00 *aTidligere: 1. udgave. 1992\n' +
+        '521 00 *b4. oplag *c2016\n' +
+        '652 00 *osk\n' +
+        '700 00 *aKure *hHenning\n' +
+        '945 00 *aPeter Madsens Valhalla *z440(a)\n' +
+        '996 00 *aDBC'
+    );
+
+    var actual = MarcXchangeToOaiMarcX.removeBkmFields( marcRecord );
+
+    var testName = "removeBkmFields (no field 504 or 520 (with subfield &))";
+
+    Assert.equalValue( testName, actual.toString( ), expected.toString( ) );
+
+
+    marcRecord = new Record();
+    marcRecord.fromString(
+        '001 00 *a52331048 *b870970\n' +
+        '004 00 *rn *ae\n' +
+        '006 00 *d11 *2b\n' +
+        '008 00 *tm *uf *a2017 *bdk *kb *lper *na *x06 *v0\n' +
+        '009 00 *am *gxe\n' +
+        '032 00 *xACC201707 *aDBI201709 *xBKM201709 *xFSB201709 *xFSC201709\n' +
+        '041 00 *aper *cdan\n' +
+        '245 00 *aSonita\n' +
+        '260 00 *b[Det Danske Filminstitut] *c[2017]\n' +
+        '504 00 *&1 *aI Iran lever 15-aarige Sonita som illegal flygtning\n' +
+        '508 00 *aPersisk tale\n' +
+        '517 00 *&1 *aMaerkning: Tilladt for boern over 11 aar\n' +
+        '600 00 *1 *aAlizadeh *hSonita'
+    );
+
+    expected =  new Record( );
+    expected.fromString(
+        '001 00 *a52331048 *b870970\n' +
+        '004 00 *rn *ae\n' +
+        '006 00 *d11 *2b\n' +
+        '008 00 *tm *uf *a2017 *bdk *kb *lper *na *x06 *v0\n' +
+        '009 00 *am *gxe\n' +
+        '032 00 *xACC201707 *aDBI201709 *xBKM201709 *xFSB201709 *xFSC201709\n' +
+        '041 00 *aper *cdan\n' +
+        '245 00 *aSonita\n' +
+        '260 00 *b[Det Danske Filminstitut] *c[2017]\n' +
+        '508 00 *aPersisk tale\n'
+    );
+
+    actual = MarcXchangeToOaiMarcX.removeBkmFields( marcRecord );
+
+    testName = "removeBkmFields (no field 504, 517 (with subfield &) and 600)";
+
+    Assert.equalValue( testName, actual.toString( ), expected.toString( ) );
+
+
+    marcRecord = new Record();
+    marcRecord.fromString(
+        '001 00 *a 52714524 *b 870970\n' +
+        '004 00 *r n *a e\n' +
+        '008 00 *t m *a 2016 *b dk *l dan\n' +
+        '009 00 *a a *g xe\n' +
+        '021 00 *e 9788740037258\n' +
+        '032 00 *x ACC201644 *a DBF201650 *x BKM201650\n' +
+        '041 00 *a dan *c nor\n' +
+        '245 00 *a Vores historie\n' +
+        '504 00 *& 1 *a Marcus og Martinus Gunnarsen (f. 2002) er to helt normale norske drenge\n' +
+        '512 00 *a Downloades i EPUB-format\n' +
+        '600 00 *a Gunnarsen *h Marcus *1\n' +
+        '600 00 *a Gunnarsen *h Martinus *1\n' +
+        '610 00 *a Marcus & Martinus *1\n' +
+        '666 00 *0 *f sangere\n' +
+        '666 00 *0 *e Norge\n' +
+        '990 00 *o 201650 *b b\n' +
+        '991 00 *o Trykt version med lektoerudtalelse (5 272 376 0)'
+    );
+
+    expected = new Record( );
+    expected.fromString(
+        '001 00 *a 52714524 *b 870970\n' +
+        '004 00 *r n *a e\n' +
+        '008 00 *t m *a 2016 *b dk *l dan\n' +
+        '009 00 *a a *g xe\n' +
+        '021 00 *e 9788740037258\n' +
+        '032 00 *x ACC201644 *a DBF201650 *x BKM201650\n' +
+        '041 00 *a dan *c nor\n' +
+        '245 00 *a Vores historie\n' +
+        '512 00 *a Downloades i EPUB-format\n'
+    );
+
+    actual = MarcXchangeToOaiMarcX.removeBkmFields( marcRecord );
+
+    testName = "removeBkmFields (no field 504, 600, 610, 666, 990, 991)";
+
+    Assert.equalValue( testName, actual.toString( ), expected.toString( ) );
+
+
+    marcRecord = new Record();
+    marcRecord.fromString(
+        '001 00 *a52331048 *b870970\n' +
+        '004 00 *rn *ae\n' +
+        '006 00 *d11 *2b\n' +
+        '008 00 *tm *uf *a2017 *bdk *kb *lper *na *x06 *v0\n' +
+        '009 00 *am *gxe\n' +
+        '032 00 *xACC201707 *aDBI201709 *xBKM201709 *xFSB201709 *xFSC201709\n' +
+        '041 00 *aper *cdan\n' +
+        '245 00 *aSonita\n' +
+        '260 00 *b[Det Danske Filminstitut] *c[2017]\n' +
+        '504 00 *&1 *aI Iran lever 15-aarige Sonita som illegal flygtning\n' +
+        '508 00 *aPersisk tale\n' +
+        '517 00 *&1 *aMaerkning: Tilladt for boern over 11 aar\n' +
+        '600 00 *1 *aAlizadeh *hSonita'
+    );
+
+    expected = new Record( );
+    expected.fromString(
+        '001 00 *a52331048 *b870970\n' +
+        '004 00 *rn *ae\n' +
+        '006 00 *d11 *2b\n' +
+        '008 00 *tm *uf *a2017 *bdk *kb *lper *na *x06 *v0\n' +
+        '009 00 *am *gxe\n' +
+        '032 00 *xACC201707 *aDBI201709 *xBKM201709 *xFSB201709 *xFSC201709\n' +
+        '041 00 *aper *cdan\n' +
+        '245 00 *aSonita\n' +
+        '260 00 *b[Det Danske Filminstitut] *c[2017]\n' +
+        '508 00 *aPersisk tale'
+    );
+
+    actual = MarcXchangeToOaiMarcX.removeBkmFields( marcRecord );
+
+    testName = "removeBkmFields (no field 504, 517 (with subfield &) and 600)";
+
+    Assert.equalValue( testName, actual.toString( ), expected.toString( ) );
+
+} );
+
 
 UnitTest.addFixture( "test removeLocalFieldsIfAny", function( ) {
 
@@ -521,6 +428,51 @@ UnitTest.addFixture( "test removeLocalFieldsIfAny", function( ) {
     Assert.equalValue( "removeLocalFieldsIfAny - no local fields", actual.toString(), expected.toString() );
 
 } );
+
+
+UnitTest.addFixture( "Test removeLocalSubfieldsIfAny", function() {
+
+    var inputRecord = new Record();
+    inputRecord.fromString(
+        '001 00 *a52331048 *b870970\n' +
+        '004 00 *rn *ae\n' +
+        '006 00 *d11 *2b\n' +
+        '008 00 *tm *uf *a2017 *bdk *kb *lper *na *x06 *v0\n' +
+        '009 00 *am *gxe\n' +
+        '032 00 *xACC201707 *aDBI201709 *xBKM201709 *xFSB201709 *xFSC201709\n' +
+        '041 00 *aper *cdan\n' +
+        '245 00 *aSonita\n' +
+        '260 00 *b[Det Danske Filminstitut] *c[2017]\n' +
+        '504 00 *&1 *aI Iran lever 15-aarige Sonita som illegal flygtning\n' +
+        '508 00 *aPersisk tale\n' +
+        '517 00 *&1 *aMaerkning: Tilladt for boern over 11 aar\n' +
+        '600 00 *1 *aAlizadeh *hSonita'
+    );
+
+    var expected = new Record();
+    expected.fromString(
+        '001 00 *a52331048 *b870970\n' +
+        '004 00 *rn *ae\n' +
+        '006 00 *d11 *2b\n' +
+        '008 00 *tm *uf *a2017 *bdk *kb *lper *na *x06 *v0\n' +
+        '009 00 *am *gxe\n' +
+        '032 00 *xACC201707 *aDBI201709 *xBKM201709 *xFSB201709 *xFSC201709\n' +
+        '041 00 *aper *cdan\n' +
+        '245 00 *aSonita\n' +
+        '260 00 *b[Det Danske Filminstitut] *c[2017]\n' +
+        '504 00 *aI Iran lever 15-aarige Sonita som illegal flygtning\n' +
+        '508 00 *aPersisk tale\n' +
+        '517 00 *aMaerkning: Tilladt for boern over 11 aar\n' +
+        '600 00 *1 *aAlizadeh *hSonita'
+    );
+
+    var actual = MarcXchangeToOaiMarcX.removeLocalSubfieldsIfAny( inputRecord );
+    var testName = "removeLocalSubfieldsIfAny - remove subfield & from several fields (present in field 504 and 517)";
+
+    Assert.equalValue( testName, actual.toString(), expected.toString() );
+
+} );
+
 
 UnitTest.addFixture( "Test getRecordType", function() {
 
