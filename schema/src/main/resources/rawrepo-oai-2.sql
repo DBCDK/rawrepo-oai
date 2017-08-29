@@ -1,3 +1,4 @@
+\set ON_ERROR_STOP
 CREATE TABLE version (
     version NUMERIC(6) NOT NULL PRIMARY KEY,
     warning TEXT DEFAULT NULL
