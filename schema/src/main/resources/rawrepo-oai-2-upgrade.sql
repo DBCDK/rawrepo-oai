@@ -26,9 +26,8 @@ $$;
 --
 --
 
-TRUNCATE oaisets;
-INSERT INTO oaisets (setSpec, setName, description) VALUES ('bkm', 'Bibliotekskatalogiserede Materialer', 'Betalingsprodukt - kræver adgangskode.');
-INSERT INTO oaisets (setSpec, setName, description) VALUES ('nat', 'Nationalbibliografi', 'Materialer udgivet i Danmark. Offentligt tilgængeligt.');
+UPDATE  oaisets SET setName = 'Bibliotekskatalogiserede Materialer', description = 'Betalingsprodukt - kræver adgangskode.' WHERE setSpec = 'bkm';
+UPDATE  oaisets SET setName = 'Nationalbibliografi', description = 'Materialer udgivet i Danmark. Offentligt tilgængeligt.' WHERE setSpec = 'nat';
 INSERT INTO oaisets (setSpec, setName, description) VALUES ('art', 'Artikler', 'Artikler fra Artikelbasen - Offentligt tilgængeligt.');
 INSERT INTO oaisets (setSpec, setName, description) VALUES ('onl', 'Onlinematerialer', 'Betalingsprodukt - kræver adgangskode');
 
