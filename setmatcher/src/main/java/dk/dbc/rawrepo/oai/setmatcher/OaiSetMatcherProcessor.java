@@ -154,6 +154,9 @@ public class OaiSetMatcherProcessor implements Runnable {
             try(Connection rawrepoOaiConn = rawrepoOai.getConnection();
                     Connection rawrepoConn = rawrepo.getConnection()) {
                 
+                rawrepoConn.setAutoCommit(false);
+                rawrepoOaiConn.setAutoCommit(false);
+                
                 try {
                     RawRepoDAO rawRepoDao = RawRepoDAO.builder(rawrepoConn).build();
                     OaiSetMatcherDAO oaiSetMatcherDAO = new OaiSetMatcherDAO(rawrepoOaiConn);
