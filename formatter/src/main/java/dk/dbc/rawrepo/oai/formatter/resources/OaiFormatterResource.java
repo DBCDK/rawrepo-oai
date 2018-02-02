@@ -111,6 +111,8 @@ public class OaiFormatterResource {
     static MarcXChangeWrapper[] fetchRecordCollection(int agencyId, String bibRecId, RawRepoDAO dao) throws RawRepoException, UnsupportedEncodingException{
         ArrayList<MarcXChangeWrapper> collection = new ArrayList<>();
         Record r = dao.fetchRecord(bibRecId, agencyId);
+        dao.expandRecord(r,false);
+
         while(r != null) {
 
             Set<dk.dbc.rawrepo.RecordId> parents = dao.getRelationsParents(r.getId());
