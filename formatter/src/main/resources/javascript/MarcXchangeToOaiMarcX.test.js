@@ -9,7 +9,7 @@ use( "MarcXchangeToOaiMarcX" );
 use( "UnitTest" );
 
 
-UnitTest.addFixture( "Test createMarcXmlWithRightRecordType", function( ) {
+UnitTest.addFixture( "MarcXchangeToOaiMarcX.createMarcXmlWithRightRecordType", function( ) {
 
     var marcRecord = new Record( );
     marcRecord.fromString(
@@ -188,7 +188,7 @@ UnitTest.addFixture( "Test createMarcXmlWithRightRecordType", function( ) {
 } );
 
 
-UnitTest.addFixture( "Test removeBkmFields", function( ) {
+UnitTest.addFixture( "MarcXchangeToOaiMarcX.removeBkmFields", function( ) {
 
     var marcRecord = new Record();
     marcRecord.fromString(
@@ -356,7 +356,7 @@ UnitTest.addFixture( "Test removeBkmFields", function( ) {
 } );
 
 
-UnitTest.addFixture( "test removeLocalFieldsIfAny", function( ) {
+UnitTest.addFixture( "MarcXchangeToOaiMarcX.removeLocalFieldsIfAny", function( ) {
 
     var marcRecord = new Record();
     marcRecord.fromString(
@@ -430,7 +430,7 @@ UnitTest.addFixture( "test removeLocalFieldsIfAny", function( ) {
 } );
 
 
-UnitTest.addFixture( "Test removeLocalSubfieldsIfAny", function() {
+UnitTest.addFixture( "MarcXchangeToOaiMarcX.removeLocalSubfieldsIfAny", function() {
 
     var inputRecord = new Record();
     inputRecord.fromString(
@@ -473,8 +473,62 @@ UnitTest.addFixture( "Test removeLocalSubfieldsIfAny", function() {
 
 } );
 
+UnitTest.addFixture( "MarcXchangeToOaiMarcX.removeField665", function() {
 
-UnitTest.addFixture( "Test getRecordType", function() {
+    var inputRecord = new Record();
+    inputRecord.fromString(
+        '001 00 *a20049278 *b870970\n' +
+        '004 00 *rn *ae\n' +
+        '008 00 *a1992 *z2016\n' +
+        '009 00 *aa *gxx\n' +
+        '032 00 *aDBF201709 *xBKM201709\n' +
+        '100 00 *aMadsen *hPeter\n' +
+        '245 00 *aFrejas smykke\n' +
+        '300 00 *a48 sider\n' +
+        '440 00 *0 *aValhalla *v8\n' +
+        '504 00 *&1 *aKaerlighedsgudinden Freja er i besiddelse af et kostbart halssmykke\n' +
+        '520 00 *&1 *aOriginaludgave: 1992\n' +
+        '520 00 *aTidligere: 1. udgave. 1992\n' +
+        '521 00 *b4. oplag *c2016\n' +
+        '652 00 *osk\n' +
+        '665 00 *qSkandinavien\n' +
+        '665 00 *umytologi\n' +
+        '700 00 *aKure *hHenning\n' +
+        '945 00 *aPeter Madsens Valhalla *z440(a)\n' +
+        '996 00 *aDBC'
+    );
+
+    var expected = new Record();
+    expected.fromString(
+        '001 00 *a20049278 *b870970\n' +
+        '004 00 *rn *ae\n' +
+        '008 00 *a1992 *z2016\n' +
+        '009 00 *aa *gxx\n' +
+        '032 00 *aDBF201709 *xBKM201709\n' +
+        '100 00 *aMadsen *hPeter\n' +
+        '245 00 *aFrejas smykke\n' +
+        '300 00 *a48 sider\n' +
+        '440 00 *0 *aValhalla *v8\n' +
+        '504 00 *&1 *aKaerlighedsgudinden Freja er i besiddelse af et kostbart halssmykke\n' +
+        '520 00 *&1 *aOriginaludgave: 1992\n' +
+        '520 00 *aTidligere: 1. udgave. 1992\n' +
+        '521 00 *b4. oplag *c2016\n' +
+        '652 00 *osk\n' +
+        '700 00 *aKure *hHenning\n' +
+        '945 00 *aPeter Madsens Valhalla *z440(a)\n' +
+        '996 00 *aDBC'
+    );
+
+    var actual = MarcXchangeToOaiMarcX.removeField665( inputRecord );
+    var testName = "remove all field 665";
+
+    Assert.equalValue( testName, actual.toString(), expected.toString() );
+
+
+} );
+
+
+UnitTest.addFixture( "MarcXchangeToOaiMarcX.getRecordType", function() {
 
     var inputRecord = new Record();
     inputRecord.fromString( '004 00 *ah *rn' );
