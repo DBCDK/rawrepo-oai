@@ -8,7 +8,7 @@
 use( "OaiFormatter" );
 use( "UnitTest" );
 
-UnitTest.addFixture( "Test formatRecords (format DC)", function() {
+UnitTest.addFixture( "OaiFormatter.formatRecords (format DC)", function() {
 
     var format = 'oai_dc'; //applies to all tests in this Fixture
     var allowedSets = [ "BKM", "NAT" ]; //applies to all tests in this Fixture
@@ -239,7 +239,7 @@ UnitTest.addFixture( "Test formatRecords (format DC)", function() {
 } );
 
 
-UnitTest.addFixture( "Test formatRecords (format marcx, bkm as allowed set)", function() {
+UnitTest.addFixture( "OaiFormatter.formatRecords (format marcx, bkm as allowed set)", function() {
 
     var format = 'marcx'; //applies to all tests in this Fixture
     var allowedSets = [ "BKM", "NAT" ]; //applies to all tests in this Fixture
@@ -321,6 +321,91 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm as allowed set)", fu
     var actual = OaiFormatter.formatRecords( records, format, allowedSets );
 
     var testName = "Format single record to marcxchange + bkm allowed set + remove local fields and subfields";
+
+    Assert.equalValue( testName, actual, expected );
+
+
+    //This next test can be removed when field 665 is allowed and code hence changed:
+    recordString =
+        '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:leader>00000c    2200000   4500</marcx:leader>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+        '<marcx:subfield code="a">23645564</marcx:subfield>' +
+        '<marcx:subfield code="b">870970</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+        '<marcx:subfield code="r">c</marcx:subfield>' +
+        '<marcx:subfield code="a">e</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="100">' +
+        '<marcx:subfield code="a">Murakami</marcx:subfield>' +
+        '<marcx:subfield code="h">Haruki</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="245">' +
+        '<marcx:subfield code="a">Traekopfuglens kroenike</marcx:subfield>' +
+        '<marcx:subfield code="e">Haruki Murakami</marcx:subfield>' +
+        '<marcx:subfield code="f">oversat af Mette Holm</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="260">' +
+        '<marcx:subfield code="&#38;">1</marcx:subfield>' +  //subfield &
+        '<marcx:subfield code="a">Århus</marcx:subfield>' +
+        '<marcx:subfield code="b">Klim</marcx:subfield>' +
+        '<marcx:subfield code="c">2003</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="504">' +
+        '<marcx:subfield code="&#38;">1</marcx:subfield>' +  //subfield &
+        '<marcx:subfield code="a">Det japanske samfund og sindets afkroge</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="665">' +
+        '<marcx:subfield code="u">magisk realistisk</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="z99">' +
+        '<marcx:subfield code="a">masseret</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '</marcx:record>';
+
+    records = [
+        {
+            content: recordString,
+            children: []
+        }
+    ];
+
+    expected =
+        '<marcx:collection xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
+        '<marcx:record format="danMARC2" type="Bibliographic">' +
+        '<marcx:leader>00000c    2200000   4500</marcx:leader>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="001">' +
+        '<marcx:subfield code="a">23645564</marcx:subfield>' +
+        '<marcx:subfield code="b">870970</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="004">' +
+        '<marcx:subfield code="r">c</marcx:subfield>' +
+        '<marcx:subfield code="a">e</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="100">' +
+        '<marcx:subfield code="a">Murakami</marcx:subfield>' +
+        '<marcx:subfield code="h">Haruki</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="245">' +
+        '<marcx:subfield code="a">Traekopfuglens kroenike</marcx:subfield>' +
+        '<marcx:subfield code="e">Haruki Murakami</marcx:subfield>' +
+        '<marcx:subfield code="f">oversat af Mette Holm</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="260">' +
+        '<marcx:subfield code="a">Århus</marcx:subfield>' +
+        '<marcx:subfield code="b">Klim</marcx:subfield>' +
+        '<marcx:subfield code="c">2003</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '<marcx:datafield ind1="0" ind2="0" tag="504">' +
+        '<marcx:subfield code="a">Det japanske samfund og sindets afkroge</marcx:subfield>' +
+        '</marcx:datafield>' +
+        '</marcx:record>' +
+        '</marcx:collection>';
+
+    actual = OaiFormatter.formatRecords( records, format, allowedSets );
+
+    testName = "Format single record to marcxchange + bkm allowed set + remove local fields and subfields + remove field 665";
 
     Assert.equalValue( testName, actual, expected );
 
@@ -603,7 +688,7 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm as allowed set)", fu
 } );
 
 
-UnitTest.addFixture( "Test formatRecords (format marcx, bkm NOT allowed set)", function() {
+UnitTest.addFixture( "OaiFormatter.formatRecords (format marcx, bkm NOT allowed set)", function() {
 
     var format = 'marcx';
     var allowedSets = [ "NAT" ];
@@ -687,7 +772,7 @@ UnitTest.addFixture( "Test formatRecords (format marcx, bkm NOT allowed set)", f
 
 } );
 
-UnitTest.addFixture( "Test formatRecords (unknown format name)", function() {
+UnitTest.addFixture( "OaiFormatter.formatRecords (unknown format name)", function() {
 
     var format = 'illegal';
     var allowedSets = [ "BKM", "NAT" ];
@@ -729,7 +814,7 @@ UnitTest.addFixture( "Test formatRecords (unknown format name)", function() {
 
 } );
 
-UnitTest.addFixture( "Test convertXmlRecordStringsToMarcObjects", function( ) {
+UnitTest.addFixture( "OaiFormatter.convertXmlRecordStringsToMarcObjects", function( ) {
 
     var volumeRecordString =
         '<marcx:record format="danMARC2" type="Bibliographic" xmlns:marcx="info:lc/xmlns/marcxchange-v1">' +
@@ -903,7 +988,7 @@ UnitTest.addFixture( "Test convertXmlRecordStringsToMarcObjects", function( ) {
 } );
 
 
-UnitTest.addFixture( "Test getAllowedFormats", function() {
+UnitTest.addFixture( "OaiFormatter.getAllowedFormats", function() {
 
     Assert.equalValue( "get allowed formats", OaiFormatter.getAllowedFormats(), [ 'oai_dc', 'marcx' ] );
 
