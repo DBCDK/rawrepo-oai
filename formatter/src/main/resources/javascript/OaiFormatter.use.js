@@ -84,6 +84,7 @@ var OaiFormatter = function() {
                 // Traverse from head to volume
                 for ( var j = marcRecords.length - 1; j >= 0; j-- ) {
                     var marcRecord = MarcXchangeToOaiMarcX.removeLocalFieldsIfAny( marcRecords[ j ] );
+                    marcRecord = MarcXchangeToOaiMarcX.removeField665( marcRecord ); //Search US#2373. Remove this call when 665 is official field.
                     if ( !bkmRecordAllowed ) {
                         marcRecord = MarcXchangeToOaiMarcX.removeBkmFields( marcRecord );
                     }

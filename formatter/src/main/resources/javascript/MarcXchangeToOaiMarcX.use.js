@@ -156,6 +156,38 @@ var MarcXchangeToOaiMarcX = function() {
 
     }
 
+    /**
+     * Function that removes field 665 from the marc record if it exists.
+     * This is a function for temporary use - until field 665 is an official
+     * danMARC2 field. Search US #2373.
+     *
+     * @syntax MarcXchangeToOaiMarcX.removeField665( marcRecord )
+     * @param {Record} marcRecord the marc record to check for field 665
+     * @return {Record} a new record without field 665
+     * @type {function}
+     * @function
+     * @name MarcXchangeToOaiMarcX.removeField665
+     */
+    function removeField665( marcRecord ) {
+
+        Log.trace( "Entering MarcXchangeToOaiMarcX.removeField665" );
+
+        var modifiedRecord = marcRecord.clone();
+
+        var fieldMatcher = {
+            matchField: function( modifiedRecord, field ) {
+                //fields starting with a letter should be removed
+                return ( "665" === field.name );
+            }
+        };
+        modifiedRecord.removeWithMatcher( fieldMatcher );
+
+        Log.trace( "Leaving MarcXchangeToOaiMarcX.removeField665" );
+
+        return modifiedRecord;
+
+    }
+
 
     /**
      * Function finds the record type to send to function MarcXchange.marcRecordToMarcXchange,
@@ -201,6 +233,7 @@ var MarcXchangeToOaiMarcX = function() {
         removeBkmFields: removeBkmFields,
         removeLocalFieldsIfAny: removeLocalFieldsIfAny,
         removeLocalSubfieldsIfAny: removeLocalSubfieldsIfAny,
+        removeField665: removeField665,
         getRecordType: getRecordType
     }
 
