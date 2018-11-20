@@ -19,10 +19,10 @@
 package dk.dbc;
 
 import io.dropwizard.configuration.UndefinedEnvironmentVariableException;
-import org.apache.commons.lang3.text.StrBuilder;
-import org.apache.commons.lang3.text.StrLookup;
-import org.apache.commons.lang3.text.StrMatcher;
-import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StrBuilder;
+import org.apache.commons.text.StrLookup;
+import org.apache.commons.text.StrMatcher;
+import org.apache.commons.text.StrSubstitutor;
 
 /**
  *

@@ -2,7 +2,6 @@
  * Copyright Dansk Bibliotekscenter a/s. Licensed under GNU GPL v3
  * See license text at https://opensource.dbc.dk/licenses/gpl-3.0
  */
-
 package dk.dbc;
 
 import ch.qos.logback.classic.LoggerContext;
@@ -32,6 +31,16 @@ public class LogbackAutoConfigLoggingFactory implements LoggingFactory {
 
     @Override
     public void configure(MetricRegistry metricRegistry, String name) {
+        reset();
+    }
+
+    @Override
+    public void stop() {
+        loggerContext.stop();
+    }
+
+    @Override
+    public void reset() {
         try {
             loggerContext.reset();
             contextInitializer.autoConfig();
@@ -40,8 +49,4 @@ public class LogbackAutoConfigLoggingFactory implements LoggingFactory {
         }
     }
 
-    @Override
-    public void stop() {
-        loggerContext.stop();
-    }
 }
