@@ -45,6 +45,16 @@ public class LogbackAutoConfigLoggingFactory implements LoggingFactory {
 
     @Override
     public void configure(MetricRegistry metricRegistry, String name) {
+        reset();
+    }
+
+    @Override
+    public void stop() {
+        loggerContext.stop();
+    }
+
+    @Override
+    public void reset() throws RuntimeException {
         try {
             loggerContext.reset();
             contextInitializer.autoConfig();
@@ -53,8 +63,4 @@ public class LogbackAutoConfigLoggingFactory implements LoggingFactory {
         }
     }
 
-    @Override
-    public void stop() {
-        loggerContext.stop();
-    }
 }

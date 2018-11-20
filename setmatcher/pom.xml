@@ -227,11 +227,12 @@
     </build>    
 
     <dependencies>
-        <dependency>
+         <dependency>
             <groupId>dk.dbc</groupId>
             <artifactId>dropwizard</artifactId>
             <version>${dropwizard.version}-SNAPSHOT</version>
-        </dependency>
+            <classifier>with-log</classifier>
+        </dependency> 
         <dependency>
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
