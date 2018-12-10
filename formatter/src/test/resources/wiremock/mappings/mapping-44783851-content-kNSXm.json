@@ -1,0 +1,18 @@
+{
+  "id" : "73e299e8-f422-33f1-b478-16ae6a652bfe",
+  "request" : {
+    "url" : "/api/v1/record/870970/44783851/content",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-44783851-content-kNSXm.xml",
+    "headers" : {
+      "Content-Type" : "application/xml",
+      "Date" : "Tue, 04 Dec 2018 12:41:19 GMT",
+      "Server" : "Payara Micro #badassfish",
+      "X-Frame-Options" : "SAMEORIGIN"
+    }
+  },
+  "uuid" : "73e299e8-f422-33f1-b478-16ae6a652bfe"
+}

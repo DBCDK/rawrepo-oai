@@ -1,0 +1,18 @@
+{
+  "id" : "f9724bc7-b9b8-3818-bdb4-bc0161b59491",
+  "request" : {
+    "url" : "/api/v1/record/870970/44816687/children",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-44816687-children-1Yf4x.json",
+    "headers" : {
+      "Content-Type" : "application/json",
+      "Date" : "Wed, 05 Dec 2018 08:57:46 GMT",
+      "Server" : "Payara Micro #badassfish",
+      "X-Frame-Options" : "SAMEORIGIN"
+    }
+  },
+  "uuid" : "f9724bc7-b9b8-3818-bdb4-bc0161b59491"
+}

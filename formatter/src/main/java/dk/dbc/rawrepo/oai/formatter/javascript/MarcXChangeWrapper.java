@@ -18,47 +18,18 @@
  */
 package dk.dbc.rawrepo.oai.formatter.javascript;
 
-import java.util.Objects;
+import dk.dbc.rawrepo.RecordData.RecordId;
 
 /*
  * @author DBC {@literal <dbc.dk>}
  */
-public class MarcXChangeWrapper {    
+public class MarcXChangeWrapper {
+
     public final String content;
     public final RecordId[] children;
-    
+
     public MarcXChangeWrapper(String content, RecordId[] children) {
         this.content = content;
-        this.children = children;        
-    }
-    
-    public static class RecordId {
-        public final String recId;
-        public final int agencyId;
-        
-        public RecordId(String recId, int agencyId) {
-            this.recId = recId;
-            this.agencyId = agencyId;            
-        }
-        
-        @Override
-        public boolean equals(Object o) {
-            if(!(o instanceof RecordId)) {
-                return false;
-            }
-            RecordId other = (RecordId) o;
-            if(this.agencyId == other.agencyId && this.recId.equals(other.recId)) {
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 3;
-            hash = 71 * hash + Objects.hashCode(this.recId);
-            hash = 71 * hash + this.agencyId;
-            return hash;
-        }
+        this.children = children;
     }
 }

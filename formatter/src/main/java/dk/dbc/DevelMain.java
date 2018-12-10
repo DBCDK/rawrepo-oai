@@ -56,6 +56,7 @@ public class DevelMain extends Main {
 
     public static void main(String[] args) {
         try {
+            System.getenv().entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(System.out::println);
             System.setProperty("logback.configurationFile", LOGBACK_XML);
             new DevelMain().run(new String[] {"server", YAML_FILE_NAME});
         } catch (Exception ex) {

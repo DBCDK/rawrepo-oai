@@ -1,20 +1,20 @@
 javaScriptPoolSize: ${POOL_SIZE:-2}
-rawrepo:
-  driverClass: org.postgresql.Driver
-  user: ${RAWREPO_URL_USER}
-  password: ${RAWREPO_URL_PASS}
-  url: jdbc:postgresql://${RAWREPO_URL_BASE}
-  properties:
-    charSet: UTF-8
-  maxWaitForConnection: 1s
-  validationQuery: "/* MyService Health Check */ SELECT 1"
-  validationQueryTimeout: 3s
-  initialSize: 1
-  minSize: 1
-  maxSize: ${POOL_SIZE:-2}
-  checkConnectionWhileIdle: false
-  evictionInterval: 10s
-  minIdleTime: 1 minute
+
+rawrepoRecordServiceUrl: ${RAWREPO_RECORD_SERVICE_URL}
+
+restClient:
+  timeout: ${FETCH_RECORDS_TIMEOUT:-30}s
+  connectionTimeout: 500ms
+  timeToLive: 1 hour
+  cookiesEnabled: false
+  maxConnections: 1024
+  maxConnectionsPerRoute: 1024
+  keepAlive: 10s
+  minThreads: 1
+  maxThreads: 128
+  gzipEnabled: true
+  gzipEnabledForRequests: true
+
 
 server:
 # *** logback requestlog

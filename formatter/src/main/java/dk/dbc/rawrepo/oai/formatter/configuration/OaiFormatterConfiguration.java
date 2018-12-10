@@ -20,7 +20,7 @@ package dk.dbc.rawrepo.oai.formatter.configuration;
 
 import dk.dbc.DbcConfiguration;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.dropwizard.db.DataSourceFactory;
+import io.dropwizard.client.JerseyClientConfiguration;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -29,23 +29,9 @@ import javax.validation.constraints.NotNull;
  * @author DBC {@literal <dbc.dk>}
  */
 public class OaiFormatterConfiguration extends DbcConfiguration {
-    
-    @Valid
-    @NotNull
-    private DataSourceFactory database;
-    
+
     @NotNull
     private Integer javaScriptPoolSize;
-
-    @JsonProperty("rawrepo")
-    public void setDataSourceFactory(DataSourceFactory factory) {
-        this.database = factory;
-    }
-
-    @JsonProperty("rawrepo")
-    public DataSourceFactory getDataSourceFactory() {
-        return database;
-    }
 
     @JsonProperty("javaScriptPoolSize")
     public Integer getJavaScriptPoolSize() {
@@ -56,5 +42,32 @@ public class OaiFormatterConfiguration extends DbcConfiguration {
     public void setJavaScriptPoolSize(Integer javaScriptPoolSize) {
         this.javaScriptPoolSize = javaScriptPoolSize;
     }
-    
+
+    @NotNull
+    private String rawrepoRecordServiceUrl;
+
+    @JsonProperty("rawrepoRecordServiceUrl")
+    public String getRawrepoRecordServiceUrl() {
+        return rawrepoRecordServiceUrl;
+    }
+
+    @JsonProperty("rawrepoRecordServiceUrl")
+    public void setRawrepoRecordServiceUrl(String rawrepoRecordServiceUrl) {
+        this.rawrepoRecordServiceUrl = rawrepoRecordServiceUrl;
+    }
+
+    @Valid
+    @NotNull
+    private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();
+
+    @JsonProperty("restClient")
+    public void setJerseyClientConfiguration(JerseyClientConfiguration httpClient) {
+        this.httpClient = httpClient;
+    }
+
+    @JsonProperty("restClient")
+    public JerseyClientConfiguration getJerseyClientConfiguration() {
+        return httpClient;
+    }
+
 }
