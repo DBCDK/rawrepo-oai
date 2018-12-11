@@ -52,12 +52,19 @@ public class OaiFormatterResource {
 
     private static final Logger log = LoggerFactory.getLogger(OaiFormatterResource.class);
 
-    private static final int COMMON_AGENCY = 870970;
+    private static final RecordServiceConnector.Params PARAMS = new RecordServiceConnector.Params()
+            .withAllowDeleted(true)
+            .withExcludeAutRecords(true)
+            .withExcludeDbcFields(true)
+            .withExpand(true)
+            .withKeepAutFields(false)
+            .withMode(RecordServiceConnector.Params.Mode.EXPANDED)
+            .withUseParentAgency(false);
 
     private final RecordServiceConnector connector;
     private final JavascriptWorkerPool jsWorkerPool;
 
-    public OaiFormatterResource(String rawrepoRecordServiceUrl, Client client,JavascriptWorkerPool jsWorkerPool) {
+    public OaiFormatterResource(String rawrepoRecordServiceUrl, Client client, JavascriptWorkerPool jsWorkerPool) {
         this.connector = new RecordServiceConnector(client, rawrepoRecordServiceUrl, RecordServiceConnector.TimingLogLevel.DEBUG);
         this.jsWorkerPool = jsWorkerPool;
     }
@@ -120,7 +127,7 @@ public class OaiFormatterResource {
         while (cont) {
             cont = false;
 
-            String parentContent = new String(connector.getRecordContent(agencyId, bibRecId), StandardCharsets.UTF_8);
+            String parentContent = new String(connector.getRecordContent(agencyId, bibRecId, PARAMS), StandardCharsets.UTF_8);
             RecordData.RecordId[] children = connector.getRecordChildren(agencyId, bibRecId);
             children = Arrays.stream(children)
                     .filter(id -> id.getAgencyId() == agencyId)
