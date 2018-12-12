@@ -18,136 +18,30 @@
  */
 package dk.dbc.rawrepo.oai.formatter.resources;
 
-import dk.dbc.commons.testutils.postgres.connection.PostgresITConnection;
-import dk.dbc.marcxmerge.MarcXChangeMimeType;
-import dk.dbc.rawrepo.RawRepoDAO;
-import dk.dbc.rawrepo.RawRepoException;
-import dk.dbc.rawrepo.Record;
-import dk.dbc.rawrepo.RecordId;
 import dk.dbc.rawrepo.oai.formatter.javascript.MarcXChangeWrapper;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import org.junit.After;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
-import org.junit.Before;
 
 /*
  * @author DBC {@literal <dbc.dk>}
  */
 public class OaiFormatterResourceIT {
-    
-    private Connection connection;
-    private PostgresITConnection postgres;
 
-    @Before
-    public void setup() throws SQLException, ClassNotFoundException {
-        postgres = new PostgresITConnection("rawrepo");        
-        postgres.clearTables("relations", "records");
-        connection = postgres.getConnection();
-        connection.setAutoCommit(false);
-        connection.prepareStatement("SET log_statement = 'all';").execute();        
-    }
-    
-    @After
-    public void after() throws SQLException {
-        connection.rollback();
-        postgres.close();
-        connection.close();
-    }
-    
     public OaiFormatterResourceIT() {
     }
 
     @Test
-    public void testFetchRecordCollection_withHeadSectionVolume() throws Exception {
-                
-        RawRepoDAO dao = RawRepoDAO.builder(connection).build();
-        
-        Record head = createRecord("bib1", dao);
-        Record section1 = createRecord("bib2", dao);
-        Record section2 = createRecord("bib3", dao);
-        Record volume1 = createRecord("bib4", dao);
-        Record volume2 = createRecord("bib5", dao);
-
-        setChild(head, section1, dao);
-        setChild(head, section2, dao);
-        setChild(section1, volume1, dao);
-        setChild(section1, volume2, dao);
-        
-        MarcXChangeWrapper[] collection = OaiFormatterResource.fetchRecordCollection(
-                volume1.getId().getAgencyId(), 
-                volume1.getId().getBibliographicRecordId(), dao);
-                               
-        assertEquals(3, collection.length);        
-        assertEquals("content_bib4", collection[0].content);
-        assertEquals("content_bib2", collection[1].content);
-        assertEquals("content_bib1", collection[2].content);        
-
-        assertEquals(0, collection[0].children.length);
-        
-        assertEquals(new HashSet<>(Arrays.asList(
-                new MarcXChangeWrapper.RecordId(volume1.getId().getBibliographicRecordId(), 
-                        volume1.getId().getAgencyId()),
-                new MarcXChangeWrapper.RecordId(volume2.getId().getBibliographicRecordId(), 
-                        volume2.getId().getAgencyId()))), 
-                new HashSet<>(Arrays.asList(collection[1].children)));
-        
-        assertEquals(new HashSet<>(Arrays.asList(
-                new MarcXChangeWrapper.RecordId(section1.getId().getBibliographicRecordId(), 
-                        section1.getId().getAgencyId()),
-                new MarcXChangeWrapper.RecordId(section2.getId().getBibliographicRecordId(), 
-                        section2.getId().getAgencyId()))), 
-                new HashSet<>(Arrays.asList(collection[2].children)));
-    }
-    
-    @Test
     public void testFetchRecordCollection_withHeadVolume() throws Exception {
-                
-        RawRepoDAO dao = RawRepoDAO.builder(connection).build();
-        
-        Record head = createRecord("bib1", dao);
-        Record volume1 = createRecord("bib4", dao);
-        Record volume2 = createRecord("bib5", dao);
-
-        setChild(head, volume1, dao);
-        setChild(head, volume2, dao);
-        
-        MarcXChangeWrapper[] collection = OaiFormatterResource.fetchRecordCollection(
-                volume1.getId().getAgencyId(), 
-                volume1.getId().getBibliographicRecordId(), dao);
-                               
-        assertEquals(2, collection.length);        
-        assertEquals("content_bib4", collection[0].content);
-        assertEquals("content_bib1", collection[1].content);
-
-        assertEquals(0, collection[0].children.length);
-        
-        assertEquals(new HashSet<>(Arrays.asList(
-                new MarcXChangeWrapper.RecordId(volume1.getId().getBibliographicRecordId(), 
-                        volume1.getId().getAgencyId()),
-                new MarcXChangeWrapper.RecordId(volume2.getId().getBibliographicRecordId(), 
-                        volume2.getId().getAgencyId()))), 
-                new HashSet<>(Arrays.asList(collection[1].children)));
-
+        Client client = ClientBuilder.newClient();
+        OaiFormatterResource resource = new OaiFormatterResource("http://localhost:" + System.getProperty("wiremock.port"), client, null);
+        MarcXChangeWrapper[] all = resource.fetchRecordCollection(870970, "44816687");
+        assertEquals(2, all.length);
+        assertEquals(0, all[0].children.length);
+        assertTrue(all[0].content.contains("<datafield ind1='0' ind2='0' tag='001'><subfield code='a'>44816687</subfield><subfield code='b'>870970</subfield>"));
+        assertEquals(6, all[1].children.length);
+        assertTrue(all[1].content.contains("<datafield ind1='0' ind2='0' tag='001'><subfield code='a'>44783851</subfield><subfield code='b'>870970</subfield>"));
     }
-    
-    void setChild(Record head, Record child, RawRepoDAO dao) throws RawRepoException{
-        Set<RecordId> relationsFrom = dao.getRelationsFrom(child.getId());
-        relationsFrom.add(head.getId());
-        dao.setRelationsFrom(child.getId(), relationsFrom);
-    }
-    
-    Record createRecord(String bibId, RawRepoDAO dao) throws RawRepoException {
-        RecordId id = new RecordId(bibId, 870970);
-        Record record = dao.fetchRecord(id.getBibliographicRecordId(), id.getAgencyId());
-        record.setMimeType(MarcXChangeMimeType.MARCXCHANGE);
-        record.setContent(("content_" + bibId).getBytes());
-        dao.saveRecord(record);
-        return record;
-    }
-    
 }

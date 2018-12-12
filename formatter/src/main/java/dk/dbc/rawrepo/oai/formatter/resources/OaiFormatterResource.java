@@ -19,25 +19,25 @@
 package dk.dbc.rawrepo.oai.formatter.resources;
 
 import dk.dbc.rawrepo.oai.formatter.javascript.JavascriptWorkerPool;
-import dk.dbc.rawrepo.RawRepoDAO;
-import dk.dbc.rawrepo.RawRepoException;
-import dk.dbc.rawrepo.Record;
+import dk.dbc.rawrepo.RecordData;
+import dk.dbc.rawrepo.RecordServiceConnector;
+import dk.dbc.rawrepo.RecordServiceConnectorException;
+import dk.dbc.rawrepo.RecordServiceConnectorUnexpectedStatusCodeException;
 import dk.dbc.rawrepo.oai.formatter.javascript.JavascriptWorkerPool.JavaScriptWorker;
 import dk.dbc.rawrepo.oai.formatter.javascript.MarcXChangeWrapper;
-import dk.dbc.rawrepo.oai.formatter.javascript.MarcXChangeWrapper.RecordId;
 import java.io.UnsupportedEncodingException;
-import java.sql.Connection;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import static java.util.stream.Collectors.toList;
-import javax.sql.DataSource;
+import java.util.logging.Level;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
@@ -49,150 +49,155 @@ import org.slf4j.LoggerFactory;
  */
 @Path("/")
 public class OaiFormatterResource {
-    
+
     private static final Logger log = LoggerFactory.getLogger(OaiFormatterResource.class);
-    
-    private final DataSource rawrepo;
+
+    private static final RecordServiceConnector.Params PARAMS = new RecordServiceConnector.Params()
+            .withAllowDeleted(true)
+            .withExcludeAutRecords(true)
+            .withExcludeDbcFields(true)
+            .withExpand(true)
+            .withKeepAutFields(false)
+            .withMode(RecordServiceConnector.Params.Mode.EXPANDED)
+            .withUseParentAgency(false);
+
+    private final RecordServiceConnector connector;
     private final JavascriptWorkerPool jsWorkerPool;
-    
-    public OaiFormatterResource(DataSource rawrepo, JavascriptWorkerPool jsWorkerPool){
-        this.rawrepo = rawrepo;        
+
+    public OaiFormatterResource(String rawrepoRecordServiceUrl, Client client, JavascriptWorkerPool jsWorkerPool) {
+        this.connector = new RecordServiceConnector(client, rawrepoRecordServiceUrl, RecordServiceConnector.TimingLogLevel.DEBUG);
         this.jsWorkerPool = jsWorkerPool;
     }
-    
+
     @GET
     @Produces(MediaType.APPLICATION_XML)
-    public Response format(@QueryParam("id") String id, 
-                           @QueryParam("format") String format, 
+    public Response format(@QueryParam("id") String id,
+                           @QueryParam("format") String format,
                            @QueryParam("sets") String sets) {
-        
-        try (Connection connection = rawrepo.getConnection()) {
-            
+        try {
             FormatRequest request = FormatRequest.parse(id, format, sets);
-            
-            RawRepoDAO dao = RawRepoDAO.builder(connection).build();
-            
-            if(!dao.recordExists(request.bibRecId, request.agencyId)){
-                throw new NotFoundException();
-            }
-            
-            
-            MarcXChangeWrapper[] records = fetchRecordCollection(request.agencyId, request.bibRecId, dao);
 
-            try(JavaScriptWorker jsWorker = jsWorkerPool.borrowWorker()) {
+            if (!connector.recordExists(request.agencyId, request.bibRecId))
+                throw new NotFoundException();
+
+            MarcXChangeWrapper[] records = fetchRecordCollection(request.agencyId, request.bibRecId);
+            try (JavaScriptWorker jsWorker = jsWorkerPool.borrowWorker()) {
                 String result = jsWorker.format(records, request.format, request.sets);
                 return Response.ok(result).build();
             }
 
-        } catch (NotFoundException ex) {
-            log.info("Record not found, id={}", id);
-            return Response.status(Response.Status.NOT_FOUND).entity("No such record: " + id).type(MediaType.TEXT_PLAIN).build();
+        } catch (RecordServiceConnectorUnexpectedStatusCodeException ex) {
+            log.error("Error getting data from rawrepo-record-service: {}", ex.getMessage());
+            log.debug("Error getting data from rawrepo-record-service: ", ex);
+        } catch (RecordServiceConnectorException ex) {
+            log.error("Error fetching record: {}", ex.getMessage());
+            log.debug("Error fetching record: ", ex);
+            java.util.logging.Logger.getLogger(OaiFormatterResource.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IllegalArgumentException ex) {
             log.info("Invalid request. Reason={}", ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(ex.getMessage()).type(MediaType.TEXT_PLAIN).build();
+        } catch (NotFoundException ex) {
+            log.info("Record not found, id={}", id);
+            return Response.status(Response.Status.NOT_FOUND).entity("No such record: " + id).type(MediaType.TEXT_PLAIN).build();
         } catch (Exception ex) {
             String cause = unrollCause(ex);
             log.error("Could not handle format request. Reason={}", cause);
             log.debug("Could not handle format request", id, format, sets, ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(cause).type(MediaType.TEXT_PLAIN).build();            
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(cause).type(MediaType.TEXT_PLAIN).build();
         }
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("OK").type(MediaType.TEXT_PLAIN).build();
+
     }
-    
+
     /**
      * creates an array consisting of the content of a record + ancestors.
      * Its ordered from closest to most distant ancestor
+     *
      * @param agencyId
      * @param bibRecId
      * @param dao
      * @return
      * @throws RawRepoException
-     * @throws UnsupportedEncodingException 
+     * @throws UnsupportedEncodingException
      */
-    static MarcXChangeWrapper[] fetchRecordCollection(int agencyId, String bibRecId, RawRepoDAO dao) throws RawRepoException, UnsupportedEncodingException{
+    MarcXChangeWrapper[] fetchRecordCollection(int agencyId, String bibRecId) throws RecordServiceConnectorException {
         ArrayList<MarcXChangeWrapper> collection = new ArrayList<>();
-        Record r = dao.fetchRecord(bibRecId, agencyId);
-        dao.expandRecord(r,false);
 
-        while(r != null) {
+        boolean cont = true;
+        while (cont) {
+            cont = false;
 
-            Set<dk.dbc.rawrepo.RecordId> parents = dao.getRelationsParents(r.getId());
-            Record parent = null;
-            for (dk.dbc.rawrepo.RecordId parentId : parents) {
-                if(parentId.getAgencyId() == r.getId().getAgencyId()) {
-                    parent = dao.fetchRecord(parentId.getBibliographicRecordId(), parentId.getAgencyId());
+            String parentContent = new String(connector.getRecordContent(agencyId, bibRecId, PARAMS), StandardCharsets.UTF_8);
+            RecordData.RecordId[] children = connector.getRecordChildren(agencyId, bibRecId);
+            children = Arrays.stream(children)
+                    .filter(id -> id.getAgencyId() == agencyId)
+                    .toArray(RecordData.RecordId[]::new);
+            collection.add(new MarcXChangeWrapper(parentContent, children));
+
+            RecordData.RecordId[] parents = connector.getRecordParents(agencyId, bibRecId);
+            for (RecordData.RecordId parent : parents) {
+                if (parent.getAgencyId() == agencyId) {
+                    bibRecId = parent.getBibliographicRecordId();
+                    cont = true;
                     break;
                 }
             }
-            
-            String content = new String(r.getContent(), "UTF-8");
-            List<RecordId> children = dao.getRelationsChildren(r.getId()).stream()
-                    .map(x -> new RecordId(x.getBibliographicRecordId(),x.getAgencyId()))
-                    .collect(toList());
-            
-            MarcXChangeWrapper wrapper = new MarcXChangeWrapper(content, children.toArray(new RecordId[children.size()]));            
-            collection.add(wrapper);
-            
-            r = parent;
         }
         return collection.toArray(new MarcXChangeWrapper[collection.size()]);
     }
-    
+
     public static class FormatRequest {
-        
+
         public final String bibRecId;
         public final int agencyId;
         public final String format;
         public final List<String> sets;
-        
-        public FormatRequest( String bibRecId, int agencyId, String format, List<String> sets){
+
+        public FormatRequest(String bibRecId, int agencyId, String format, List<String> sets) {
             this.bibRecId = bibRecId;
             this.agencyId = agencyId;
             this.format = format;
-            this.sets = sets;            
+            this.sets = sets;
         }
-        
+
         static FormatRequest parse(String id, String format, String sets) {
-            
-            if(id == null || id.isEmpty()){
+
+            if (id == null || id.isEmpty())
                 throw new IllegalArgumentException("Missing query param 'id'");
-            }
 
-            if(format == null || format.isEmpty()){
+            if (format == null || format.isEmpty())
                 throw new IllegalArgumentException("Missing query param 'format'");
-            }
 
-            if(sets == null || sets.isEmpty()){
+            if (sets == null || sets.isEmpty())
                 throw new IllegalArgumentException("Missing query param 'sets'");
-            }
-            
+
             String bibRecId;
             int agencyId;
-            
-            try{
+
+            try {
                 String[] idSplit = id.split(":");
                 bibRecId = idSplit[1];
                 agencyId = Integer.parseInt(idSplit[0]);
-            } catch(RuntimeException e){
+            } catch (RuntimeException e) {
                 throw new IllegalArgumentException("Illegal value of 'id'. Required format: agencyId:bibRecId");
             }
-            
+
             return new FormatRequest(bibRecId, agencyId, format, Arrays.asList(sets.split(",")));
         }
     }
-    
-    public static String unrollCause( Throwable e ) {
+
+    public static String unrollCause(Throwable e) {
         String message = e.getMessage();
 
-        Throwable cause = null; 
+        Throwable cause = null;
         Throwable result = e;
 
-        while( null != ( cause = result.getCause() )  && result != cause ) {
+        while (null != ( cause = result.getCause() ) && result != cause) {
             result = cause;
-            if( result.getMessage() != null ) {
+            if (result.getMessage() != null)
                 message = result.getMessage();
-            }
         }
         return message;
-    }   
-            
+    }
+
 }

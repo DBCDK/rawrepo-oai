@@ -1,0 +1,18 @@
+{
+  "id" : "fdfad286-a240-34a4-84cc-51c535a3e15d",
+  "request" : {
+    "url" : "/api/v1/record/870970/44783851/parents",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-44783851-parents-Iuq2k.json",
+    "headers" : {
+      "Content-Type" : "application/json",
+      "Date" : "Tue, 04 Dec 2018 12:41:20 GMT",
+      "Server" : "Payara Micro #badassfish",
+      "X-Frame-Options" : "SAMEORIGIN"
+    }
+  },
+  "uuid" : "fdfad286-a240-34a4-84cc-51c535a3e15d"
+}
