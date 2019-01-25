@@ -110,8 +110,8 @@ UnitTest.addFixture( "OaiFormatter.formatRecords (format DC)", function() {
             content: headRecordString,
             children: [
                 {
-                    recId: "44816687",
-                    agencyId: 870970
+                    getBibliographicRecordId: function() { return "44816687"; },
+                    getAgencyId: function() { return 870970; }
                 }
             ]
         }
@@ -202,8 +202,8 @@ UnitTest.addFixture( "OaiFormatter.formatRecords (format DC)", function() {
             content: sectionRecordString,
             children: [
                 {
-                    recId: "23642468",
-                    agencyId: 870970
+                    getBibliographicRecordId: function() { return "23642468"; },
+                    getAgencyId: function() { return 870970; }
                 }
             ]
         },
@@ -211,8 +211,8 @@ UnitTest.addFixture( "OaiFormatter.formatRecords (format DC)", function() {
             content: headRecordString,
             children: [
                 {
-                    recId: "23642433",
-                    agencyId: 870970
+                    getBibliographicRecordId: function() { return  "23642433"; },
+                    getAgencyId: function() { return 870970; }
                 }
             ]
         }
@@ -460,11 +460,11 @@ UnitTest.addFixture( "OaiFormatter.formatRecords (format marcx, bkm as allowed s
             content: headRecordString,
             children: [
                 {
-                    recId: "44816687",
-                    agencyId: 870970
+                    getBibliographicRecordId: function() { return "44816687"; },
+                    getAgencyId: function() { return 870970; }
                 }, {
-                    recId: "44816679",
-                    agencyId: 870970
+                    getBibliographicRecordId: function() { return "44816679"; },
+                    getAgencyId: function() { return 870970; }
                 }
             ]
         }
@@ -590,22 +590,22 @@ UnitTest.addFixture( "OaiFormatter.formatRecords (format marcx, bkm as allowed s
             content: sectionRecordString,
             children: [
                 {
-                    recId: "23642468",
-                    agencyId: 870970
+                    getBibliographicRecordId: function() { return "23642468"; },
+                    getAgencyId: function() { return 870970; }
                 }, {
-                    recId: "23642980",
-                    agencyId: 870970
+                    getBibliographicRecordId: function() { return "23642980"; },
+                    getAgencyId: function() { return 870970; }
                 }
             ]
         }, {
             content: headRecordString,
             children: [
                 {
-                    recId: "23642433",
-                    agencyId: 870970
+                    getBibliographicRecordId: function() { return "23642433"; },
+                    getAgencyId: function() { return 870970; }
                 }, {
-                    recId: "23644584",
-                    agencyId: 870970
+                    getBibliographicRecordId: function() { return "23644584"; },
+                    getAgencyId: function() { return 870970; }
                 }
             ]
         }
@@ -882,22 +882,22 @@ UnitTest.addFixture( "OaiFormatter.convertXmlRecordStringsToMarcObjects", functi
             content: sectionRecordString,
             children: [
                 {
-                    recId: "23642468",
-                    agencyId: 870970
+                    getBibliographicRecordId: function() { return "23642468"; },
+                    getAgencyId: function() { return 870970; }
                 }, {
-                    recId: "23642980",
-                    agencyId: 870970
+                    getBibliographicRecordId: function() { return "23642980"; },
+                    getAgencyId: function() { return 870970; }
                 }
             ]
         }, {
             content: headRecordString,
             children: [
                 {
-                    recId: "23642433",
-                    agencyId: 870970
+                    getBibliographicRecordId: function() { return "23642433"; },
+                    getAgencyId: function() { return 870970; }
                 }, {
-                    recId: "23644584",
-                    agencyId: 870970
+                    getBibliographicRecordId: function() { return "23644584"; },
+                    getAgencyId: function() { return 870970; }
                 }
             ]
         }

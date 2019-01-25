@@ -133,7 +133,7 @@ var OaiFormatter = function() {
             var childrenObjects = record.children;
             var childrenIdentifiers = [];
             for ( var j = 0; j < childrenObjects.length; j++ ) {
-                childrenIdentifiers.push( childrenObjects[ j ].recId );
+                childrenIdentifiers.push( childrenObjects[ j ].getBibliographicRecordId() );
             }
             return childrenIdentifiers;
         };
