@@ -131,6 +131,7 @@ public class OaiFormatterResource {
             RecordData.RecordId[] children = connector.getRecordChildren(agencyId, bibRecId);
             children = Arrays.stream(children)
                     .filter(id -> id.getAgencyId() == agencyId)
+                    .sorted((l,r) -> l.getBibliographicRecordId().compareTo(r.getBibliographicRecordId()))
                     .toArray(RecordData.RecordId[]::new);
             collection.add(new MarcXChangeWrapper(parentContent, children));
 
