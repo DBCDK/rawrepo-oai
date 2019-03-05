@@ -34,10 +34,11 @@ restClient:
   maxConnectionsPerRoute: 1024
   keepAlive: 10s
   minThreads: 1
-  maxThreads: 128
+  maxThreads: 32
   gzipEnabled: true
   gzipEnabledForRequests: true
-
+  workQueueSize: 16384
+  
 server:
 # *** logback requestlog
   type: dbc
