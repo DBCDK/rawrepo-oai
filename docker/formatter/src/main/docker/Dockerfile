@@ -1,8 +1,8 @@
 FROM docker.dbc.dk/dbc-dropwizard
 MAINTAINER os-team
 
-ENV KAFKA_LOG_APPNAME rawrepo-oai-formatter \
-    FETCH_RECORDS_TIMEOUT 30
+ENV KAFKA_LOG_APPNAME=rawrepo-oai-formatter \
+    FETCH_RECORDS_TIMEOUT=30
 ADD res/rawrepo-oai-formatter-jar/ $DROPWIZARD_HOME
 
 LABEL RAWREPO_RECORD_SERVICE_URL="Rawrepo record service  url. (required). Format: http://..." \
